@@ -23,12 +23,13 @@ Dự án áp dụng mô hình kiến trúc **Monorepo** chia theo các tầng đ
 
 ```text
 Edumy-App/
-├── backend/            # Spring Boot RESTful API (Java 21, Spring Security, JPA, Flyway)
-├── mobile/             # React Native (Expo Router, React Native Paper, TanStack Query)
-├── docs/               # Toàn bộ tài liệu kỹ thuật, kế hoạch và tài nguyên dự án
-│   ├── PROJECT_PLAN.md # Kế hoạch chi tiết 4 tuần (D1 - D28)
-│   └── *.docx          # File Word kế hoạch gốc
-└── .github/            # GitHub Actions CI, Pull Request Template & Issue Templates
+├── backend/                  # Spring Boot RESTful API (Java 21, Spring Security, JPA, Flyway)
+├── mobile/                   # React Native (Expo Router, React Native Paper, TanStack Query)
+├── docs/                     # Toàn bộ tài liệu kỹ thuật, kế hoạch và tài nguyên dự án
+│   ├── PROJECT_PLAN.md       # Kế hoạch chi tiết 4 tuần (D1 - D28)
+│   ├── FEATURES_AND_VISION.md# Tổng quan chức năng & Tính ứng dụng thực tế
+│   └── *.docx                # File Word kế hoạch gốc
+└── .github/                  # GitHub Actions CI, Pull Request Template & Issue Templates
 ```
 
 ---
@@ -78,7 +79,19 @@ Mỗi thành viên phụ trách trọn vẹn một module end-to-end (Database �
 - **Tuần 9 (D15 – D21) · Extended Features:** Review & Rating, Q&A, Chứng chỉ PDF, Dashboard thống kê. *(D21: Feature Freeze)*.
 - **Tuần 10 (D22 – D28) · Stabilize & Release:** Bug bash, tích hợp VNPay Sandbox, hoàn thiện báo cáo và đóng gói APK Release v1.0. *(D25: Code Freeze)*.
 
-Chi tiết phân công từng ngày và từng thành viên xem tại: 👉 **[Kế Hoạch Dự Án Chi Tiết (docs/PROJECT_PLAN.md)](docs/PROJECT_PLAN.md)**
+Chi tiết phân công từng ngày và từng thành viên xem tại:
+👉 **[Kế Hoạch Dự Án Chi Tiết (docs/PROJECT_PLAN.md)](docs/PROJECT_PLAN.md)**  
+👉 **[Hệ Thống Chức Năng & Tính Ứng Dụng Thực Tế (docs/FEATURES_AND_VISION.md)](docs/FEATURES_AND_VISION.md)**
+
+---
+
+## 💡 Giá trị & Tính ứng dụng thực tế
+
+- 🎓 **Học viên:** Tự học linh hoạt mọi lúc mọi nơi, ghi nhớ tiến độ bài học, nhận chứng chỉ hoàn thành xác thực.
+- 👨‍🏫 **Giảng viên:** Phân phối nội dung số hóa rộng rãi, tạo nguồn thu nhập thụ động bền vững từ tri thức.
+- 🏛️ **Cơ sở đào tạo:** Chuyển đổi số mô hình học kết hợp (Blended Learning), quản lý nội dung và học viên tập trung.
+- 🏢 **Doanh nghiệp:** Chuẩn hóa quy trình Onboarding nhân sự và bồi dưỡng chuyên môn liên tục (Upskilling) tiết kiệm chi phí.
+- 💼 **Đơn vị vận hành:** Mô hình kinh doanh thương mại điện tử khóa học số, phân tích dữ liệu học tập (Learning Analytics).
 
 ---
 
