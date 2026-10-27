@@ -1,0 +1,262 @@
+// Edumy Database Schema - DBML Specification for dbdiagram.io
+// Project: Edumy Online Learning Android App
+// Date: 2026-10-27 (W7-T1 Kickoff)
+
+Project edumy_db {
+  database_type: 'MySQL 8'
+  Note: '''
+    # Edumy Online Learning Platform Database
+    Hệ thống CSDL phân hệ 5 modules:
+    - Member A: Users & Authentication
+    - Member B: Categories, Courses, Wishlists, Reviews
+    - Member C: Sections, Lessons (Instructor Studio)
+    - Member D: Orders, Enrollments, LessonProgress, Certificates
+    - Member E: Questions, Answers, Notifications, Admin Controls
+  '''
+}
+
+// ------------------------------------------------------
+// MODULE 1: AUTH & USERS (Member A)
+// ------------------------------------------------------
+Table users {
+  id bigint [pk, increment]
+  email varchar(255) [unique, not null]
+  password_hash varchar(255) [not null]
+  full_name varchar(150) [not null]
+  avatar_url varchar(500)
+  role varchar(20) [not null, default: 'STUDENT', note: 'STUDENT, INSTRUCTOR, ADMIN']
+  status varchar(20) [not null, default: 'ACTIVE', note: 'ACTIVE, LOCKED']
+  bio text
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Quản lý tài khoản người dùng và phân quyền 3 roles'
+}
+
+// ------------------------------------------------------
+// MODULE 2: CATALOG & DISCOVERY (Member B)
+// ------------------------------------------------------
+Table categories {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  slug varchar(120) [unique, not null]
+  icon varchar(100)
+  description varchar(500)
+  parent_id bigint [null]
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Danh mục khóa học đa cấp'
+}
+
+Table courses {
+  id bigint [pk, increment]
+  instructor_id bigint [not null]
+  category_id bigint [not null]
+  title varchar(255) [not null]
+  subtitle varchar(300)
+  description longtext
+  thumbnail_url varchar(500)
+  price decimal(12,2) [not null, default: 0.00]
+  level varchar(20) [not null, default: 'ALL_LEVELS', note: 'BEGINNER, INTERMEDIATE, ADVANCED, ALL_LEVELS']
+  status varchar(20) [not null, default: 'DRAFT', note: 'DRAFT, PENDING, PUBLISHED, REJECTED']
+  rejection_reason text
+  total_duration_seconds int [not null, default: 0]
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Thông tin cốt lõi khóa học và vòng đời kiểm duyệt'
+}
+
+Table wishlists {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  course_id bigint [not null]
+  created_at datetime [default: `now()`]
+
+  indexes {
+    (user_id, course_id) [unique]
+  }
+  Note: 'Danh sách khóa học quan tâm/yêu thích'
+}
+
+Table reviews {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  course_id bigint [not null]
+  rating tinyint [not null, note: '1 to 5 stars']
+  comment text
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  indexes {
+    (user_id, course_id) [unique]
+  }
+  Note: 'Đánh giá số sao và bình luận của học viên sau khi ghi danh'
+}
+
+// ------------------------------------------------------
+// MODULE 3: INSTRUCTOR STUDIO & CURRICULUM (Member C)
+// ------------------------------------------------------
+Table sections {
+  id bigint [pk, increment]
+  course_id bigint [not null]
+  title varchar(255) [not null]
+  order_index int [not null, default: 1]
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Các chương học trong một khóa học'
+}
+
+Table lessons {
+  id bigint [pk, increment]
+  section_id bigint [not null]
+  title varchar(255) [not null]
+  video_url varchar(500)
+  video_public_id varchar(255)
+  duration_seconds int [not null, default: 0]
+  is_preview boolean [not null, default: false]
+  order_index int [not null, default: 1]
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Bài học video được upload lên Cloudinary'
+}
+
+// ------------------------------------------------------
+// MODULE 4: ORDERS, LEARNING & CERTIFICATE (Member D)
+// ------------------------------------------------------
+Table orders {
+  id bigint [pk, increment]
+  order_code varchar(50) [unique, not null]
+  user_id bigint [not null]
+  course_id bigint [not null]
+  total_amount decimal(12,2) [not null, default: 0.00]
+  status varchar(20) [not null, default: 'PENDING', note: 'PENDING, PAID, CANCELLED']
+  payment_method varchar(20) [not null, default: 'MOCK', note: 'MOCK, VNPAY']
+  paid_at datetime
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Đơn hàng mua khóa học (Mock checkout / VNPay Sandbox)'
+}
+
+Table enrollments {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  course_id bigint [not null]
+  order_id bigint [null]
+  status varchar(20) [not null, default: 'ACTIVE', note: 'ACTIVE, COMPLETED']
+  enrolled_at datetime [default: `now()`]
+  completed_at datetime
+  created_at datetime [default: `now()`]
+
+  indexes {
+    (user_id, course_id) [unique]
+  }
+  Note: 'Bản ghi ghi danh chính thức vào khóa học'
+}
+
+Table lesson_progress {
+  id bigint [pk, increment]
+  enrollment_id bigint [not null]
+  lesson_id bigint [not null]
+  is_completed boolean [not null, default: false]
+  last_watched_seconds int [not null, default: 0]
+  completed_at datetime
+  updated_at datetime [default: `now()`]
+
+  indexes {
+    (enrollment_id, lesson_id) [unique]
+  }
+  Note: 'Theo dõi tiến độ xem từng bài học (hoàn thành khi xem >= 90%)'
+}
+
+Table certificates {
+  id bigint [pk, increment]
+  enrollment_id bigint [unique, not null]
+  certificate_code varchar(100) [unique, not null]
+  pdf_url varchar(500)
+  issued_at datetime [default: `now()`]
+
+  Note: 'Chứng chỉ hoàn thành khóa học cấp dưới định dạng PDF'
+}
+
+// ------------------------------------------------------
+// MODULE 5: COMMUNITY, Q&A & ADMIN (Member E)
+// ------------------------------------------------------
+Table questions {
+  id bigint [pk, increment]
+  lesson_id bigint [not null]
+  user_id bigint [not null]
+  title varchar(255) [not null]
+  content text [not null]
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Câu hỏi thảo luận của học viên dưới từng bài học'
+}
+
+Table answers {
+  id bigint [pk, increment]
+  question_id bigint [not null]
+  user_id bigint [not null]
+  content text [not null]
+  is_accepted_by_instructor boolean [not null, default: false]
+  created_at datetime [default: `now()`]
+  updated_at datetime [default: `now()`]
+
+  Note: 'Câu trả lời giải đáp thắc mắc giữa học viên và giảng viên'
+}
+
+Table notifications {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  title varchar(255) [not null]
+  content text [not null]
+  type varchar(30) [not null, note: 'COURSE_APPROVED, COURSE_REJECTED, NEW_ANSWER, SYSTEM']
+  reference_id bigint
+  is_read boolean [not null, default: false]
+  created_at datetime [default: `now()`]
+
+  Note: 'Thông báo đẩy trong ứng dụng cho người dùng'
+}
+
+// ------------------------------------------------------
+// RELATIONSHIPS / FOREIGN KEYS
+// ------------------------------------------------------
+
+// Users Relationships
+Ref: courses.instructor_id > users.id [delete: cascade]
+Ref: wishlists.user_id > users.id [delete: cascade]
+Ref: reviews.user_id > users.id [delete: cascade]
+Ref: orders.user_id > users.id [delete: cascade]
+Ref: enrollments.user_id > users.id [delete: cascade]
+Ref: questions.user_id > users.id [delete: cascade]
+Ref: answers.user_id > users.id [delete: cascade]
+Ref: notifications.user_id > users.id [delete: cascade]
+
+// Categories Relationships
+Ref: categories.parent_id > categories.id [delete: set null]
+Ref: courses.category_id > categories.id [delete: restrict]
+
+// Courses Relationships
+Ref: sections.course_id > courses.id [delete: cascade]
+Ref: wishlists.course_id > courses.id [delete: cascade]
+Ref: reviews.course_id > courses.id [delete: cascade]
+Ref: orders.course_id > courses.id [delete: cascade]
+Ref: enrollments.course_id > courses.id [delete: cascade]
+
+// Sections & Lessons Relationships
+Ref: lessons.section_id > sections.id [delete: cascade]
+Ref: lesson_progress.lesson_id > lessons.id [delete: cascade]
+Ref: questions.lesson_id > lessons.id [delete: cascade]
+
+// Orders & Enrollments Relationships
+Ref: enrollments.order_id > orders.id [delete: set null]
+Ref: lesson_progress.enrollment_id > enrollments.id [delete: cascade]
+Ref: certificates.enrollment_id - enrollments.id [delete: cascade]
+
+// Community Relationships
+Ref: answers.question_id > questions.id [delete: cascade]

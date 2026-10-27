@@ -28,6 +28,10 @@ Edumy-App/
 ├── docs/                     # Toàn bộ tài liệu kỹ thuật, kế hoạch và tài nguyên dự án
 │   ├── PROJECT_PLAN.md       # Kế hoạch chi tiết 4 tuần (D1 - D28)
 │   ├── FEATURES_AND_VISION.md# Tổng quan chức năng & Tính ứng dụng thực tế
+│   ├── scope-and-backlog.md  # Khóa phạm vi MVP & Quản lý Backlog (W7-T1)
+│   ├── ERD.md & erd.png      # Sơ đồ CSDL tổng thể (MySQL 8, DBML) (W7-T1)
+│   ├── wireframes.md & .png  # Thiết kế Wireframe giao diện 5 modules (W7-T1)
+│   ├── api-conventions.md    # Quy ước chuẩn API RESTful & Response Wrapper (W7-T1)
 │   └── *.docx                # File Word kế hoạch gốc
 └── .github/                  # GitHub Actions CI, Pull Request Template & Issue Templates
 ```
