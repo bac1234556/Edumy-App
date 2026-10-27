@@ -1,0 +1,65 @@
+# ===============================
+# Operating System & IDE Files
+# ===============================
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*~
+
+# VS Code & JetBrains
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+
+# ===============================
+# Backend (Java / Spring / Maven / Gradle)
+# ===============================
+backend/target/
+backend/build/
+backend/.gradle/
+backend/out/
+backend/bin/
+backend/*.log
+backend/logs/
+backend/application-local.yml
+backend/application-local.properties
+
+# ===============================
+# Mobile (Node / React Native / Expo)
+# ===============================
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/*.log
+mobile/npm-debug.log*
+mobile/yarn-debug.log*
+mobile/yarn-error.log*
+
+# Android build outputs
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/*.iml
+mobile/android/local.properties
+mobile/android/.idea/
+
+# Native binaries
+*.apk
+*.aab
+
+# ===============================
+# Environment Variables & Secrets
+# ===============================
+.env
+.env.local
+.env.*.local
+*.keystore
+*.jks
