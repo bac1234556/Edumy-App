@@ -1,4 +1,4 @@
-# Edumy — Nền Tảng Học Trực Tuyến Trên Android 🎓📱
+# Edumy — Nền Tảng Học Trực Tuyến Trên Android 📱
 
 [![React Native](https://img.shields.io/badge/Mobile-React%20Native%20%7C%20Expo-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
 [![Spring Boot](https://img.shields.io/badge/Backend-Spring%20Boot%203-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
