@@ -54,9 +54,18 @@ Khi manifest tồn tại, thiếu prerequisite sẽ FAIL, không tiếp tục b�
   Nếu đổi package manager, đổi đồng bộ guard, lệnh frozen install, cache và lint trong cùng PR;
   không commit nhiều lockfile. Xác minh Node/Expo compatibility khi nâng SDK.
 
-Tại thời điểm triển khai trên develop `f5c7a7e`, đã có pom.xml và package.json từ #7–#9,
-nhưng chưa có wrapper/lockfile/lint. Vì vậy hai preflight hiện **FAIL đúng thiết kế**;
-Maven verification và lint thật **chưa chạy**. Không thêm scaffold hoặc placeholder test để che lỗi.
+Bổ sung hạ tầng CI tối thiểu sau lần chạy PR #23 đầu tiên:
+
+- Maven wrapper Apache 3.9.9 / wrapper 3.3.2, checksum SHA-256 cho distribution ZIP,
+  và wrapper Windows. Không đổi pom.xml hoặc code ứng dụng.
+- `src/test/resources/application.properties` dùng H2 trong test, Hibernate create-drop,
+  không chạy Flyway MySQL. Hai application tests hiện có chạy thật; đây không phải
+  kiểm tra migration hoặc deployment MySQL. #3 vẫn sở hữu schema/migration và môi trường MySQL.
+- npm lockfile và ESLint 9 + React/React Hooks rules, script `eslint . --max-warnings=0`.
+  Kiểm tra JavaScript hiện có; không thêm màn hình, Router, authentication hoặc scaffold mới của #4.
+
+Đã xác minh cục bộ: Java 21 `./mvnw -B verify` (2 tests, không fail/skip),
+Node 22 `npm ci` và `npm run lint`. Kết quả Actions trên GitHub cần kiểm tra theo commit mới nhất.
 
 Kiểm tra tại root:
 
@@ -71,7 +80,8 @@ git diff --check
 ## Thiết lập trên GitHub (owner thực hiện và xác minh)
 
 Commit file không cấu hình được Projects, labels hoặc branch protection. Khi triển khai này,
-Git read hoạt động nhưng GitHub REST/GraphQL trả Forbidden; các mục dưới đây chưa được xác minh.
+Git read/push hoạt động nhưng GitHub REST/GraphQL trả Forbidden. Trang GitHub công khai
+đã cho phép kiểm tra labels và Issue #2; protection/Project configuration chưa xác minh được.
 Không xóa/sửa quy tắc hoặc trạng thái đang dùng khi chưa được owner cho phép.
 
 ### Labels
@@ -85,8 +95,8 @@ Giữ nguyên nhãn đã có; chỉ **New label** cho tên thực sự thiếu (
 - `priority:high`, `priority:medium`, `priority:low`
 - `size:S` (≤4 giờ), `size:M` (≤1 ngày), `size:L` (≤2 ngày)
 
-Issue Forms dùng đúng tên trong kế hoạch, chưa tự gán label vì chưa kiểm tra được danh sách remote.
-Người triage chọn nhãn đã tồn tại; có thể bật auto-label sau khi owner xác nhận tên chính xác.
+Đã đọc trang Labels và xác minh đủ toàn bộ tên trên; không tạo label mới.
+Issue Forms tự gán type:feature/type:bug/type:chore tương ứng; người triage chọn thêm area/module, priority và size.
 
 ### Project board
 
@@ -123,16 +133,27 @@ không áp dụng cho feature/** hoặc fix/**:
   Không dùng force push hoặc xóa nhánh thật để thử policy. Nếu plan/quyền không hỗ trợ enforcement,
   ghi hạn chế và nhờ owner xử lý; không tuyên bố protection đã bật.
 
-## Mở PR Issue #2 sau khi kết nối GitHub khả dụng
+## PR #23 và liên kết Issue #2
 
-Sau khi xác minh base vẫn là develop, commit các file thuộc task trên nhánh
-`feature/2-setup-monorepo-ci`, push không dùng force rồi:
+PR hiện có: https://github.com/bac1234556/Edumy-App/pull/23, base develop,
+head feature/2-setup-monorepo-ci. Không tạo PR trùng.
+
+Trang công khai cho thấy PR description còn `Closes #` chưa có số và Issue #2 hiển thị
+**No branches or pull requests**, **No projects**. Owner cần:
+
+1. PR #23 → **Edit description**, thay nội dung bằng PR body đã chuẩn bị, gồm dòng chính xác `Closes #2`.
+   File trong cloud: `/workspace/.edumy-local/issue-2-pr.md`.
+2. Nếu keyword chưa liên kết vì develop không phải default branch, mở PR sidebar **Development**,
+   liên kết Issue #2 thủ công; kiểm tra Issue #2 hiển thị PR #23.
+3. Liên kết Issue #2 với Project đã cấu hình 5 Status; đưa In Review trong lúc chờ nghiệm thu.
+4. Kiểm tra Actions của commit mới nhất, lấy ít nhất 1 approval từ thành viên khác,
+   xác minh quyền push feature của cả 5 người và branch protection.
+5. Đăng comment nghiệm thu trước khi đóng; file cloud:
+   `/workspace/.edumy-local/issue-2-completion-comment.md`.
+   Chỉ owner merge/đóng sau review và hoàn tất các mục còn thiếu.
+
+Nếu GitHub API trở lại khả dụng, cập nhật PR hiện có (không tạo mới):
 
 ```bash
-gh pr create --base develop --head feature/2-setup-monorepo-ci \
-  --title 'chore(devops): setup monorepo workflow and CI (#2)' \
-  --body-file /workspace/.edumy-local/issue-2-pr.md
+gh pr edit 23 --repo bac1234556/Edumy-App --body-file /workspace/.edumy-local/issue-2-pr.md
 ```
-
-PR body được chuẩn bị ngoài checkout; nội dung gồm `Closes #2`, file thay đổi, kết quả kiểm tra
-và việc thủ công còn thiếu. Chưa có URL PR/run thì không coi PR hoặc CI GitHub đã được tạo/chạy.

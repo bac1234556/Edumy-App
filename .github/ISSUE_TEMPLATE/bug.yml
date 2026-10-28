@@ -1,6 +1,7 @@
 name: Bug
 description: Báo lỗi kèm bước tái hiện.
 title: "[Bug] "
+labels: ["type:bug"]
 body:
   - type: markdown
     attributes:

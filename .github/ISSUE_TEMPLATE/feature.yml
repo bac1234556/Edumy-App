@@ -1,6 +1,7 @@
 name: Feature
 description: Đề xuất tính năng trong phạm vi đã thống nhất.
 title: "[Feature] "
+labels: ["type:feature"]
 body:
   - type: markdown
     attributes:

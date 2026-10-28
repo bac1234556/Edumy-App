@@ -1,6 +1,7 @@
 name: Chore / Task
 description: Công việc hạ tầng, tài liệu hoặc bảo trì.
 title: "[Chore] "
+labels: ["type:chore"]
 body:
   - type: markdown
     attributes:
