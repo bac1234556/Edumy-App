@@ -46,7 +46,24 @@ CREATE TABLE IF NOT EXISTS `notifications` (
     INDEX `idx_notifications_is_read` (`user_id`, `is_read`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. Seed: Admin account
+-- 4. Table: users (nếu chưa được tạo bởi module Auth)
+CREATE TABLE IF NOT EXISTS `users` (
+    `id`            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `email`         VARCHAR(150) NOT NULL UNIQUE,
+    `password_hash` VARCHAR(255) NOT NULL,
+    `full_name`     VARCHAR(100) NOT NULL,
+    `avatar_url`    VARCHAR(255) DEFAULT NULL,
+    `role`          VARCHAR(20)  NOT NULL DEFAULT 'STUDENT',
+    `status`        VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    `bio`           TEXT         DEFAULT NULL,
+    `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_users_email` (`email`),
+    INDEX `idx_users_role` (`role`),
+    INDEX `idx_users_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. Seed: Admin account
 -- Mật khẩu mặc định demo: "Admin@123456" (BCrypt hash) dùng cho môi trường demo/staging.
 -- Production: thay hash bằng biến môi trường ADMIN_PASSWORD_HASH khi chạy Docker.
 -- Hash bên dưới tương ứng với password "Admin@123456"
