@@ -63,14 +63,3 @@ mobile/android/.idea/
 .env.*.local
 *.keystore
 *.jks
-
-# Environment-specific secrets; retain shareable examples
-.env.*
-!.env.example
-!.env.*.example
-*.p12
-*.pfx
-
-# Python documentation tooling
-__pycache__/
-*.py[cod]
