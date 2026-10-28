@@ -116,3 +116,5 @@ Chi tiết phân công từng ngày và từng thành viên xem tại:
    - API có tài liệu trên Swagger, validate dữ liệu đầy đủ.
    - Màn hình Mobile có đủ 3 trạng thái: *Loading*, *Empty Data*, *Error*.
    - Đã kiểm thử trực tiếp trên thiết bị Android hoặc Emulator.
+
+Hướng dẫn nhánh, PR, CI và cấu hình GitHub: [GitHub Workflow](docs/GITHUB_WORKFLOW.md).
