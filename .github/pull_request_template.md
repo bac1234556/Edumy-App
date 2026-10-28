@@ -40,6 +40,9 @@ Closes #<!-- Ghi số issue vào đây, ví dụ: Closes #12 -->
 ---
 
 ## Tiêu chuẩn hoàn thành (Definition of Done)
+<!-- Ghi N/A và lý do cho mục UI/API/Android không áp dụng; không coi kiểm tra chưa chạy là PASS. -->
+- [ ] CI đã chạy thật; có lệnh, kết quả và link run (ghi rõ FAIL/SKIPPED nếu có)
+- [ ] Ít nhất 1 approval từ thành viên khác trước khi merge
 - [ ] Code đã tự test trên điện thoại Android thật hoặc máy ảo (Emulator)
 - [ ] API có mô tả trên Swagger, validate input, trả lỗi đúng format `{ success, data, message }`
 - [ ] Màn hình Mobile có đủ 3 trạng thái: Loading, Empty, Error
