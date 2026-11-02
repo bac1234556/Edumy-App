@@ -51,8 +51,27 @@ jobs:
           java-version: '21'
           cache: maven
           cache-dependency-path: backend/pom.xml
-      - name: Verify (including tests and Flyway migrations)
+      - name: Verify backend tests and package
         run: ./mvnw -B verify
+      - name: Smoke test real MySQL migrations and auth HTTP flow
+        run: |
+          java -jar target/edumy-backend-0.0.1-SNAPSHOT.jar > "$RUNNER_TEMP/backend-smoke.log" 2>&1 &
+          backend_pid=$!
+          trap 'kill "$backend_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/api/health > /dev/null; then
+              ready=true
+              break
+            fi
+            if ! kill -0 "$backend_pid" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then
+            echo 'Backend failed to become ready; see backend-smoke artifact.' >&2
+            exit 1
+          fi
+          python3 scripts/smoke_auth.py
       - name: Upload test reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -60,9 +79,16 @@ jobs:
           name: backend-test-reports
           path: backend/target/surefire-reports/
           if-no-files-found: ignore
+      - name: Upload backend smoke log
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-smoke-log
+          path: ${{ runner.temp }}/backend-smoke.log
+          if-no-files-found: ignore
 
   mobile:
-    name: Mobile lint
+    name: Mobile verify
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -81,3 +107,10 @@ jobs:
         env:
           CI: 'true'
         run: npm run lint
+      - name: Test auth and secure session
+        run: npm test -- --runInBand
+      - name: Export Android bundle
+        env:
+          CI: 'true'
+          EXPO_OFFLINE: '1'
+        run: npx expo export --platform android --output-dir dist --max-workers 2

@@ -21,6 +21,9 @@ async function refreshSession() {
       throw new Error('Phiên đăng nhập đã thay đổi');
     }
     await useAuthStore.getState().setSession(data.data);
+    if (useAuthStore.getState().session?.accessToken !== data.data.accessToken) {
+      throw new Error('Phiên đăng nhập đã thay đổi');
+    }
     return data.data.accessToken;
   } catch (error) {
     // A temporary network error should not erase a valid refresh token.
@@ -34,6 +37,10 @@ async function refreshSession() {
 
 api.interceptors.response.use((response) => response, async (error) => {
   const original = error.config;
+  if (error.response?.status === 401 && original?._retry
+      && original.headers.Authorization === `Bearer ${useAuthStore.getState().session?.accessToken}`) {
+    await useAuthStore.getState().clearSession();
+  }
   if (error.response?.status !== 401 || !original || original._retry
       || !useAuthStore.getState().session?.refreshToken) throw error;
   original._retry = true;

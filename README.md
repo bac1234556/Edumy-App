@@ -189,3 +189,23 @@ lưu token mới rồi retry một lần; refresh token không hợp lệ sẽ x
 Mỗi nhóm route chặn người dùng chưa đăng nhập hoặc sai role. API vẫn là nơi
 kiểm tra quyền cuối cùng. Test Android cần kiểm tra health UP, mở lại app và
 luồng điều hướng theo role; bundle/lint không thay thế kiểm thử thiết bị.
+
+## Kiểm tra luồng đăng ký và đăng nhập
+
+Trong app, chọn **Tạo tài khoản**, nhập họ tên, email, mật khẩu từ 8 ký tự và
+chọn Học viên hoặc Giảng viên. Đăng ký thành công mở màn đăng nhập; đăng nhập
+sẽ lưu phiên và mở đúng nhóm route. ADMIN chỉ được cấp bởi hệ thống, không có
+lựa chọn đăng ký admin. Các form khóa nút gửi khi đang xử lý và hiển thị lỗi từ
+server. Đăng xuất xóa token cục bộ và cố gắng thu hồi refresh token trên server.
+
+Khi backend đang chạy với MySQL, chạy:
+
+```bash
+cd backend
+python3 scripts/smoke_auth.py
+```
+
+Script tạo tài khoản thử ngẫu nhiên, kiểm tra register/login/me, 403 cho admin,
+409 email trùng, 401 mật khẩu sai, refresh rotation và logout; không in token.
+CI chạy script với MySQL 8 thật sau build, cùng lint, test mobile và bundle Android.
+Kiểm thử tự động không thay thế review PR độc lập hoặc thử ứng dụng trên thiết bị.

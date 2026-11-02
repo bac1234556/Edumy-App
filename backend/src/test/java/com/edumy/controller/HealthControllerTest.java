@@ -22,6 +22,7 @@ class HealthControllerTest {
                 .andExpect(jsonPath("$.data.status").value("UP"));
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paths['/api/health']").exists());
+                .andExpect(jsonPath("$.paths['/api/health']").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"));
     }
 }

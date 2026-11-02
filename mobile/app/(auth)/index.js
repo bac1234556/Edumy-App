@@ -1,7 +1,8 @@
 import React from 'react';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
+import { router } from 'expo-router';
 import { HealthCard } from '../../src/components/HealthCard';
 
 export default function Welcome() {
@@ -12,6 +13,8 @@ export default function Welcome() {
         <Text variant="titleLarge">Học hôm nay, vững bước ngày mai.</Text>
         <Text>Khám phá kiến thức và phát triển kỹ năng cùng giảng viên Edumy.</Text>
         <HealthCard />
+        <Button mode="contained" onPress={() => router.push('/(auth)/login')}>Đăng nhập</Button>
+        <Button mode="outlined" onPress={() => router.push('/(auth)/register')}>Tạo tài khoản</Button>
       </ScrollView>
     </SafeAreaView>
   );

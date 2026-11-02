@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin User API", description = "Quản trị danh sách người dùng (yêu cầu quyền ADMIN)")
 @CrossOrigin(origins = "*")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 public class AdminUserController {
 
     private final AdminUserService adminUserService;

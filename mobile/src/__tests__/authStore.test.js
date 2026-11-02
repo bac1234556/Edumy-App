@@ -53,3 +53,15 @@ test('logout deletes persisted tokens', async () => {
   expect(useAuthStore.getState().session).toBeNull();
   expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('edumy.auth.session');
 });
+
+test('logout during a secure write cannot resurrect the old session', async () => {
+  let finishWrite;
+  SecureStore.setItemAsync.mockImplementation(() => new Promise((resolve) => { finishWrite = resolve; }));
+  const saving = useAuthStore.getState().setSession(session);
+  await new Promise(setImmediate);
+  const clearing = useAuthStore.getState().clearSession();
+  finishWrite();
+  await Promise.all([saving, clearing]);
+  expect(useAuthStore.getState().session).toBeNull();
+  expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('edumy.auth.session');
+});
