@@ -1,4 +1,4 @@
-# Edumy — Nền Tảng Học Trực Tuyến Trên Android 🎓📱
+# Edumy — Nền Tảng Học Trực Tuyến Trên Android 📱
 
 ## Chạy môi trường phát triển
 
