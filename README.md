@@ -1,5 +1,33 @@
 # Edumy — Nền Tảng Học Trực Tuyến Trên Android 🎓📱
 
+## Chạy môi trường phát triển
+
+Yêu cầu: **JDK 21** (có `javac`), Docker Compose v2, Node.js 22.
+
+```bash
+cp .env.example .env
+docker compose up -d --wait
+cd backend
+./mvnw -B verify
+./mvnw spring-boot:run
+```
+
+Các giá trị mặc định trong `.env.example` khớp cấu hình backend. Khi đổi thông tin
+DB, export các biến `DB_*` tương ứng trước khi chạy Maven (Spring không tự đọc
+file `.env` của Docker). Chỉ dùng mật khẩu mẫu cho môi trường local.
+
+Kiểm tra `GET /api/health` trả `data.status = UP`; tài liệu tại `/swagger-ui`
+và `/v3/api-docs`. Flyway tự chạy migration khi backend khởi động, Hibernate
+kiểm tra schema. Test mặc định dùng H2 độc lập; cần khởi động MySQL để xác nhận
+migration thực tế. `docker compose down` giữ dữ liệu trong volume.
+
+```bash
+cd mobile
+npm ci
+npm run lint
+npm start
+```
+
 [![React Native](https://img.shields.io/badge/Mobile-React%20Native%20%7C%20Expo-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
 [![Spring Boot](https://img.shields.io/badge/Backend-Spring%20Boot%203-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![MySQL](https://img.shields.io/badge/Database-MySQL%208-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)

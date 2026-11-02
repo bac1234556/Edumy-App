@@ -10,7 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
     @Builder.Default
@@ -20,6 +19,7 @@ public class ApiResponse<T> {
 
     private T data;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ValidationError> errors;
 
     public static <T> ApiResponse<T> ok(T data, String message) {
