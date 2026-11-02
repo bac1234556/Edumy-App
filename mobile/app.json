@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Edumy",
+    "slug": "edumy-mobile",
+    "scheme": "edumy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "plugins": ["expo-router", "expo-secure-store", "expo-font"],
+    "android": { "package": "com.edumy.app" },
+    "ios": { "bundleIdentifier": "com.edumy.app" }
+  }
+}

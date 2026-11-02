@@ -63,3 +63,10 @@ mobile/android/.idea/
 .env.*.local
 *.keystore
 *.jks
+
+# Environment secrets and signing artifacts; keep shareable examples
+.env.*
+!.env.example
+!.env.*.example
+*.p12
+*.pfx

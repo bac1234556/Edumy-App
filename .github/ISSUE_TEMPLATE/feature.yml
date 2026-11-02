@@ -1,0 +1,26 @@
+name: Feature
+description: Đề xuất tính năng trong phạm vi đã thống nhất.
+title: "[Feature] "
+labels: ["type:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: "Chọn label type:feature và area/module, priority, size đang có; tránh tạo label trùng."
+  - type: textarea
+    id: goal
+    attributes:
+      label: Mục tiêu và phạm vi
+      description: Người dùng cần gì? Phần nào không thuộc task này?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí nghiệm thu và cách kiểm thử
+      placeholder: "- [ ] Hành vi có thể kiểm chứng"
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Phụ thuộc / tài liệu / ảnh minh họa
