@@ -5,7 +5,8 @@ import urllib.error
 import urllib.request
 import uuid
 
-base = sys.argv[1].rstrip('/') if len(sys.argv) > 1 else 'http://127.0.0.1:8080/api'
+args = [arg for arg in sys.argv[1:] if not arg.startswith('--')]
+base = args[0].rstrip('/') if args else 'http://127.0.0.1:8080/api'
 
 
 def request(path, expected, body=None, token=None):
@@ -44,3 +45,10 @@ for role in ['STUDENT', 'INSTRUCTOR']:
     request('/auth/logout', 200, {'refreshToken': refreshed['refreshToken']})
     request('/auth/refresh', 401, {'refreshToken': refreshed['refreshToken']})
     print(role + ': register/login/me/permissions/validation/refresh/logout PASS')
+
+if '--check-seeded-admin' in sys.argv:
+    # Only use this flag against a fresh local/CI database with the repository demo seed.
+    admin = request('/auth/login', 200, {'email': 'admin@edumy.vn', 'password': 'Admin@123456'})
+    assert request('/users/me', 200, token=admin['accessToken'])['role'] == 'ADMIN'
+    request('/admin/users', 200, token=admin['accessToken'])
+    print('Seeded ADMIN: login/me/admin-access PASS')
