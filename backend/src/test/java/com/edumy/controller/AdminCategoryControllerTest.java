@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
 @SpringBootTest
 @AutoConfigureMockMvc
 public class AdminCategoryControllerTest {
@@ -42,13 +43,14 @@ public class AdminCategoryControllerTest {
     void testNonAdminReceives403() throws Exception {
         // Gọi không có role admin (anonymous)
         mockMvc.perform(get("/api/admin/categories")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false));
 
         // Gọi với role STUDENT
         mockMvc.perform(get("/api/admin/categories")
-                        .header("X-User-Role", "STUDENT")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("student").roles("STUDENT"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false));
@@ -58,7 +60,7 @@ public class AdminCategoryControllerTest {
     @DisplayName("Admin lấy danh sách categories thành công (200 OK)")
     void testAdminGetCategories() throws Exception {
         mockMvc.perform(get("/api/admin/categories")
-                        .header("X-User-Role", "ADMIN")
+
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -77,7 +79,7 @@ public class AdminCategoryControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/admin/categories")
-                        .header("X-User-Role", "ADMIN")
+
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
@@ -105,7 +107,7 @@ public class AdminCategoryControllerTest {
 
         // Cố gắng xóa category đang có khóa học -> Bắt buộc trả về 409
         mockMvc.perform(delete("/api/admin/categories/" + cat.getId())
-                        .header("X-User-Role", "ADMIN")
+
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false));
@@ -120,7 +122,7 @@ public class AdminCategoryControllerTest {
                 .build());
 
         mockMvc.perform(delete("/api/admin/categories/" + cat.getId())
-                        .header("X-User-Role", "ADMIN")
+
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
