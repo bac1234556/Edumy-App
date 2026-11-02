@@ -23,6 +23,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin Category API", description = "CRUD danh mục khóa học dành cho Quản trị viên (yêu cầu quyền ADMIN)")
 @CrossOrigin(origins = "*")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 public class AdminCategoryController {
 
     private final AdminCategoryService adminCategoryService;

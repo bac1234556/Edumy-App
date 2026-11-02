@@ -144,3 +144,68 @@ Chi tiết phân công từng ngày và từng thành viên xem tại:
    - API có tài liệu trên Swagger, validate dữ liệu đầy đủ.
    - Màn hình Mobile có đủ 3 trạng thái: *Loading*, *Empty Data*, *Error*.
    - Đã kiểm thử trực tiếp trên thiết bị Android hoặc Emulator.
+
+## Xác thực (W7-A4)
+
+- `POST /api/auth/register`: `{email, password, fullName, role}`; role chỉ nhận
+  `STUDENT` hoặc `INSTRUCTOR`, mật khẩu tối thiểu 8 ký tự (tối đa 72 byte UTF-8).
+- `POST /api/auth/login`: `{email, password}`. Cả đăng ký và đăng nhập trả
+  `data: {accessToken, refreshToken, tokenType, expiresIn, user}`.
+- `POST /api/auth/refresh`: `{refreshToken}`. Mỗi lần refresh thay token cũ bằng
+  token mới; cần lưu lại cả hai token. `POST /api/auth/logout` thu hồi refresh token.
+- `GET /api/users/me`: gửi `Authorization: Bearer <accessToken>`.
+- Token thiếu/hết hạn/không hợp lệ trả 401; sai role trả 403. Header role và mock
+  token không được dùng để xác thực. Tài khoản bị khóa không thể login/refresh.
+
+Access token sống 15 phút, refresh token sống 7 ngày và chỉ lưu SHA-256 trong DB.
+Đặt `JWT_SECRET` (ít nhất 32 byte) bằng giá trị riêng trong cấu hình môi trường
+để giữ phiên qua lần khởi động; khi không đặt, backend tạo khóa ngẫu nhiên trong
+bộ nhớ và access token cũ sẽ hết hiệu lực sau restart. Không commit khóa này.
+Đổi `JWT_ACCESS_SECONDS` để cấu hình thời hạn access token. Chỉ dùng HTTPS khi
+triển khai ngoài local.
+
+## Mobile: cấu hình API và phiên đăng nhập
+
+```bash
+cd mobile
+cp .env.example .env
+npm ci
+npm run lint
+npm test -- --runInBand
+npx expo start --clear
+```
+
+`EXPO_PUBLIC_API_URL` bao gồm `/api`. Emulator Android dùng
+`http://10.0.2.2:8080/api`; điện thoại thật dùng IP LAN của máy chạy backend và
+cùng mạng Wi-Fi (không dùng `localhost` của điện thoại). Cần khởi động lại Metro
+sau khi đổi biến. Dùng Expo Go tương thích **SDK 51** hoặc development build;
+bản Expo Go mới nhất có thể không còn hỗ trợ SDK 51.
+
+Ứng dụng dùng Expo Router với `(auth)`, `(student)`, `(instructor)`, `(admin)`.
+Trang chào hiển thị kết quả thật từ `/api/health`, có trạng thái đang tải,
+chưa có dữ liệu và lỗi kèm nút thử lại. Token được lưu chung một bản ghi trong
+SecureStore, khôi phục khi mở app. Các request 401 dùng chung một lần refresh,
+lưu token mới rồi retry một lần; refresh token không hợp lệ sẽ xóa phiên.
+Mỗi nhóm route chặn người dùng chưa đăng nhập hoặc sai role. API vẫn là nơi
+kiểm tra quyền cuối cùng. Test Android cần kiểm tra health UP, mở lại app và
+luồng điều hướng theo role; bundle/lint không thay thế kiểm thử thiết bị.
+
+## Kiểm tra luồng đăng ký và đăng nhập
+
+Trong app, chọn **Tạo tài khoản**, nhập họ tên, email, mật khẩu từ 8 ký tự và
+chọn Học viên hoặc Giảng viên. Đăng ký thành công mở màn đăng nhập; đăng nhập
+sẽ lưu phiên và mở đúng nhóm route. ADMIN chỉ được cấp bởi hệ thống, không có
+lựa chọn đăng ký admin. Các form khóa nút gửi khi đang xử lý và hiển thị lỗi từ
+server. Đăng xuất xóa token cục bộ và cố gắng thu hồi refresh token trên server.
+
+Khi backend đang chạy với MySQL, chạy:
+
+```bash
+cd backend
+python3 scripts/smoke_auth.py
+```
+
+Script tạo tài khoản thử ngẫu nhiên, kiểm tra register/login/me, 403 cho admin,
+409 email trùng, 401 mật khẩu sai, refresh rotation và logout; không in token.
+CI chạy script với MySQL 8 thật sau build, cùng lint, test mobile và bundle Android.
+Kiểm thử tự động không thay thế review PR độc lập hoặc thử ứng dụng trên thiết bị.

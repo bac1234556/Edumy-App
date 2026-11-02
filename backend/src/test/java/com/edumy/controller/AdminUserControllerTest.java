@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
 @SpringBootTest
 @AutoConfigureMockMvc
 public class AdminUserControllerTest {
@@ -44,13 +45,14 @@ public class AdminUserControllerTest {
     void testNonAdminAccessUsersReturns403() throws Exception {
         // Không có role
         mockMvc.perform(get("/api/admin/users")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false));
 
         // Role STUDENT
         mockMvc.perform(get("/api/admin/users")
-                        .header("X-User-Role", "STUDENT")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("student").roles("STUDENT"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false));
@@ -60,7 +62,7 @@ public class AdminUserControllerTest {
     @DisplayName("Admin lấy danh sách người dùng thành công có phân trang (200 OK)")
     void testAdminGetUsers() throws Exception {
         mockMvc.perform(get("/api/admin/users?page=0&size=10")
-                        .header("X-User-Role", "ADMIN")
+
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -73,7 +75,7 @@ public class AdminUserControllerTest {
     @DisplayName("Admin tìm kiếm người dùng theo từ khóa và lọc theo Role")
     void testAdminSearchAndFilterUsers() throws Exception {
         mockMvc.perform(get("/api/admin/users?keyword=Học Viên&role=STUDENT&page=0&size=5")
-                        .header("X-User-Role", "ADMIN")
+
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
