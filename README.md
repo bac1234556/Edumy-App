@@ -89,6 +89,94 @@ Chi tiết phân công từng ngày và từng thành viên xem tại:
 
 ---
 
+## 🚀 Hướng Dẫn Cài Đặt & Chạy Dự Án (Step-by-Step Setup)
+
+> Mục tiêu: Đảm bảo bất kỳ thành viên nào trong nhóm hoặc người chấm khi clone dự án về đều có thể tự cài đặt và chạy thành công mà không gặp trở ngại.
+
+### 1. Yêu cầu môi trường chuẩn bị (Prerequisites)
+- **Java Development Kit (JDK):** Phiên bản **21** (Khuyên dùng [Eclipse Temurin 21](https://adoptium.net/) hoặc Oracle OpenJDK 21).
+- **Node.js:** Phiên bản **v18.x** hoặc **v20.x LTS** kèm `npm` (hoặc `yarn`).
+- **Docker & Docker Compose:** Đã cài đặt [Docker Desktop](https://www.docker.com/products/docker-desktop/) (dùng để chạy container MySQL 8).
+- **Thiết bị chạy Mobile:**
+  - Thiết bị Android thật cài sẵn ứng dụng **Expo Go** từ Google Play Store, **hoặc**
+  - Trình giả lập Android Studio (Android Emulator).
+
+---
+
+### 2. Khởi động Cơ sở dữ liệu (MySQL 8)
+Dự án đã cấu hình sẵn file `docker-compose.yml` chuẩn tại thư mục gốc:
+
+```bash
+# Tại thư mục gốc của dự án (Edumy-App):
+docker compose up -d
+```
+
+*Thông số kết nối mặc định của CSDL:*
+- **Host / Port:** `localhost:3306`
+- **Database:** `edumy_db`
+- **Username:** `edumy_user`
+- **Password:** `edumy_password`
+
+---
+
+### 3. Cài đặt và Chạy Backend (Spring Boot 3 API)
+
+1. Mở cửa sổ Terminal và di chuyển vào thư mục `backend`:
+   ```bash
+   cd backend
+   ```
+
+2. Khởi chạy ứng dụng Spring Boot:
+   - Trên **Windows (PowerShell / CMD)**:
+     ```powershell
+     mvn spring-boot:run
+     ```
+   - *Cách khác:* Mở thư mục `backend` bằng **IntelliJ IDEA**, đợi Maven đồng bộ thư viện (dependencies) và nhấn nút **Run** tại file `com.edumy.BackendApplication`.
+
+3. Cơ chế **Flyway Migration** sẽ tự động khởi tạo toàn bộ bảng trong cơ sở dữ liệu và nạp dữ liệu mẫu ban đầu (admin user, danh mục, v.v.).
+
+4. **Kiểm tra hoạt động:**
+   - Truy cập tài liệu API tự động (Swagger UI):  
+     👉 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+   - Kiểm tra API Docs JSON:  
+     👉 [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+---
+
+### 4. Cài đặt và Chạy Ứng dụng Mobile (React Native / Expo)
+
+1. Mở một cửa sổ Terminal mới và di chuyển vào thư mục `mobile`:
+   ```bash
+   cd mobile
+   ```
+
+2. Cài đặt các gói phụ thuộc (Dependencies):
+   ```bash
+   npm install
+   ```
+
+3. Khởi chạy Expo Dev Server:
+   ```bash
+   npm start
+   # hoặc: npx expo start
+   ```
+
+4. **Trải nghiệm ứng dụng:**
+   - **Trên điện thoại Android thật:** Mở ứng dụng **Expo Go**, chọn *Scan QR Code* và quét mã QR hiển thị trên màn hình Terminal (lưu ý điện thoại và máy tính kết nối cùng mạng Wi-Fi hoặc sử dụng `npx expo start --tunnel`).
+   - **Trên Android Emulator:** Nhấn phím `a` trên cửa sổ Terminal sau khi Expo khởi động.
+   - **Trên Trình duyệt Web:** Nhấn phím `w` trên Terminal để chạy bản xem trước giao diện.
+
+---
+
+### 5. Kiểm thử các màn hình trên ứng dụng Mobile
+Ứng dụng đã được tích hợp thanh điều hướng nhanh ở cuối màn hình giúp việc chấm điểm và review thuận tiện:
+- 🏠 **Trang chủ (Home):** Danh mục khóa học, thanh tìm kiếm, danh sách khóa học nổi bật (Issue [W7-B3]).
+- 📚 **Khóa học (Course Detail):** Chi tiết bài giảng, thông tin giảng viên, đề cương chương học.
+- 🛡️ **Admin Dashboard:** 4 thẻ chỉ số thống kê (Học viên, Khóa học, Doanh thu, Khóa chờ duyệt), lối tắt tác vụ nhanh và nhật ký hoạt động gần đây (Issue [W7-E3]).
+- 👥 **Quản lý người dùng (Users):** Danh sách người dùng, thanh tìm kiếm họ tên/email, chip lọc theo vai trò (*Tất cả / Học viên / Giảng viên / Quản trị viên*), trạng thái hoạt động và tính năng khóa/mở khóa tài khoản (Issue [W7-E3]).
+
+---
+
 ## 💡 Giá trị & Tính ứng dụng thực tế
 
 - 🎓 **Học viên:** Tự học linh hoạt mọi lúc mọi nơi, ghi nhớ tiến độ bài học, nhận chứng chỉ hoàn thành xác thực.
