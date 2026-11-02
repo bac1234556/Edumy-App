@@ -15,6 +15,7 @@ import { CourseCard } from '../components/common/CourseCard';
 import { CategoryChip } from '../components/common/CategoryChip';
 import { CATEGORIES_MOCK } from '../mock/categoriesMock';
 import { COURSES_MOCK } from '../mock/coursesMock';
+import { api } from '../api/client';
 
 export const HomeScreen = ({ navigation }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState(0);
@@ -136,7 +137,7 @@ export const HomeScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesContainer}
         >
-          {CATEGORIES_MOCK.map((cat) => (
+          {(categories || CATEGORIES_MOCK).map((cat) => (
             <CategoryChip
               key={cat.id}
               name={cat.name}
