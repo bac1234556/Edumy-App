@@ -209,3 +209,9 @@ Script tạo tài khoản thử ngẫu nhiên, kiểm tra register/login/me, 403
 409 email trùng, 401 mật khẩu sai, refresh rotation và logout; không in token.
 CI chạy script với MySQL 8 thật sau build, cùng lint, test mobile và bundle Android.
 Kiểm thử tự động không thay thế review PR độc lập hoặc thử ứng dụng trên thiết bị.
+
+DB demo có admin `admin@edumy.vn` với mật khẩu công khai `Admin@123456` theo seed
+của dự án. Chỉ dùng tài khoản này cho local/demo và đổi thông tin xác thực trước
+khi triển khai. Migration bổ sung sửa hash seed cũ bị sai, có điều kiện giữ nguyên
+mật khẩu đã tùy chỉnh. Trên DB local/CI mới, thêm `--check-seeded-admin` khi chạy
+smoke script để kiểm tra cả login admin và quyền truy cập admin.

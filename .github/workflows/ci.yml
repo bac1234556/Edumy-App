@@ -71,7 +71,7 @@ jobs:
             echo 'Backend failed to become ready; see backend-smoke artifact.' >&2
             exit 1
           fi
-          python3 scripts/smoke_auth.py
+          python3 scripts/smoke_auth.py --check-seeded-admin
       - name: Upload test reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
