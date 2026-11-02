@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,10 +13,23 @@ import {
 import { RatingStars } from '../components/common/RatingStars';
 import { PriceTag } from '../components/common/PriceTag';
 import { COURSES_MOCK } from '../mock/coursesMock';
+import { api } from '../api/client';
 
 export const CourseDetailScreen = ({ route, navigation }) => {
   const courseId = route?.params?.courseId || 1;
-  const course = COURSES_MOCK.find((c) => c.id === courseId) || COURSES_MOCK[0];
+  const [course, setCourse] = useState(() => COURSES_MOCK.find((c) => c.id === courseId) || COURSES_MOCK[0]);
+
+  useEffect(() => {
+    let active = true;
+    api.get('/courses/' + courseId)
+      .then((res) => {
+        if (active && res?.data?.data) {
+          setCourse(res.data.data);
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [courseId]);
 
   const [expandedSections, setExpandedSections] = useState({ 1: true });
   const [isWishlisted, setIsWishlisted] = useState(false);
