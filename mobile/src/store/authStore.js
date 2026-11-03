@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 const KEY = 'edumy.auth.session';
@@ -9,6 +10,43 @@ export const roleHome = (role) => ({
 const valid = (session) => session && typeof session.accessToken === 'string' && session.accessToken.length > 0
   && typeof session.refreshToken === 'string' && session.refreshToken.length > 0
   && ['STUDENT', 'INSTRUCTOR', 'ADMIN'].includes(session.user?.role);
+
+const webStorage = {
+  getItem: (k) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage.getItem(k);
+      }
+    } catch {
+      /* ignore storage errors */
+    }
+    return null;
+  },
+  setItem: (k, v) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(k, v);
+      }
+    } catch {
+      /* ignore storage errors */
+    }
+  },
+  deleteItem: (k) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(k);
+      }
+    } catch {
+      /* ignore storage errors */
+    }
+  },
+};
+
+const storage = {
+  getItemAsync: (k) => (Platform.OS === 'web' ? Promise.resolve(webStorage.getItem(k)) : SecureStore.getItemAsync(k)),
+  setItemAsync: (k, v) => (Platform.OS === 'web' ? Promise.resolve(webStorage.setItem(k, v)) : SecureStore.setItemAsync(k, v)),
+  deleteItemAsync: (k) => (Platform.OS === 'web' ? Promise.resolve(webStorage.deleteItem(k)) : SecureStore.deleteItemAsync(k)),
+};
 
 let revision = 0;
 let storageWork = Promise.resolve();
@@ -24,14 +62,14 @@ export const useAuthStore = create((set) => ({
   hydrate: async () => {
     const currentRevision = revision;
     try {
-      const stored = await enqueueStorage(() => SecureStore.getItemAsync(KEY));
+      const stored = await enqueueStorage(() => storage.getItemAsync(KEY));
       if (revision !== currentRevision) return;
       const session = stored ? JSON.parse(stored) : null;
       if (session && !valid(session)) throw new Error('Phiên đăng nhập không hợp lệ');
       set({ session, hydrated: true, storageError: null });
     } catch {
       if (revision !== currentRevision) return;
-      await enqueueStorage(() => SecureStore.deleteItemAsync(KEY)).catch(() => {});
+      await enqueueStorage(() => storage.deleteItemAsync(KEY)).catch(() => {});
       if (revision !== currentRevision) return;
       set({ session: null, hydrated: true, storageError: 'Không thể khôi phục phiên. Vui lòng đăng nhập lại.' });
     }
@@ -39,14 +77,14 @@ export const useAuthStore = create((set) => ({
   setSession: async (session) => {
     if (!valid(session)) throw new Error('Phản hồi đăng nhập không hợp lệ');
     const currentRevision = ++revision;
-    await enqueueStorage(() => SecureStore.setItemAsync(KEY, JSON.stringify(session)));
+    await enqueueStorage(() => storage.setItemAsync(KEY, JSON.stringify(session)));
     if (revision === currentRevision) set({ session, storageError: null });
   },
   clearSession: async () => {
     ++revision;
     set({ session: null });
     try {
-      await enqueueStorage(() => SecureStore.deleteItemAsync(KEY));
+      await enqueueStorage(() => storage.deleteItemAsync(KEY));
       set({ storageError: null });
     } catch {
       set({ storageError: 'Không thể xóa phiên trên thiết bị. Vui lòng thử lại.' });

@@ -26,11 +26,11 @@ export default function RootLayout() {
     });
   }, []);
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={{ flex: 1, width: '100%', height: '100%' }}>
       <PaperProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
           {hydrated ? <Stack screenOptions={{ headerShown: false }} /> : (
-            <View style={{ flex: 1, justifyContent: 'center' }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <ActivityIndicator accessibilityLabel="Đang khôi phục phiên đăng nhập" />
             </View>
           )}
