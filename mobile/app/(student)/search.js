@@ -18,3 +18,4 @@ export default function SearchRoute() {
 
   return <SearchScreen navigation={navigation} route={{ params }} />;
 }
+
