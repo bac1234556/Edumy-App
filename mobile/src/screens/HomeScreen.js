@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,33 +18,58 @@ import { COURSES_MOCK } from '../mock/coursesMock';
 import { api } from '../api/client';
 
 export const HomeScreen = ({ navigation }) => {
+  const [categories, setCategories] = useState(CATEGORIES_MOCK);
   const [selectedCategoryId, setSelectedCategoryId] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   // 3 UI States
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [courses, setCourses] = useState(COURSES_MOCK);
+  const [courses, setCourses] = useState([]);
 
-  const fetchCourses = () => {
+  const fetchCoursesAndCategories = useCallback(async () => {
     setIsLoading(true);
     setHasError(false);
-    // Simulate fast mock load
-    setTimeout(() => {
+    try {
+      const [coursesRes, catRes] = await Promise.allSettled([
+        api.get('/courses', { params: { page: 0, size: 20 } }),
+        api.get('/categories'),
+      ]);
+
+      let loadedCourses = [];
+      if (coursesRes.status === 'fulfilled' && coursesRes.value?.data?.data) {
+        const raw = coursesRes.value.data.data;
+        loadedCourses = Array.isArray(raw) ? raw : (raw.content || []);
+      }
+
+      if (loadedCourses.length > 0) {
+        setCourses(loadedCourses);
+      } else {
+        setCourses(COURSES_MOCK);
+      }
+
+      if (catRes.status === 'fulfilled' && Array.isArray(catRes.value?.data?.data)) {
+        if (catRes.value.data.data.length > 0) {
+          setCategories(catRes.value.data.data);
+        }
+      }
+    } catch {
+      // Fallback gracefully to mock data
       setCourses(COURSES_MOCK);
+    } finally {
       setIsLoading(false);
       setRefreshing(false);
-    }, 400);
-  };
+    }
+  }, []);
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    fetchCoursesAndCategories();
+  }, [fetchCoursesAndCategories]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchCourses();
+    fetchCoursesAndCategories();
   };
 
   // Filter courses by category and search keyword
@@ -67,6 +92,12 @@ export const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const handleSearchSubmit = () => {
+    if (navigation && navigation.navigate) {
+      navigation.navigate('Search', { initialKeyword: searchKeyword });
+    }
+  };
+
   // 1. Loading State View
   if (isLoading && !refreshing) {
     return (
@@ -84,7 +115,7 @@ export const HomeScreen = ({ navigation }) => {
         <Text style={styles.errorIcon}>⚠️</Text>
         <Text style={styles.errorTitle}>Không thể kết nối đến máy chủ</Text>
         <Text style={styles.stateText}>Vui lòng kiểm tra lại kết nối mạng và thử lại.</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={fetchCourses}>
+        <TouchableOpacity style={styles.retryBtn} onPress={fetchCoursesAndCategories}>
           <Text style={styles.retryBtnText}>Thử lại</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -105,12 +136,20 @@ export const HomeScreen = ({ navigation }) => {
             placeholderTextColor="#94A3B8"
             value={searchKeyword}
             onChangeText={setSearchKeyword}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
           />
           {searchKeyword.length > 0 && (
             <TouchableOpacity onPress={() => setSearchKeyword('')}>
               <Text style={styles.clearSearch}>✕</Text>
             </TouchableOpacity>
           )}
+          <TouchableOpacity
+            style={styles.filterBtn}
+            onPress={handleSearchSubmit}
+          >
+            <Text style={styles.filterBtnText}>Lọc</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -137,7 +176,7 @@ export const HomeScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesContainer}
         >
-          {(categories || CATEGORIES_MOCK).map((cat) => (
+          {categories.map((cat) => (
             <CategoryChip
               key={cat.id}
               name={cat.name}
@@ -248,6 +287,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#94A3B8',
     padding: 4,
+    marginRight: 4,
+  },
+  filterBtn: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    marginLeft: 4,
+  },
+  filterBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   scrollContent: {
     paddingBottom: 40,
