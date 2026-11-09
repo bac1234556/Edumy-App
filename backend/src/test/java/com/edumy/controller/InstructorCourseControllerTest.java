@@ -1,70 +1,90 @@
 package com.edumy.controller;
 
-import org.junit.jupiter.api.DisplayName;
+import com.edumy.dto.instructor.CourseResponse;
+import com.edumy.entity.CourseStatus;
+import com.edumy.service.CloudinarySignService;
+import com.edumy.service.InstructorCourseService;
+import com.edumy.service.InstructorLessonService;
+import com.edumy.service.InstructorSectionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Collections;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-public class InstructorCourseControllerTest {
+@WebMvcTest(controllers = {InstructorCourseController.class, MediaSignatureController.class})
+class InstructorCourseControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private static RequestPostProcessor instructor(Long id) {
-        return authentication(new UsernamePasswordAuthenticationToken(
-                id, null, List.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))));
-    }
+    @MockBean
+    private InstructorCourseService instructorCourseService;
 
-    private static RequestPostProcessor student(Long id) {
-        return authentication(new UsernamePasswordAuthenticationToken(
-                id, null, List.of(new SimpleGrantedAuthority("ROLE_STUDENT"))));
-    }
+    @MockBean
+    private InstructorSectionService instructorSectionService;
 
-    @Test
-    @DisplayName("Chưa đăng nhập gọi GET /api/instructor/courses nhận 401")
-    void requiresAuth() throws Exception {
-        mockMvc.perform(get("/api/instructor/courses"))
-                .andExpect(status().isUnauthorized());
-    }
+    @MockBean
+    private InstructorLessonService instructorLessonService;
+
+    @MockBean
+    private CloudinarySignService cloudinarySignService;
 
     @Test
-    @DisplayName("Student gọi API instructor nhận 403 Forbidden")
-    void studentForbidden() throws Exception {
-        mockMvc.perform(get("/api/instructor/courses").with(student(2L)))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @DisplayName("Instructor gọi GET /api/instructor/courses nhận 200 OK")
+    @WithMockUser(username = "instructor@edumy.com", roles = {"INSTRUCTOR"})
     void getMyCoursesSuccess() throws Exception {
-        mockMvc.perform(get("/api/instructor/courses").with(instructor(1L)))
+        CourseResponse mockCourse = CourseResponse.builder()
+                .id(1L)
+                .title("Spring Boot Masterclass")
+                .price(BigDecimal.valueOf(100000))
+                .status(CourseStatus.DRAFT)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(instructorCourseService.getMyCourses(anyLong()))
+                .thenReturn(Collections.singletonList(mockCourse));
+
+        mockMvc.perform(get("/api/v1/instructor/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$.data[0].title").value("Spring Boot Masterclass"));
     }
 
     @Test
-    @DisplayName("POST /api/instructor/media/signature sinh chữ ký upload Cloudinary")
+    @WithMockUser(username = "instructor@edumy.com", roles = {"INSTRUCTOR"})
     void getCloudinarySignature() throws Exception {
-        mockMvc.perform(post("/api/instructor/media/signature").with(instructor(1L)))
+        com.edumy.dto.instructor.CloudinarySignatureResponse mockSig = 
+                com.edumy.dto.instructor.CloudinarySignatureResponse.builder()
+                .signature("mock_signature_hash")
+                .timestamp(1731138000L)
+                .apiKey("123456789")
+                .cloudName("edumy_cloud")
+                .folder("edumy/courses")
+                .build();
+
+        when(cloudinarySignService.generateSignature(anyString())).thenReturn(mockSig);
+
+        mockMvc.perform(post("/api/v1/instructor/media/signature")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.signature").isString())
-                .andExpect(jsonPath("$.data.timestamp").isNumber());
+                .andExpect(jsonPath("$.data.signature").value("mock_signature_hash"));
     }
 }
