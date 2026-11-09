@@ -89,16 +89,16 @@ class AuthControllerTest {
                         "password", "Password123!"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
         String oldRefresh = login.get("refreshToken").asText();
-        JsonNode refreshed = mapper.readTree(postJson("/api/auth/refresh", Map.of("refreshToken", oldRefresh))
+        JsonNode refreshed = mapper.readTree(postJson("/api/v1/auth/refresh-token", Map.of("refreshToken", oldRefresh))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
         assertNotEquals(oldRefresh, refreshed.get("refreshToken").asText());
         assertTrue(refreshTokens.findAll().stream().noneMatch(t -> t.getTokenHash().equals(oldRefresh)));
-        postJson("/api/auth/refresh", Map.of("refreshToken", oldRefresh)).andExpect(status().isUnauthorized());
+        postJson("/api/v1/auth/refresh-token", Map.of("refreshToken", oldRefresh)).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/users/me").header("Authorization", "Bearer " + refreshed.get("accessToken").asText()))
                 .andExpect(status().isOk());
         postJson("/api/auth/logout", Map.of("refreshToken", refreshed.get("refreshToken").asText()))
                 .andExpect(status().isOk());
-        postJson("/api/auth/refresh", Map.of("refreshToken", refreshed.get("refreshToken").asText()))
+        postJson("/api/v1/auth/refresh-token", Map.of("refreshToken", refreshed.get("refreshToken").asText()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -110,11 +110,11 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized());
         postJson("/api/auth/login", Map.of("email", email(), "password", "wrong-password"))
                 .andExpect(status().isUnauthorized());
-        postJson("/api/auth/refresh", Map.of("refreshToken", "unknown")).andExpect(status().isUnauthorized());
+        postJson("/api/v1/auth/refresh-token", Map.of("refreshToken", "unknown")).andExpect(status().isUnauthorized());
         var tokens = refreshTokens.findAll();
         tokens.forEach(t -> t.setExpiresAt(Instant.now().minusSeconds(1)));
         refreshTokens.saveAll(tokens);
-        postJson("/api/auth/refresh", Map.of("refreshToken", registered.get("refreshToken").asText()))
+        postJson("/api/v1/auth/refresh-token", Map.of("refreshToken", registered.get("refreshToken").asText()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -149,7 +149,7 @@ class AuthControllerTest {
         users.save(user);
         postJson("/api/auth/login", Map.of("email", email, "password", "Password123!"))
                 .andExpect(status().isUnauthorized());
-        postJson("/api/auth/refresh", Map.of("refreshToken", result.get("refreshToken").asText()))
+        postJson("/api/v1/auth/refresh-token", Map.of("refreshToken", result.get("refreshToken").asText()))
                 .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/users/me").header("Authorization", "Bearer " + result.get("accessToken").asText()))
                 .andExpect(status().isUnauthorized());
