@@ -1,29 +1,31 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Image, ScrollView, View } from 'react-native';
 import { ActivityIndicator, Button, Card, Divider, HelperText, RadioButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { errorMessage } from '../api/client';
-import { createOrder, fetchCheckoutCourse } from '../api/learning';
+import { MY_COURSES_KEY, checkoutCourse, fetchCheckoutCourse } from '../api/learning';
 import { PriceTag } from '../components/common/PriceTag';
-
-const PAYMENT_METHODS = [
-  { value: 'MOCK', label: 'Thanh toán mô phỏng (Mock)' },
-  { value: 'VNPAY', label: 'VNPay Sandbox (sắp có)', disabled: true },
-];
 
 function Centered({ children }) {
   return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, gap: 12 }}>{children}</View>;
 }
 
-export function CheckoutScreen({ courseId, onBack, onDone }) {
-  const [paymentMethod, setPaymentMethod] = useState('MOCK');
+export function CheckoutScreen({ courseId, onBack, onSuccess, onLearn }) {
+  const queryClient = useQueryClient();
   const course = useQuery({
     queryKey: ['checkout-course', courseId],
     queryFn: () => fetchCheckoutCourse(courseId),
     enabled: !!courseId,
   });
-  const order = useMutation({ mutationFn: () => createOrder({ courseId, paymentMethod }) });
+  const order = useMutation({
+    mutationFn: () => checkoutCourse({ courseId, paymentMethod: 'MOCK' }),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: MY_COURSES_KEY });
+      onSuccess?.(result);
+    },
+  });
+  const alreadyOwned = order.error?.response?.status === 409;
 
   let body;
   if (!courseId || (course.isSuccess && !course.data)) {
@@ -42,15 +44,6 @@ export function CheckoutScreen({ courseId, onBack, onDone }) {
         <Button mode="contained" onPress={() => course.refetch()}>Thử lại</Button>
       </Centered>
     );
-  } else if (order.isSuccess) {
-    body = (
-      <Centered>
-        <Text variant="headlineSmall">Đã tạo đơn hàng</Text>
-        <Text testID="checkout-txn">Mã giao dịch: {order.data.txnRef}</Text>
-        <Text>Trạng thái: {order.data.status === 'PAID' ? 'Đã thanh toán' : 'Chờ thanh toán'}</Text>
-        <Button mode="contained" onPress={onDone}>Đến Khóa học của tôi</Button>
-      </Centered>
-    );
   } else {
     const c = course.data;
     const isFree = Number(c.price) === 0;
@@ -67,11 +60,10 @@ export function CheckoutScreen({ courseId, onBack, onDone }) {
         {!isFree && (
           <View>
             <Text variant="titleSmall">Phương thức thanh toán</Text>
-            <RadioButton.Group onValueChange={setPaymentMethod} value={paymentMethod}>
-              {PAYMENT_METHODS.map((m) => (
-                <RadioButton.Item key={m.value} mode="android" value={m.value} label={m.label} disabled={m.disabled} />
-              ))}
+            <RadioButton.Group onValueChange={() => {}} value="MOCK">
+              <RadioButton.Item mode="android" value="MOCK" label="Thanh toán mô phỏng (Mock)" />
             </RadioButton.Group>
+            <Text variant="bodySmall">Thanh toán mô phỏng luôn thành công, không trừ tiền thật.</Text>
           </View>
         )}
 
@@ -81,15 +73,19 @@ export function CheckoutScreen({ courseId, onBack, onDone }) {
           <PriceTag price={c.price} originalPrice={c.originalPrice} size="large" />
         </View>
         <HelperText type="error" visible={order.isError}>{order.isError ? errorMessage(order.error) : ''}</HelperText>
-        <Button
-          mode="contained"
-          testID="checkout-pay"
-          loading={order.isPending}
-          disabled={order.isPending}
-          onPress={() => order.mutate()}
-        >
-          {isFree ? 'Đăng ký miễn phí' : 'Thanh toán'}
-        </Button>
+        {alreadyOwned ? (
+          <Button mode="contained" testID="checkout-learn" onPress={() => onLearn?.(courseId)}>Vào học</Button>
+        ) : (
+          <Button
+            mode="contained"
+            testID="checkout-pay"
+            loading={order.isPending}
+            disabled={order.isPending}
+            onPress={() => order.mutate()}
+          >
+            {isFree ? 'Đăng ký miễn phí' : 'Thanh toán'}
+          </Button>
+        )}
       </ScrollView>
     );
   }

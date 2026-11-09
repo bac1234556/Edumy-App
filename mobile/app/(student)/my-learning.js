@@ -7,7 +7,7 @@ export default function MyLearning() {
     <MyLearningScreen
       onBack={() => router.back()}
       onExplore={() => router.push('/(student)/catalog')}
-      onOpenCourse={(item) => router.push({ pathname: '/(student)/courses/[id]', params: { id: item.courseId } })}
+      onOpenCourse={(item) => router.push({ pathname: '/(student)/learn/[courseId]', params: { courseId: item.courseId } })}
     />
   );
 }
