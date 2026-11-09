@@ -102,7 +102,7 @@ export const AdminDashboardScreen = ({ navigation }) => {
           <View style={styles.welcomeInfo}>
             <Text style={styles.welcomeGreeting}>Xin chào, Quản trị viên! 👋</Text>
             <Text style={styles.welcomeDesc}>
-              Hệ thống đang hoạt động ổn định. Có 8 khóa học đang chờ bạn kiểm duyệt.
+              Hệ thống đang hoạt động ổn định. Xem hàng chờ để kiểm duyệt khóa học mới.
             </Text>
           </View>
           <View style={styles.statusBadge}>
@@ -187,13 +187,17 @@ export const AdminDashboardScreen = ({ navigation }) => {
             <Text style={styles.actionArrow}>›</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.actionItem}
+            onPress={() => navigation?.navigate?.('CourseReviewQueue')}
+            activeOpacity={0.7}
+          >
             <View style={[styles.actionIconBox, { backgroundColor: '#FEF2F2' }]}>
               <Text style={styles.actionIcon}>📋</Text>
             </View>
             <View style={styles.actionTextGroup}>
               <Text style={styles.actionTitle}>Hàng chờ duyệt khóa học</Text>
-              <Text style={styles.actionDesc}>8 bài giảng mới đang chờ kiểm duyệt nội dung</Text>
+              <Text style={styles.actionDesc}>Xem nội dung và xử lý các khóa học đang chờ duyệt</Text>
             </View>
             <Text style={styles.actionArrow}>›</Text>
           </TouchableOpacity>

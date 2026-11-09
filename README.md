@@ -203,6 +203,7 @@ docker compose up -d
 - 🛡️ **Admin Dashboard:** 4 thẻ chỉ số thống kê (Học viên, Khóa học, Doanh thu, Khóa chờ duyệt), lối tắt tác vụ nhanh và nhật ký hoạt động gần đây (Issue [W7-E3]).
 - 👥 **Quản lý người dùng (Users):** Danh sách người dùng, thanh tìm kiếm họ tên/email, chip lọc theo vai trò (*Tất cả / Học viên / Giảng viên / Quản trị viên*), trạng thái hoạt động và tính năng khóa/mở khóa tài khoản (Issue [W7-E3]).
 - 📝 **Duyệt khóa học & Thông báo:** API cho Admin duyệt hoặc từ chối khóa học kèm lý do (Issue #47 [W8-E1]), gửi thông báo kết quả lập tức cho giảng viên.
+- 📋 **Hàng chờ duyệt trên Mobile:** Admin xem chi tiết giáo trình và video, phê duyệt có xác nhận hoặc từ chối kèm lý do bắt buộc (Issue #52 [W8-E2]).
 
 ---
 
