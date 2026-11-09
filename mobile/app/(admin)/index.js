@@ -8,6 +8,8 @@ export default function AdminHome() {
     navigate: (screen) => {
       if (screen === 'UserManagement') {
         router.push('/(admin)/users');
+      } else if (screen === 'CourseReviewQueue') {
+        router.push('/(admin)/review-queue');
       }
     },
     goBack: () => router.back(),
