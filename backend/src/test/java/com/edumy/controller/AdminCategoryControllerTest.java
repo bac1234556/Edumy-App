@@ -68,6 +68,25 @@ public class AdminCategoryControllerTest {
     }
 
     @Test
+    @DisplayName("Danh sách danh mục công khai được đồng bộ cho bộ lọc học viên")
+    void testPublicCategoryListIncludesAdminChanges() throws Exception {
+        String slug = "public-category-" + System.currentTimeMillis();
+        CategoryRequest request = CategoryRequest.builder()
+                .name("Public Category " + System.currentTimeMillis())
+                .slug(slug)
+                .build();
+        mockMvc.perform(post("/api/v1/admin/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/categories")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.slug == '" + slug + "')]").isNotEmpty());
+    }
+
+    @Test
     @DisplayName("Admin tạo category mới thành công (201 CREATED)")
     void testAdminCreateCategory() throws Exception {
         String uniqueSlug = "test-cat-" + System.currentTimeMillis();

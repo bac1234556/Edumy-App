@@ -156,6 +156,31 @@ class AuthControllerTest {
     }
 
     @Test
+    void lockingUserThroughAdminApiImmediatelyRejectsExistingAccessToken() throws Exception {
+        JsonNode studentTokens = register(email(), Role.STUDENT);
+        User student = users.findByEmail(studentTokens.get("user").get("email").asText()).orElseThrow();
+        User admin = users.save(User.builder().email(email()).fullName("Admin")
+                .passwordHash(passwords.encode("Password123!")).role(Role.ADMIN).status(UserStatus.ACTIVE).build());
+
+        mvc.perform(patch("/api/v1/admin/users/{id}/status", admin.getId())
+                        .header("Authorization", "Bearer " + jwt.issue(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("status", "LOCKED"))))
+                .andExpect(status().isConflict());
+
+        mvc.perform(patch("/api/v1/admin/users/{id}/status", student.getId())
+                        .header("Authorization", "Bearer " + jwt.issue(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("status", "LOCKED"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("LOCKED"));
+
+        mvc.perform(get("/api/users/me")
+                        .header("Authorization", "Bearer " + studentTokens.get("accessToken").asText()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void realAdminJwtCanAccessAdminApi() throws Exception {
         User admin = users.save(User.builder().email(email()).fullName("Admin")
                 .passwordHash(passwords.encode("Password123!")).role(Role.ADMIN).status(UserStatus.ACTIVE).build());

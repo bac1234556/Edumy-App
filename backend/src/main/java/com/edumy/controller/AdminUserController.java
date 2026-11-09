@@ -3,22 +3,30 @@ package com.edumy.controller;
 import com.edumy.common.ApiResponse;
 import com.edumy.common.PageResponse;
 import com.edumy.dto.admin.UserResponse;
+import com.edumy.dto.admin.UserStatusRequest;
 import com.edumy.entity.Role;
+import com.edumy.entity.UserStatus;
 import com.edumy.service.AdminUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping({"/api/admin/users", "/api/v1/admin/users"})
 @RequiredArgsConstructor
+@Validated
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin User API", description = "Quản trị danh sách người dùng (yêu cầu quyền ADMIN)")
 @CrossOrigin(origins = "*")
@@ -40,16 +48,23 @@ public class AdminUserController {
             @RequestParam(required = false) Role role,
 
             @Parameter(description = "Số thứ tự trang (0-indexed, mặc định 0)")
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
 
             @Parameter(description = "Số lượng người dùng trên mỗi trang (mặc định 10)")
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
 
             @Parameter(description = "Sắp xếp theo trường, ví dụ: 'createdAt,desc' hoặc 'fullName,asc'")
             @RequestParam(defaultValue = "createdAt,desc") String sort
     ) {
         String[] sortParts = sort.split(",");
         String sortField = sortParts[0];
+        if (!sortField.matches("createdAt|updatedAt|fullName|email|role|status")
+                || (sortParts.length > 1
+                && !sortParts[1].equalsIgnoreCase("asc")
+                && !sortParts[1].equalsIgnoreCase("desc"))
+                || sortParts.length > 2) {
+            throw new IllegalArgumentException("Tham số sắp xếp không hợp lệ");
+        }
         Sort.Direction direction = (sortParts.length > 1 && sortParts[1].equalsIgnoreCase("asc"))
                 ? Sort.Direction.ASC
                 : Sort.Direction.DESC;
@@ -58,5 +73,19 @@ public class AdminUserController {
         PageResponse<UserResponse> response = adminUserService.getUsers(keyword, role, pageable);
 
         return ResponseEntity.ok(ApiResponse.ok(response, "Lấy danh sách người dùng thành công"));
+    }
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Cập nhật trạng thái tài khoản", description = "Khóa hoặc mở khóa tài khoản (ACTIVE | LOCKED).")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UserStatusRequest request,
+            Authentication authentication
+    ) {
+        Object principal = authentication.getPrincipal();
+        Long adminId = principal instanceof Long idValue ? idValue : null;
+        UserStatus status = request.getStatus();
+        UserResponse response = adminUserService.updateStatus(id, status, adminId);
+        return ResponseEntity.ok(ApiResponse.ok(response, "Cập nhật trạng thái tài khoản thành công"));
     }
 }

@@ -202,7 +202,11 @@ export const AdminDashboardScreen = ({ navigation }) => {
             <Text style={styles.actionArrow}>›</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.actionItem}
+            onPress={() => navigation?.navigate?.('CategoryManagement')}
+            activeOpacity={0.7}
+          >
             <View style={[styles.actionIconBox, { backgroundColor: '#ECFDF5' }]}>
               <Text style={styles.actionIcon}>🗂️</Text>
             </View>

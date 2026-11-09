@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
   FlatList,
   Image,
-  ActivityIndicator,
-  StyleSheet,
+  Pressable,
+  RefreshControl,
   SafeAreaView,
   StatusBar,
-  RefreshControl,
-  Alert,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-import { USERS_MOCK } from '../mock/adminMock';
+import { errorMessage } from '../api/client';
+import { fetchAdminUsers, updateAdminUserStatus } from '../api/adminManagement';
+import { useAuthStore } from '../store/authStore';
 
 const ROLES = [
   { key: 'ALL', label: 'Tất cả' },
@@ -21,92 +24,124 @@ const ROLES = [
   { key: 'INSTRUCTOR', label: 'Giảng viên' },
   { key: 'ADMIN', label: 'Quản trị viên' },
 ];
+const PAGE_SIZE = 20;
 
-/**
- * UserManagementScreen - Quản lý người dùng
- * Đáp ứng yêu cầu Issue [W7-E3]:
- * - Danh sách người dùng
- * - Ô tìm kiếm (theo Tên, Email)
- * - Chip Role lọc theo vai trò (STUDENT, INSTRUCTOR, ADMIN)
- * - Đủ 3 trạng thái: Loading / Empty / Error
- * - Hỗ trợ tương tác Khóa / Mở khóa tài khoản (mock toggle)
- */
 export const UserManagementScreen = ({ navigation }) => {
+  const adminId = useAuthStore((state) => state.session?.user?.id);
+  const requestId = useRef(0);
   const [selectedRole, setSelectedRole] = useState('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchText, setSearchText] = useState('');
+  const [keyword, setKeyword] = useState('');
   const [users, setUsers] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [error, setError] = useState('');
+  const [updatingUsers, setUpdatingUsers] = useState({});
 
-  const fetchUsers = () => {
-    setIsLoading(true);
-    setHasError(false);
-    setTimeout(() => {
-      setUsers(USERS_MOCK);
-      setIsLoading(false);
-      setRefreshing(false);
-    }, 400);
-  };
+  const loadUsers = useCallback(async (page = 0, append = false) => {
+    const request = ++requestId.current;
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+      setError('');
+    }
+
+    try {
+      const result = await fetchAdminUsers({
+        page,
+        size: PAGE_SIZE,
+        sort: 'createdAt,desc',
+        ...(keyword ? { keyword } : {}),
+        ...(selectedRole !== 'ALL' ? { role: selectedRole } : {}),
+      });
+      if (request !== requestId.current) return;
+      setUsers((current) => append ? [...current, ...result.content] : result.content);
+      setTotalUsers(result.totalElements);
+      setHasMore(!result.last);
+      setError('');
+    } catch (loadError) {
+      if (request === requestId.current) setError(errorMessage(loadError));
+    } finally {
+      if (request === requestId.current) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+        setIsLoadingMore(false);
+      }
+    }
+  }, [keyword, selectedRole]);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const timer = setTimeout(() => loadUsers(), 250);
+    return () => {
+      clearTimeout(timer);
+      requestId.current += 1;
+    };
+  }, [loadUsers]);
 
   const onRefresh = () => {
-    setRefreshing(true);
-    fetchUsers();
+    setIsRefreshing(true);
+    loadUsers();
   };
 
-  // Lọc người dùng theo Role và từ khóa tìm kiếm
-  const filteredUsers = users.filter((u) => {
-    const matchesRole = selectedRole === 'ALL' || u.role === selectedRole;
-    const matchesQuery =
-      !searchQuery.trim() ||
-      u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesRole && matchesQuery;
-  });
-
-  // Xử lý chuyển đổi trạng thái Khóa / Mở khóa người dùng
-  const handleToggleStatus = (userId) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => {
-        if (user.id === userId) {
-          const newStatus = user.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE';
-          return { ...user, status: newStatus };
-        }
-        return user;
-      })
-    );
+  const loadNextPage = () => {
+    if (!isLoading && !isLoadingMore && hasMore) {
+      return loadUsers(Math.ceil(users.length / PAGE_SIZE), true);
+    }
+    return undefined;
   };
 
-  // Render role badge với màu sắc đặc trưng
-  const renderRoleBadge = (role) => {
-    switch (role) {
-      case 'ADMIN':
-        return (
-          <View style={[styles.roleBadge, { backgroundColor: '#FEE2E2' }]}>
-            <Text style={[styles.roleBadgeText, { color: '#DC2626' }]}>🛡️ Admin</Text>
-          </View>
-        );
-      case 'INSTRUCTOR':
-        return (
-          <View style={[styles.roleBadge, { backgroundColor: '#F3E8FF' }]}>
-            <Text style={[styles.roleBadgeText, { color: '#7E22CE' }]}>👨‍🏫 Giảng viên</Text>
-          </View>
-        );
-      default:
-        return (
-          <View style={[styles.roleBadge, { backgroundColor: '#EFF6FF' }]}>
-            <Text style={[styles.roleBadgeText, { color: '#2563EB' }]}>👨‍🎓 Học viên</Text>
-          </View>
-        );
+  const toggleStatus = async (user) => {
+    const status = user.status === 'ACTIVE' ? 'LOCKED' : 'ACTIVE';
+    setUpdatingUsers((current) => ({ ...current, [user.id]: true }));
+    try {
+      const updated = await updateAdminUserStatus(user.id, status);
+      setUsers((current) => current.map((item) => item.id === user.id ? updated : item));
+    } catch (updateError) {
+      Alert.alert('Không thể cập nhật trạng thái', errorMessage(updateError));
+    } finally {
+      setUpdatingUsers((current) => ({ ...current, [user.id]: false }));
     }
   };
 
-  // 1. Trạng thái Loading
-  if (isLoading && !refreshing) {
+  const renderUser = ({ item }) => {
+    const isActive = item.status === 'ACTIVE';
+    const isCurrentAdmin = Number(item.id) === Number(adminId);
+    return (
+      <View style={styles.userCard}>
+        {item.avatarUrl ? (
+          <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <Text style={styles.avatarInitial}>{(item.fullName || item.email || '?').charAt(0).toUpperCase()}</Text>
+          </View>
+        )}
+        <View style={styles.userInfo}>
+          <Text style={styles.userName} numberOfLines={1}>{item.fullName || 'Chưa cập nhật tên'}</Text>
+          <Text style={styles.email} numberOfLines={1}>{item.email}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.role}>{ROLES.find((role) => role.key === item.role)?.label || item.role}</Text>
+            <Text style={[styles.status, isActive ? styles.active : styles.locked]}>
+              {isActive ? 'Hoạt động' : 'Đã khóa'}
+            </Text>
+          </View>
+        </View>
+        <Switch
+          accessibilityRole="switch"
+          accessibilityLabel={`${isActive ? 'Khóa' : 'Mở khóa'} tài khoản ${item.email}`}
+          value={isActive}
+          disabled={isCurrentAdmin || Boolean(updatingUsers[item.id])}
+          onValueChange={() => toggleStatus(item)}
+          trackColor={{ false: '#FCA5A5', true: '#86EFAC' }}
+        />
+      </View>
+    );
+  };
+
+  if (isLoading && users.length === 0 && !error) {
     return (
       <SafeAreaView style={styles.stateContainer}>
         <ActivityIndicator size="large" color="#2563EB" />
@@ -115,506 +150,119 @@ export const UserManagementScreen = ({ navigation }) => {
     );
   }
 
-  // 2. Trạng thái Error
-  if (hasError) {
+  if (error && users.length === 0) {
     return (
       <SafeAreaView style={styles.stateContainer}>
-        <Text style={styles.stateIcon}>⚠️</Text>
-        <Text style={styles.errorTitle}>Lỗi tải dữ liệu người dùng</Text>
-        <Text style={styles.stateText}>Không thể kết nối đến máy chủ. Vui lòng thử lại.</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={fetchUsers}>
-          <Text style={styles.retryBtnText}>Thử lại</Text>
-        </TouchableOpacity>
+        <Text style={styles.errorTitle}>Không tải được danh sách người dùng</Text>
+        <Text style={styles.stateText}>{error}</Text>
+        <Pressable style={styles.primaryButton} onPress={() => loadUsers()}>
+          <Text style={styles.primaryButtonText}>Thử lại</Text>
+        </Pressable>
       </SafeAreaView>
     );
   }
 
-  // Render từng dòng người dùng
-  const renderUserItem = ({ item }) => {
-    const isBlocked = item.status === 'BLOCKED';
-
-    return (
-      <View style={styles.userCard}>
-        {/* Avatar */}
-        {item.avatarUrl ? (
-          <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
-        ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Text style={styles.avatarInitials}>
-              {item.fullName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-
-        {/* Thông tin chính */}
-        <View style={styles.userInfo}>
-          <View style={styles.nameRow}>
-            <Text style={styles.userName} numberOfLines={1}>
-              {item.fullName}
-            </Text>
-          </View>
-
-          <Text style={styles.userEmail} numberOfLines={1}>
-            {item.email}
-          </Text>
-
-          {item.bio ? (
-            <Text style={styles.userBio} numberOfLines={2}>
-              {item.bio}
-            </Text>
-          ) : null}
-
-          <View style={styles.metaRow}>
-            {renderRoleBadge(item.role)}
-
-            <View
-              style={[
-                styles.statusBadge,
-                isBlocked ? styles.statusBlocked : styles.statusActive,
-              ]}
-            >
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: isBlocked ? '#EF4444' : '#10B981' },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.statusText,
-                  { color: isBlocked ? '#DC2626' : '#059669' },
-                ]}
-              >
-                {isBlocked ? 'Đã khóa' : 'Hoạt động'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Nút Khóa / Mở khóa */}
-        <View style={styles.actionColumn}>
-          <TouchableOpacity
-            style={[
-              styles.statusToggleBtn,
-              isBlocked ? styles.btnUnlock : styles.btnLock,
-            ]}
-            onPress={() => handleToggleStatus(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.statusToggleText,
-                isBlocked ? styles.textUnlock : styles.textLock,
-              ]}
-            >
-              {isBlocked ? 'Mở' : 'Khóa'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation?.goBack?.()}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.backBtnText}>‹ Quay lại</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Quản Lý Người Dùng 👥</Text>
-        <View style={{ width: 60 }} />
+        <Pressable accessibilityRole="button" onPress={() => navigation?.goBack?.()}>
+          <Text style={styles.backButton}>‹ Quay lại</Text>
+        </Pressable>
+        <Text style={styles.title}>Quản lý người dùng</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      {/* Ô tìm kiếm */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Tìm theo họ tên hoặc email..."
-            placeholderTextColor="#94A3B8"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            clearButtonMode="while-editing"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={styles.clearBtn}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Danh sách Chip Role */}
-      <View style={styles.chipsWrapper}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={ROLES}
-          keyExtractor={(item) => item.key}
-          contentContainerStyle={styles.chipsContainer}
-          renderItem={({ item }) => {
-            const isSelected = selectedRole === item.key;
-            return (
-              <TouchableOpacity
-                style={[styles.roleChip, isSelected && styles.roleChipSelected]}
-                onPress={() => setSelectedRole(item.key)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.roleChipText,
-                    isSelected && styles.roleChipTextSelected,
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      </View>
-
-      {/* Thống kê số lượng kết quả */}
-      <View style={styles.countBar}>
-        <Text style={styles.countText}>
-          Tìm thấy <Text style={styles.countBold}>{filteredUsers.length}</Text> tài khoản
-        </Text>
-      </View>
-
-      {/* 3. Trạng thái Empty / Danh sách người dùng */}
-      {filteredUsers.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>🔍</Text>
-          <Text style={styles.emptyTitle}>Không tìm thấy tài khoản nào</Text>
-          <Text style={styles.emptyDesc}>
-            Không có người dùng nào khớp với bộ lọc role hoặc từ khóa "{searchQuery}".
-          </Text>
-          <TouchableOpacity
-            style={styles.resetFilterBtn}
-            onPress={() => {
-              setSelectedRole('ALL');
-              setSearchQuery('');
-            }}
+      <TextInput
+        accessibilityLabel="Tìm kiếm người dùng"
+        style={styles.searchInput}
+        placeholder="Tìm theo họ tên hoặc email..."
+        value={searchText}
+        onChangeText={(text) => {
+          setSearchText(text);
+          setKeyword(text.trim());
+        }}
+      />
+      <View style={styles.roleList}>
+        {ROLES.map((role) => (
+          <Pressable
+            key={role.key}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selectedRole === role.key }}
+            style={[styles.roleChip, selectedRole === role.key && styles.roleChipSelected]}
+            onPress={() => setSelectedRole(role.key)}
           >
-            <Text style={styles.resetFilterText}>Xóa bộ lọc</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredUsers}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderUserItem}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
-          }
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+            <Text style={[styles.roleChipText, selectedRole === role.key && styles.roleChipTextSelected]}>
+              {role.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.countText}>Tìm thấy {totalUsers} tài khoản</Text>
+      {error ? <Text accessibilityRole="alert" style={styles.inlineError}>{error}</Text> : null}
+      <FlatList
+        testID="users-list"
+        data={users}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderUser}
+        contentContainerStyle={styles.listContent}
+        onEndReached={loadNextPage}
+        onEndReachedThreshold={0.4}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+        ListEmptyComponent={(
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Không tìm thấy tài khoản nào</Text>
+            <Text style={styles.stateText}>Thử thay đổi từ khóa hoặc bộ lọc vai trò.</Text>
+          </View>
+        )}
+        ListFooterComponent={isLoadingMore ? <ActivityIndicator style={styles.footer} color="#2563EB" /> : null}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
+  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0',
   },
-  backBtn: {
-    paddingVertical: 6,
-    paddingRight: 10,
-  },
-  backBtnText: {
-    fontSize: 16,
-    color: '#2563EB',
-    fontWeight: '600',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 6,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 42,
-  },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
+  backButton: { color: '#2563EB', fontSize: 16, fontWeight: '600' },
+  title: { color: '#0F172A', fontSize: 17, fontWeight: '700' },
+  headerSpacer: { width: 70 },
   searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#0F172A',
-    paddingVertical: 0,
+    margin: 16, marginBottom: 10, paddingHorizontal: 14, paddingVertical: 10,
+    borderRadius: 10, backgroundColor: '#FFFFFF', color: '#0F172A',
   },
-  clearBtn: {
-    fontSize: 14,
-    color: '#94A3B8',
-    padding: 4,
-  },
-  chipsWrapper: {
-    backgroundColor: '#FFFFFF',
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  chipsContainer: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  roleChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
-    marginRight: 8,
-  },
-  roleChipSelected: {
-    backgroundColor: '#2563EB',
-  },
-  roleChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  roleChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  countBar: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  countText: {
-    fontSize: 12,
-    color: '#64748B',
-  },
-  countBold: {
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
+  roleList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, paddingBottom: 12 },
+  roleChip: { paddingHorizontal: 13, paddingVertical: 7, borderRadius: 18, backgroundColor: '#E2E8F0' },
+  roleChipSelected: { backgroundColor: '#2563EB' },
+  roleChipText: { color: '#475569', fontSize: 13, fontWeight: '600' },
+  roleChipTextSelected: { color: '#FFFFFF' },
+  countText: { paddingHorizontal: 16, paddingBottom: 8, color: '#64748B', fontSize: 13 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 24, flexGrow: 1 },
   userCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    alignItems: 'center',
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 2,
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10,
+    padding: 12, borderRadius: 12, backgroundColor: '#FFFFFF',
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E2E8F0',
-  },
-  avatarPlaceholder: {
-    backgroundColor: '#DBEAFE',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarInitials: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2563EB',
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-    flex: 1,
-  },
-  userEmail: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  userBio: {
-    fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 3,
-    lineHeight: 15,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    gap: 6,
-  },
-  roleBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  roleBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  statusActive: {
-    backgroundColor: '#ECFDF5',
-  },
-  statusBlocked: {
-    backgroundColor: '#FEF2F2',
-  },
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    marginRight: 4,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  actionColumn: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statusToggleBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  btnLock: {
-    backgroundColor: '#FFF1F2',
-    borderColor: '#FECDD3',
-  },
-  btnUnlock: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#A7F3D0',
-  },
-  statusToggleText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  textLock: {
-    color: '#E11D48',
-  },
-  textUnlock: {
-    color: '#059669',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 6,
-  },
-  emptyDesc: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  resetFilterBtn: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  resetFilterText: {
-    color: '#2563EB',
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  stateContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#F8FAFC',
-  },
-  stateIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  stateText: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginTop: 8,
-  },
-  retryBtn: {
-    marginTop: 18,
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  retryBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#E2E8F0' },
+  avatarPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#DBEAFE' },
+  avatarInitial: { color: '#2563EB', fontSize: 18, fontWeight: '700' },
+  userInfo: { flex: 1 },
+  userName: { color: '#0F172A', fontSize: 14, fontWeight: '700' },
+  email: { marginTop: 2, color: '#64748B', fontSize: 12 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  role: { color: '#475569', fontSize: 11 },
+  status: { fontSize: 11, fontWeight: '600' },
+  active: { color: '#059669' },
+  locked: { color: '#DC2626' },
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
+  emptyTitle: { color: '#1E293B', fontSize: 16, fontWeight: '700' },
+  stateContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#F8FAFC' },
+  stateText: { marginTop: 8, color: '#64748B', textAlign: 'center' },
+  errorTitle: { color: '#1E293B', fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  inlineError: { marginHorizontal: 16, marginBottom: 8, color: '#B91C1C' },
+  primaryButton: { marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: '#2563EB' },
+  primaryButtonText: { color: '#FFFFFF', fontWeight: '700' },
+  footer: { padding: 16 },
 });
