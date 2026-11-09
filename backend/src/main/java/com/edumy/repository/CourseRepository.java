@@ -14,6 +14,7 @@ import java.util.Optional;
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecificationExecutor<Course> {
     Page<Course> findByStatus(CourseStatus status, Pageable pageable);
+    Page<Course> findByStatusOrderByCreatedAtAsc(CourseStatus status, Pageable pageable);
     Page<Course> findByCategoryIdAndStatus(Long categoryId, CourseStatus status, Pageable pageable);
     Optional<Course> findByIdAndStatus(Long id, CourseStatus status);
     List<Course> findByInstructorId(Long instructorId);

@@ -9,11 +9,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     /** Lấy danh sách thông báo của user (mới nhất trước), hỗ trợ phân trang */
     Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    /** Lấy thông báo theo ID thuộc quyền sở hữu của user cụ thể */
+    Optional<Notification> findByIdAndUserId(Long id, Long userId);
 
     /** Đếm số thông báo chưa đọc — dùng hiển thị badge đỏ trên notification bell */
     long countByUserIdAndIsReadFalse(Long userId);
