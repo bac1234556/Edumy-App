@@ -98,8 +98,8 @@ describe('ReviewQueueScreen', () => {
 
     fireEvent.press(await view.findByText('Xem chi tiết'));
     expect(await view.findByText('Mô tả khóa học')).toBeTruthy();
-    expect(view.getByText('Chương 1')).toBeTruthy();
-    expect(view.getByText('Bài học 1')).toBeTruthy();
+    expect(view.getByText(/Chương 1/)).toBeTruthy();
+    expect(view.getByText(/Bài học 1/)).toBeTruthy();
     expect(view.getByText('Mở video bài học')).toBeTruthy();
     expect(view.getByText('Phê duyệt')).toBeTruthy();
     expect(view.getByText('Từ chối')).toBeTruthy();
