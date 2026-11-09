@@ -4,6 +4,7 @@ import com.edumy.entity.Role;
 import com.edumy.entity.User;
 import com.edumy.entity.UserStatus;
 import com.edumy.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
@@ -26,6 +27,9 @@ public class AdminUserControllerTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -80,5 +84,36 @@ public class AdminUserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.content").isArray());
+    }
+
+    @Test
+    @DisplayName("Admin khóa và mở khóa tài khoản")
+    void testAdminUpdatesUserStatus() throws Exception {
+        User user = userRepository.findByEmail("test.student@edumy.vn").orElseThrow();
+
+        mockMvc.perform(patch("/api/v1/admin/users/{id}/status", user.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("status", "LOCKED"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("LOCKED"));
+
+        mockMvc.perform(patch("/api/admin/users/{id}/status", user.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("status", "ACTIVE"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"));
+    }
+
+    @Test
+    @DisplayName("Reject invalid paging and status values")
+    void testRejectsInvalidPagingAndStatus() throws Exception {
+        mockMvc.perform(get("/api/admin/users?size=101"))
+                .andExpect(status().isBadRequest());
+
+        User user = userRepository.findByEmail("test.student@edumy.vn").orElseThrow();
+        mockMvc.perform(patch("/api/admin/users/{id}/status", user.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DISABLED\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

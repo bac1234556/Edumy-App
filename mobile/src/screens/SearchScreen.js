@@ -94,7 +94,7 @@ export const SearchScreen = ({ navigation, route }) => {
       }
 
       if (catRes.status === 'fulfilled' && Array.isArray(catRes.value?.data?.data)) {
-        if (catRes.value.data.data.length > 0) setCategories(catRes.value.data.data);
+        setCategories(catRes.value.data.data);
       }
     } catch {
       // Local fallback filter if backend is unavailable
@@ -627,4 +627,3 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
-

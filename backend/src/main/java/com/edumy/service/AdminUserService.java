@@ -4,6 +4,9 @@ import com.edumy.common.PageResponse;
 import com.edumy.dto.admin.UserResponse;
 import com.edumy.entity.Role;
 import com.edumy.entity.User;
+import com.edumy.entity.UserStatus;
+import com.edumy.exception.ConflictException;
+import com.edumy.exception.ResourceNotFoundException;
 import com.edumy.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -45,5 +48,20 @@ public class AdminUserService {
 
         Page<User> userPage = userRepository.findAll(spec, pageable);
         return PageResponse.from(userPage.map(UserResponse::from));
+    }
+
+    @Transactional
+    public UserResponse updateStatus(Long userId, UserStatus status, Long adminId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + userId));
+
+        if (userId.equals(adminId) && status == UserStatus.LOCKED) {
+            throw new ConflictException("Bạn không thể khóa tài khoản quản trị đang sử dụng");
+        }
+
+        user.setStatus(status);
+        User updated = userRepository.save(user);
+        log.info("Admin updated user status id={}, status={}", userId, status);
+        return UserResponse.from(updated);
     }
 }

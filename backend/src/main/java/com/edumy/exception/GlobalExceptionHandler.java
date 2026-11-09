@@ -1,6 +1,7 @@
 package com.edumy.exception;
 
 import com.edumy.common.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -69,6 +70,12 @@ public class GlobalExceptionHandler {
         log.warn("Validation failed: {}", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("Dữ liệu gửi lên không hợp lệ", errors));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException ex) {
+        log.warn("Constraint violation: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(ApiResponse.error("Tham số yêu cầu không hợp lệ"));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

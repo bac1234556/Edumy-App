@@ -50,9 +50,7 @@ export const HomeScreen = ({ navigation }) => {
       }
 
       if (catRes.status === 'fulfilled' && Array.isArray(catRes.value?.data?.data)) {
-        if (catRes.value.data.data.length > 0) {
-          setCategories(catRes.value.data.data);
-        }
+        setCategories(catRes.value.data.data);
       }
     } catch {
       // Fallback gracefully to mock data

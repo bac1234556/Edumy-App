@@ -211,7 +211,7 @@ Khi xây dựng màn hình, mỗi thành viên bắt buộc phải xử lý đ�
 - `PATCH /api/v1/users/me/password` - Đổi mật khẩu.
 
 ### Module B: Catalog & Discovery
-- `GET /api/v1/categories` - Lấy danh sách danh mục khóa học.
+- `GET /api/v1/categories` - Lấy danh sách danh mục khóa học hiện hành cho bộ lọc catalog.
 - `GET /api/v1/courses` - Tìm kiếm, lọc và phân trang khóa học (`keyword`, `categoryId`, `level`, `priceType`, `page`, `size`, `sort`).
 - `GET /api/v1/courses/{id}` - Chi tiết khóa học (kèm curriculum tóm tắt).
 - `GET /api/v1/courses/{id}/reviews` - Lấy danh sách đánh giá của khóa học.
@@ -242,9 +242,13 @@ Khi xây dựng màn hình, mỗi thành viên bắt buộc phải xử lý đ�
 - `GET /api/v1/admin/courses/review-queue` - Danh sách khóa học đang chờ duyệt.
 - `PATCH /api/v1/admin/courses/{id}/approve` - Phê duyệt khóa học (`PUBLISHED`).
 - `PATCH /api/v1/admin/courses/{id}/reject` - Từ chối khóa học kèm lý do (`REJECTED`).
-- `GET /api/v1/admin/users` - Danh sách người dùng hệ thống.
-- `PATCH /api/v1/admin/users/{id}/lock` - Khóa/Mở khóa tài khoản người dùng.
+- `GET /api/v1/admin/users` - Danh sách người dùng hệ thống, phân trang (`page`, `size`), tìm kiếm (`keyword`) và lọc vai trò (`role`).
+- `PATCH /api/v1/admin/users/{id}/status` - Khóa/Mở khóa tài khoản (`{"status":"LOCKED"}` hoặc `{"status":"ACTIVE"}`). Token đang dùng của tài khoản bị khóa bị từ chối ngay ở request tiếp theo.
+- `GET /api/v1/admin/categories` - Danh sách danh mục cho quản trị viên.
+- `GET /api/v1/admin/categories/{id}` - Chi tiết danh mục.
 - `POST /api/v1/admin/categories` - Tạo mới danh mục.
+- `PUT /api/v1/admin/categories/{id}` - Cập nhật danh mục.
+- `DELETE /api/v1/admin/categories/{id}` - Xóa danh mục nếu không còn khóa học hoặc danh mục con liên kết.
 - `GET /api/v1/lessons/{lessonId}/questions` - Danh sách câu hỏi thảo luận theo bài học.
 - `POST /api/v1/lessons/{lessonId}/questions` - Đặt câu hỏi mới.
 - `POST /api/v1/questions/{questionId}/answers` - Trả lời câu hỏi.
