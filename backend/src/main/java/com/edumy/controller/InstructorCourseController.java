@@ -83,6 +83,17 @@ public class InstructorCourseController {
         return ResponseEntity.ok(ApiResponse.ok(null, "Xóa khóa học thành công"));
     }
 
+    @PostMapping({"/api/instructor/courses/{id}/submit-review", "/api/v1/instructor/courses/{id}/submit-review"})
+    @Operation(summary = "Gửi phê duyệt khóa học (chuyển trạng thái từ DRAFT sang PENDING)")
+    public ResponseEntity<ApiResponse<InstructorCourseResponse>> submitCourseForReview(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Long instructorId
+    ) {
+        ensureAuthenticated(instructorId);
+        InstructorCourseResponse response = instructorCourseService.submitForReview(id, instructorId);
+        return ResponseEntity.ok(ApiResponse.ok(response, "Khóa học đã được gửi phê duyệt thành công"));
+    }
+
     @PostMapping({"/api/instructor/media/signature", "/api/v1/instructor/media/signature"})
     @Operation(summary = "Lấy chữ ký bảo mật tải video/ảnh trực tiếp lên Cloudinary")
     public ResponseEntity<ApiResponse<CloudinarySignatureResponse>> getCloudinarySignature(

@@ -7,10 +7,15 @@ import com.edumy.dto.instructor.UpdateCourseRequest;
 import com.edumy.entity.Course;
 import com.edumy.entity.CourseLevel;
 import com.edumy.entity.CourseStatus;
+import com.edumy.entity.Lesson;
+import com.edumy.entity.Section;
+import com.edumy.exception.BadRequestException;
 import com.edumy.exception.ForbiddenException;
 import com.edumy.exception.ResourceNotFoundException;
 import com.edumy.repository.CategoryRepository;
 import com.edumy.repository.CourseRepository;
+import com.edumy.repository.LessonRepository;
+import com.edumy.repository.SectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +35,8 @@ public class InstructorCourseService {
 
     private final CourseRepository courseRepository;
     private final CategoryRepository categoryRepository;
+    private final SectionRepository sectionRepository;
+    private final LessonRepository lessonRepository;
 
     @Value("${cloudinary.api-key:dummy_key}")
     private String cloudinaryApiKey;
@@ -128,6 +135,37 @@ public class InstructorCourseService {
         validateOwnership(course, instructorId);
         courseRepository.delete(course);
         log.info("Instructor {} deleted course {}", instructorId, id);
+    }
+
+    @Transactional
+    public InstructorCourseResponse submitForReview(Long courseId, Long instructorId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+
+        validateOwnership(course, instructorId);
+
+        if (course.getStatus() != CourseStatus.DRAFT) {
+            throw new BadRequestException("Chỉ khóa học ở trạng thái bản nháp (DRAFT) mới có thể gửi phê duyệt");
+        }
+
+        List<Section> sections = sectionRepository.findByCourseIdOrderByOrderIndexAsc(courseId);
+        if (sections == null || sections.isEmpty()) {
+            throw new BadRequestException("Khóa học phải có ít nhất 1 chương học (Section) trước khi gửi duyệt");
+        }
+
+        List<Long> sectionIds = sections.stream().map(Section::getId).collect(Collectors.toList());
+        List<Lesson> lessons = lessonRepository.findBySectionIdInOrderByOrderIndexAsc(sectionIds);
+        boolean hasVideoLesson = lessons.stream()
+                .anyMatch(l -> l.getVideoUrl() != null && !l.getVideoUrl().trim().isEmpty());
+
+        if (!hasVideoLesson) {
+            throw new BadRequestException("Khóa học phải có ít nhất 1 bài học chứa video trước khi gửi duyệt");
+        }
+
+        course.setStatus(CourseStatus.PENDING);
+        Course saved = courseRepository.save(course);
+        log.info("Instructor {} submitted course {} for review", instructorId, courseId);
+        return InstructorCourseResponse.fromEntity(saved);
     }
 
     public CloudinarySignatureResponse getUploadSignature(Long instructorId, String folder) {
