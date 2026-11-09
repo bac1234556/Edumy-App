@@ -21,6 +21,23 @@ jest.mock('../api/client', () => ({
   errorMessage: (error) => error.response?.data?.message || error.message || 'Lỗi kết nối',
 }));
 
+jest.mock('react-native-paper', () => {
+  const ReactNative = require('react-native');
+  const React = require('react');
+  const Paper = jest.requireActual('react-native-paper');
+
+  const TextInput = React.forwardRef(({ label, ...props }, ref) => (
+    <ReactNative.TextInput
+      ref={ref}
+      accessibilityLabel={props.accessibilityLabel || label}
+      {...props}
+    />
+  ));
+  TextInput.displayName = 'TestTextInput';
+
+  return { ...Paper, TextInput };
+});
+
 const pendingCourse = {
   id: 8,
   title: 'Khóa học chờ duyệt',
