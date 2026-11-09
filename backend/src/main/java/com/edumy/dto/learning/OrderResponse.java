@@ -11,20 +11,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "Thông tin đơn hàng vừa tạo")
+@Schema(description = "Kết quả checkout: đơn hàng (nếu có phí) và bản ghi ghi danh")
 public class OrderResponse {
 
-    @Schema(description = "Mã tham chiếu thanh toán", example = "EDU20261102153000123456")
+    @Schema(description = "ID đơn hàng (null với khóa miễn phí)")
+    private Long orderId;
+
+    @Schema(description = "Mã tham chiếu thanh toán (null với khóa miễn phí)", example = "EDU20261109153000123456")
     private String txnRef;
+
     private Long courseId;
     private String courseTitle;
     private BigDecimal amount;
 
-    @Schema(allowableValues = {"PENDING", "PAID", "FAILED"})
+    @Schema(description = "Trạng thái đơn; FREE khi khóa 0đ được ghi danh trực tiếp", allowableValues = {"PAID", "FREE"})
     private String status;
 
-    @Schema(allowableValues = {"MOCK", "VNPAY"})
+    @Schema(allowableValues = {"MOCK"})
     private String paymentMethod;
 
-    private LocalDateTime createdAt;
+    private LocalDateTime paidAt;
+    private Long enrollmentId;
+    private LocalDateTime enrolledAt;
 }

@@ -11,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "Yêu cầu tạo đơn mua khóa học")
+@Schema(description = "Yêu cầu checkout khóa học")
 public class CreateOrderRequest {
 
     @NotNull(message = "Vui lòng chọn khóa học")
@@ -19,8 +19,8 @@ public class CreateOrderRequest {
     @Schema(description = "ID khóa học cần mua", example = "1")
     private Long courseId;
 
-    @Pattern(regexp = "MOCK|VNPAY", message = "Phương thức thanh toán chỉ nhận MOCK hoặc VNPAY")
-    @Schema(description = "Phương thức thanh toán (mặc định MOCK)", allowableValues = {"MOCK", "VNPAY"}, example = "MOCK")
+    @Pattern(regexp = "MOCK", message = "Hiện chỉ hỗ trợ phương thức thanh toán MOCK")
+    @Schema(description = "Phương thức thanh toán (W8 chỉ hỗ trợ MOCK)", allowableValues = {"MOCK"}, example = "MOCK")
     @Builder.Default
     private String paymentMethod = "MOCK";
 }
