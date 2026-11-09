@@ -7,6 +7,23 @@ import { useAuthStore } from '../store/authStore';
 jest.mock('../api/client', () => ({ api: { get: jest.fn(), put: jest.fn(), defaults: { baseURL: 'http://localhost:8080/api' } }, errorMessage: () => 'Lỗi kết nối' }));
 jest.mock('expo-image-picker', () => ({}));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(), setItemAsync: jest.fn().mockResolvedValue(), deleteItemAsync: jest.fn() }));
+
+jest.mock('react-native-paper', () => {
+  const ReactNative = require('react-native');
+  const React = require('react');
+  const Paper = jest.requireActual('react-native-paper');
+
+  const TextInput = React.forwardRef(({ label, ...props }, ref) => (
+    <ReactNative.TextInput
+      ref={ref}
+      accessibilityLabel={props.accessibilityLabel || label}
+      {...props}
+    />
+  ));
+  TextInput.displayName = 'TestTextInput';
+
+  return { ...Paper, TextInput };
+});
 const user = { id: 1, fullName: 'Original', email: 'student@edumy.com', role: 'STUDENT', bio: '' };
 beforeEach(() => {
   useAuthStore.setState({ session: { accessToken: 'a', refreshToken: 'r', user }, hydrated: true });
