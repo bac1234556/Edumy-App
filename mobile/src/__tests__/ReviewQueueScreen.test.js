@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import {
@@ -65,10 +65,13 @@ const courseDetail = {
   }],
 };
 
+const clients = [];
+
 function renderScreen() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   });
+  clients.push(client);
   const view = render(
     <QueryClientProvider client={client}>
       <PaperProvider theme={{ ...MD3LightTheme, animation: { scale: 0 } }}>
@@ -83,7 +86,17 @@ const page = (content) => ({ content, page: 0, size: 50, totalElements: content.
 
 describe('ReviewQueueScreen', () => {
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    clients.splice(0).forEach((client) => client.clear());
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    jest.useRealTimers();
   });
 
   test('shows a loading state while the review queue is loading', () => {
