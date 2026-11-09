@@ -85,6 +85,11 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLargeUpload(Exception ex) {
+        return ResponseEntity.status(413).body(ApiResponse.error("Ảnh phải nhỏ hơn 2 MB"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
         log.error("Unhandled Exception: ", ex);

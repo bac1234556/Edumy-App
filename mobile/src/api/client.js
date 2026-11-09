@@ -16,7 +16,7 @@ async function refreshSession() {
   const snapshot = useAuthStore.getState().session;
   if (!snapshot) throw new Error('Vui lòng đăng nhập lại');
   try {
-    const { data } = await authClient.post('/auth/refresh', { refreshToken: snapshot.refreshToken });
+    const { data } = await authClient.post('/auth/refresh-token', { refreshToken: snapshot.refreshToken });
     if (useAuthStore.getState().session?.refreshToken !== snapshot.refreshToken) {
       throw new Error('Phiên đăng nhập đã thay đổi');
     }

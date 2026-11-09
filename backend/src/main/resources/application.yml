@@ -33,3 +33,10 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET:}
   access-seconds: ${JWT_ACCESS_SECONDS:900}
+
+---
+spring:
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB

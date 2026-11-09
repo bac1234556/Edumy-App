@@ -29,7 +29,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Rotate a refresh token and issue new access token")
-    @PostMapping("/refresh")
+    @PostMapping({"/refresh", "/refresh-token"})
     public ApiResponse<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
         return ApiResponse.ok(auth.refresh(request.refreshToken()));
     }

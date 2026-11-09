@@ -19,7 +19,7 @@ afterAll(() => { apiMock.restore(); authMock.restore(); });
 test('concurrent 401 requests rotate once, persist and retry with the new token', async () => {
   apiMock.onGet('/users/me').reply((config) => config.headers.Authorization === 'Bearer new-access'
     ? [200, { data: session.user }] : [401, {}]);
-  authMock.onPost('/auth/refresh').reply(200, {
+  authMock.onPost('/auth/refresh-token').reply(200, {
     data: { ...session, accessToken: 'new-access', refreshToken: 'new-refresh' },
   });
   const replies = await Promise.all([api.get('/users/me'), api.get('/users/me')]);
@@ -30,21 +30,21 @@ test('concurrent 401 requests rotate once, persist and retry with the new token'
 
 test('an invalid refresh token clears the session', async () => {
   apiMock.onGet('/users/me').reply(401);
-  authMock.onPost('/auth/refresh').reply(401, { message: 'Refresh token đã hết hạn' });
+  authMock.onPost('/auth/refresh-token').reply(401, { message: 'Refresh token đã hết hạn' });
   await expect(api.get('/users/me')).rejects.toThrow();
   expect(useAuthStore.getState().session).toBeNull();
 });
 
 test('temporary network failure keeps the stored session for a later retry', async () => {
   apiMock.onGet('/users/me').reply(401);
-  authMock.onPost('/auth/refresh').networkError();
+  authMock.onPost('/auth/refresh-token').networkError();
   await expect(api.get('/users/me')).rejects.toThrow();
   expect(useAuthStore.getState().session).toEqual(session);
 });
 
 test('does not loop if a retried access request still returns 401', async () => {
   apiMock.onGet('/users/me').reply(401);
-  authMock.onPost('/auth/refresh').reply(200, {
+  authMock.onPost('/auth/refresh-token').reply(200, {
     data: { ...session, accessToken: 'new-access', refreshToken: 'new-refresh' },
   });
   await expect(api.get('/users/me')).rejects.toThrow();
