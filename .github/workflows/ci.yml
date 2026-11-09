@@ -110,7 +110,20 @@ jobs:
           CI: 'true'
         run: npm run lint
       - name: Test auth and secure session
-        run: npm test -- --runInBand
+        run: npm test -- --runInBand --json --outputFile="$RUNNER_TEMP/mobile-tests.json"
+      - name: Report mobile test failures
+        if: ${{ failure() }}
+        run: |
+          python3 - <<'PYTHON'
+          import json, os, pathlib
+          report = pathlib.Path(os.environ["RUNNER_TEMP"]) / "mobile-tests.json"
+          if report.exists():
+              for suite in json.loads(report.read_text()).get("testResults", []):
+                  if suite.get("status") == "failed":
+                      message = suite.get("message") or suite.get("name", "Mobile test failed")
+                      message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                      print("::error title=Mobile test failure::" + message[:6000])
+          PYTHON
       - name: Export Android bundle
         env:
           CI: 'true'
