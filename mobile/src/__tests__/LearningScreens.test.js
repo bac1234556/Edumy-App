@@ -3,14 +3,16 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
-import { createOrder, fetchCheckoutCourse, fetchMyEnrollments } from '../api/learning';
+import { checkoutCourse, fetchCheckoutCourse, fetchMyCourses } from '../api/learning';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';
+import { PaymentResultScreen } from '../screens/PaymentResultScreen';
 import { COURSES_MOCK } from '../mock/coursesMock';
 import { ENROLLMENTS_MOCK } from '../mock/enrollmentsMock';
 
 jest.mock('../api/learning', () => ({
-  fetchCheckoutCourse: jest.fn(), createOrder: jest.fn(), fetchMyEnrollments: jest.fn(),
+  MY_COURSES_KEY: ['learning', 'my-courses'],
+  fetchCheckoutCourse: jest.fn(), checkoutCourse: jest.fn(), fetchMyCourses: jest.fn(),
 }));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(), setItemAsync: jest.fn(), deleteItemAsync: jest.fn(),
@@ -23,6 +25,10 @@ function renderWithProviders(ui) {
   return render(<QueryClientProvider client={client}><PaperProvider theme={{ ...MD3LightTheme, animation: { scale: 0 } }}>{ui}</PaperProvider></QueryClientProvider>);
 }
 const networkError = Object.assign(new Error('Network Error'), { response: undefined });
+const PAID_RESULT = {
+  orderId: 5, txnRef: 'EDU123', courseId: 1, courseTitle: COURSES_MOCK[0].title,
+  amount: 499000, status: 'PAID', paymentMethod: 'MOCK', enrollmentId: 9,
+};
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -35,7 +41,7 @@ afterEach(() => {
 });
 
 describe('CheckoutScreen', () => {
-  test('shows loading then course summary, price and pay button', async () => {
+  test('shows loading then course summary, price and mock payment method', async () => {
     fetchCheckoutCourse.mockResolvedValue(COURSES_MOCK[0]);
     const view = renderWithProviders(<CheckoutScreen courseId={1} />);
     expect(view.getByLabelText('Đang tải thông tin khóa học')).toBeTruthy();
@@ -44,16 +50,14 @@ describe('CheckoutScreen', () => {
     expect(view.getByTestId('checkout-pay')).toBeTruthy();
   });
 
-  test('pay creates a MOCK order and shows the transaction reference', async () => {
+  test('pay calls the mock checkout API and hands the result to onSuccess', async () => {
     fetchCheckoutCourse.mockResolvedValue(COURSES_MOCK[0]);
-    createOrder.mockResolvedValue({ txnRef: 'EDU123', status: 'PENDING', courseId: 1 });
-    const onDone = jest.fn();
-    const view = renderWithProviders(<CheckoutScreen courseId={1} onDone={onDone} />);
+    checkoutCourse.mockResolvedValue(PAID_RESULT);
+    const onSuccess = jest.fn();
+    const view = renderWithProviders(<CheckoutScreen courseId={1} onSuccess={onSuccess} />);
     fireEvent.press(await view.findByTestId('checkout-pay'));
-    expect((await view.findByTestId('checkout-txn')).props.children.join('')).toContain('EDU123');
-    expect(createOrder).toHaveBeenCalledWith({ courseId: 1, paymentMethod: 'MOCK' });
-    fireEvent.press(view.getByText('Đến Khóa học của tôi'));
-    expect(onDone).toHaveBeenCalled();
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(PAID_RESULT));
+    expect(checkoutCourse).toHaveBeenCalledWith({ courseId: 1, paymentMethod: 'MOCK' });
   });
 
   test('free course offers free enrollment without payment methods', async () => {
@@ -61,6 +65,17 @@ describe('CheckoutScreen', () => {
     const view = renderWithProviders(<CheckoutScreen courseId={3} />);
     expect(await view.findByText('Đăng ký miễn phí')).toBeTruthy();
     expect(view.queryByText('Phương thức thanh toán')).toBeNull();
+  });
+
+  test('already owned course (409) shows the message and a learn button', async () => {
+    fetchCheckoutCourse.mockResolvedValue(COURSES_MOCK[0]);
+    checkoutCourse.mockRejectedValue({ response: { status: 409, data: { message: 'Bạn đã sở hữu khóa học này' } } });
+    const onLearn = jest.fn();
+    const view = renderWithProviders(<CheckoutScreen courseId={1} onLearn={onLearn} />);
+    fireEvent.press(await view.findByTestId('checkout-pay'));
+    expect(await view.findByText('Bạn đã sở hữu khóa học này')).toBeTruthy();
+    fireEvent.press(view.getByTestId('checkout-learn'));
+    expect(onLearn).toHaveBeenCalledWith(1);
   });
 
   test('empty state when the course does not exist', async () => {
@@ -75,19 +90,40 @@ describe('CheckoutScreen', () => {
     fireEvent.press(await view.findByText('Thử lại'));
     expect(await view.findByText(COURSES_MOCK[0].title)).toBeTruthy();
   });
+});
 
-  test('order failure shows an inline error', async () => {
-    fetchCheckoutCourse.mockResolvedValue(COURSES_MOCK[0]);
-    createOrder.mockRejectedValue({ response: { data: { message: 'Bạn đã sở hữu khóa học này' } } });
-    const view = renderWithProviders(<CheckoutScreen courseId={1} />);
-    fireEvent.press(await view.findByTestId('checkout-pay'));
-    expect(await view.findByText('Bạn đã sở hữu khóa học này')).toBeTruthy();
+describe('PaymentResultScreen', () => {
+  test('paid order shows success, transaction and "Vào học ngay"', () => {
+    const onLearn = jest.fn();
+    const onMyLearning = jest.fn();
+    const view = renderWithProviders(<PaymentResultScreen result={PAID_RESULT} onLearn={onLearn} onMyLearning={onMyLearning} />);
+    expect(view.getByTestId('result-title').props.children).toBe('Đặt hàng thành công');
+    expect(view.getByTestId('result-txn').props.children.join('')).toContain('EDU123');
+    fireEvent.press(view.getByTestId('result-learn'));
+    expect(onLearn).toHaveBeenCalledWith(1);
+    fireEvent.press(view.getByText('Khóa học của tôi'));
+    expect(onMyLearning).toHaveBeenCalled();
+  });
+
+  test('free enrollment shows a free success message without transaction', () => {
+    const view = renderWithProviders(<PaymentResultScreen result={{ courseId: 3, courseTitle: 'Figma', status: 'FREE', amount: 0 }} />);
+    expect(view.getByTestId('result-title').props.children).toBe('Đăng ký khóa học thành công');
+    expect(view.queryByTestId('result-txn')).toBeNull();
+    expect(view.getByText('Số tiền: Miễn phí')).toBeTruthy();
+  });
+
+  test('empty state without result', () => {
+    const onHome = jest.fn();
+    const view = renderWithProviders(<PaymentResultScreen result={null} onHome={onHome} />);
+    expect(view.getByTestId('result-empty')).toBeTruthy();
+    fireEvent.press(view.getByText('Về trang chủ'));
+    expect(onHome).toHaveBeenCalled();
   });
 });
 
 describe('MyLearningScreen', () => {
-  test('lists purchased courses with progress', async () => {
-    fetchMyEnrollments.mockResolvedValue(ENROLLMENTS_MOCK);
+  test('lists purchased courses with progress and opens the player on tap', async () => {
+    fetchMyCourses.mockResolvedValue(ENROLLMENTS_MOCK);
     const onOpenCourse = jest.fn();
     const view = renderWithProviders(<MyLearningScreen onOpenCourse={onOpenCourse} />);
     expect(view.getByLabelText('Đang tải khóa học của tôi')).toBeTruthy();
@@ -99,7 +135,7 @@ describe('MyLearningScreen', () => {
   });
 
   test('empty state links to the catalog', async () => {
-    fetchMyEnrollments.mockResolvedValue([]);
+    fetchMyCourses.mockResolvedValue([]);
     const onExplore = jest.fn();
     const view = renderWithProviders(<MyLearningScreen onExplore={onExplore} />);
     expect(await view.findByText('Bạn chưa mua khóa học nào')).toBeTruthy();
@@ -108,7 +144,7 @@ describe('MyLearningScreen', () => {
   });
 
   test('error state retries the request', async () => {
-    fetchMyEnrollments.mockRejectedValueOnce(networkError).mockResolvedValue(ENROLLMENTS_MOCK);
+    fetchMyCourses.mockRejectedValueOnce(networkError).mockResolvedValue(ENROLLMENTS_MOCK);
     const view = renderWithProviders(<MyLearningScreen />);
     expect(await view.findByText('Không kết nối được máy chủ. Kiểm tra mạng và thử lại.')).toBeTruthy();
     fireEvent.press(view.getByText('Thử lại'));
