@@ -3,6 +3,8 @@ package com.edumy.controller;
 import com.edumy.common.ApiResponse;
 import com.edumy.dto.profile.UserResponse;
 import com.edumy.dto.profile.UpdateProfileRequest;
+import com.edumy.dto.auth.ChangePasswordRequest;
+import com.edumy.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.transaction.annotation.Transactional;
 import com.edumy.exception.UnauthorizedException;
@@ -17,6 +19,17 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
     private final UserRepository users;
+    private final AuthService auth;
+
+    @Operation(summary = "Change password and revoke all refresh tokens",
+            description = "Checks the current password. All devices must sign in again when refreshing; existing access tokens expire normally.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping({"/api/users/me/password", "/api/v1/users/me/password"})
+    public ApiResponse<Void> changePassword(@AuthenticationPrincipal Long userId,
+                                           @Valid @RequestBody ChangePasswordRequest request) {
+        auth.changePassword(userId, request);
+        return ApiResponse.ok(null);
+    }
 
     @Operation(summary = "Get current user profile")
     @SecurityRequirement(name = "bearerAuth")

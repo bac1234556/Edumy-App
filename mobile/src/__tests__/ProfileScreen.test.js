@@ -48,3 +48,31 @@ test('failed load provides a retry and recovers', async () => {
   fireEvent.press(screen.getByText('Thử lại'));
   await waitFor(() => expect(screen.getByText('Original')).toBeTruthy());
 });
+
+test('changes password and clears this device session only after success', async () => {
+  api.put.mockResolvedValue({ data: { success: true } });
+  const screen = render(<ProfileScreen />);
+  await screen.findByText('Original');
+  fireEvent.press(screen.getByText('Đổi mật khẩu'));
+  fireEvent.changeText(screen.getByLabelText('Mật khẩu hiện tại'), 'Password123!');
+  fireEvent.changeText(screen.getByLabelText('Mật khẩu mới'), 'NewPassword456!');
+  fireEvent.changeText(screen.getByLabelText('Xác nhận mật khẩu mới'), 'NewPassword456!');
+  fireEvent.press(screen.getByText('Lưu mật khẩu'));
+  await waitFor(() => expect(useAuthStore.getState().session).toBeNull());
+  expect(api.put).toHaveBeenCalledWith('/users/me/password', {
+    oldPassword: 'Password123!', newPassword: 'NewPassword456!',
+  });
+});
+
+test('password failure preserves the session and allows retry', async () => {
+  api.put.mockRejectedValueOnce(new Error('offline'));
+  const screen = render(<ProfileScreen />);
+  await screen.findByText('Original');
+  fireEvent.press(screen.getByText('Đổi mật khẩu'));
+  fireEvent.changeText(screen.getByLabelText('Mật khẩu hiện tại'), 'Password123!');
+  fireEvent.changeText(screen.getByLabelText('Mật khẩu mới'), 'NewPassword456!');
+  fireEvent.changeText(screen.getByLabelText('Xác nhận mật khẩu mới'), 'NewPassword456!');
+  fireEvent.press(screen.getByText('Lưu mật khẩu'));
+  await screen.findByText('Lỗi kết nối');
+  expect(useAuthStore.getState().session).not.toBeNull();
+});

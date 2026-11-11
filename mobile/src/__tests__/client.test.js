@@ -51,3 +51,17 @@ test('does not loop if a retried access request still returns 401', async () => 
   expect(apiMock.history.get).toHaveLength(2);
   expect(authMock.history.post).toHaveLength(1);
 });
+
+test('network failures on both clients show a global notice; HTTP errors do not', async () => {
+  const { useNetworkNoticeStore } = require('../store/networkNoticeStore');
+  for (const [client, mock] of [[api, apiMock], [authClient, authMock]]) {
+    useNetworkNoticeStore.getState().dismiss();
+    mock.onGet('/offline').networkError();
+    await expect(client.get('/offline')).rejects.toThrow();
+    expect(useNetworkNoticeStore.getState().visible).toBe(true);
+    useNetworkNoticeStore.getState().dismiss();
+    mock.onGet('/invalid').reply(400);
+    await expect(client.get('/invalid')).rejects.toThrow();
+    expect(useNetworkNoticeStore.getState().visible).toBe(false);
+  }
+});

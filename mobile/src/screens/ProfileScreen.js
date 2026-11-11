@@ -1,9 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Image } from 'react-native';
-import { ActivityIndicator, Button, Text, TextInput } from 'react-native-paper';
+import { Button, Text, TextInput } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { api, errorMessage } from '../api/client';
 import { useAuthStore } from '../store/authStore';
+import LoadingView from '../components/common/LoadingView';
+import ErrorView from '../components/common/ErrorView';
+import EmptyView from '../components/common/EmptyView';
+import ChangePasswordForm from '../components/ChangePasswordForm';
 
 export const avatarSource = (url) => url?.startsWith('/')
   ? `${api.defaults.baseURL.replace(/\/api(?:\/v1)?$/, '')}${url}` : url;
@@ -57,10 +61,10 @@ export default function ProfileScreen() {
   };
   return <ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}>
     <Text variant="headlineMedium">Hồ sơ cá nhân</Text>
-    {loading ? <ActivityIndicator accessibilityLabel="Đang tải hồ sơ" /> : <>
-      {!!error && <Text accessibilityRole="alert">{error}</Text>}
+    {loading ? <LoadingView message="Đang tải hồ sơ" /> : <>
+      {!!error && <ErrorView message={error} onRetry={!profile ? load : undefined} />}
       {!!message && <Text>{message}</Text>}
-      {!profile ? <><Text>Chưa có thông tin hồ sơ.</Text><Button onPress={load}>Thử lại</Button></> : <>
+      {!profile ? (!error && <EmptyView message="Chưa có thông tin hồ sơ."><Button onPress={load}>Thử lại</Button></EmptyView>) : <>
         {!!profile.avatarUrl && <Image accessibilityLabel="Ảnh đại diện" source={{ uri: avatarSource(profile.avatarUrl) }} style={{ width: 96, height: 96, borderRadius: 48 }} />}
         <Text>{profile.email}</Text>
         {editing ? <>
@@ -72,6 +76,7 @@ export default function ProfileScreen() {
         </> : <>
           <Text>{profile.fullName}</Text><Text>{profile.bio || 'Chưa có giới thiệu.'}</Text>
           <Button onPress={() => { setEditing(true); setMessage(''); }}>Chỉnh sửa hồ sơ</Button>
+          <ChangePasswordForm />
         </>}
       </>}
     </>}

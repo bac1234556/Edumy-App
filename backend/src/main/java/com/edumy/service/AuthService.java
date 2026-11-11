@@ -44,7 +44,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = users.findByEmail(normalizeEmail(request.email()))
+        User user = users.findLockedByEmail(normalizeEmail(request.email()))
                 .orElseThrow(() -> new UnauthorizedException("Email hoặc mật khẩu không đúng"));
         if (request.password().getBytes(StandardCharsets.UTF_8).length > 72
                 || !passwords.matches(request.password(), user.getPasswordHash()))
@@ -54,13 +54,34 @@ public class AuthService {
     }
 
     public AuthResponse refresh(String rawToken) {
+        // Serialize token issuance and password changes on the same user row.
+        // Always lock the user before the refresh token to avoid lock inversion.
+        Long userId = refreshTokens.findUserIdByTokenHash(hash(rawToken))
+                .orElseThrow(() -> new UnauthorizedException("Refresh token không hợp lệ"));
+        User user = users.findLockedById(userId)
+                .orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
         RefreshToken token = refreshTokens.findByTokenHash(hash(rawToken))
                 .orElseThrow(() -> new UnauthorizedException("Refresh token không hợp lệ"));
         if (token.getRevokedAt() != null || !token.getExpiresAt().isAfter(Instant.now()))
             throw new UnauthorizedException("Refresh token đã hết hạn hoặc bị thu hồi");
-        requireActive(token.getUser());
+        requireActive(user);
         token.setRevokedAt(Instant.now());
-        return tokens(token.getUser());
+        return tokens(user);
+    }
+
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = users.findLockedById(userId)
+                .orElseThrow(() -> new UnauthorizedException("Tài khoản không tồn tại"));
+        requireActive(user);
+        if (request.oldPassword().getBytes(StandardCharsets.UTF_8).length > 72
+                || !passwords.matches(request.oldPassword(), user.getPasswordHash()))
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng");
+        if (request.newPassword().getBytes(StandardCharsets.UTF_8).length > 72)
+            throw new IllegalArgumentException("Mật khẩu không được vượt quá 72 byte UTF-8");
+        if (passwords.matches(request.newPassword(), user.getPasswordHash()))
+            throw new IllegalArgumentException("Mật khẩu mới phải khác mật khẩu hiện tại");
+        user.setPasswordHash(passwords.encode(request.newPassword()));
+        refreshTokens.revokeAllForUser(userId, Instant.now());
     }
 
     public void logout(String rawToken) {
