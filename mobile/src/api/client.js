@@ -1,11 +1,19 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 import { useAuthStore } from '../store/authStore';
+import { useNetworkNoticeStore } from '../store/networkNoticeStore';
 
 const defaultUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8080/api' : 'http://localhost:8080/api';
 const baseURL = (process.env.EXPO_PUBLIC_API_URL || defaultUrl).replace(/\/$/, '');
 export const authClient = axios.create({ baseURL, timeout: 15000 });
 export const api = axios.create({ baseURL, timeout: 15000 });
+
+const reportNetworkError = (error) => {
+  if (!error.response && !axios.isCancel(error)) useNetworkNoticeStore.getState().show();
+  return Promise.reject(error);
+};
+authClient.interceptors.response.use((response) => response, reportNetworkError);
+api.interceptors.response.use((response) => response, reportNetworkError);
 
 api.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().session?.accessToken;

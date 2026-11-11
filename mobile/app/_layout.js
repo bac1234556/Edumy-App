@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from '../src/theme';
 import { api } from '../src/api/client';
 import { useAuthStore } from '../src/store/authStore';
+import NetworkSnackbar from '../src/components/NetworkSnackbar';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 
@@ -35,6 +36,7 @@ export default function RootLayout() {
             </View>
           )}
         </QueryClientProvider>
+        <NetworkSnackbar />
       </PaperProvider>
     </SafeAreaProvider>
   );
