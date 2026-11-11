@@ -5,8 +5,27 @@
     "scheme": "edumy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "plugins": ["expo-router", "expo-secure-store", "expo-font"],
-    "android": { "package": "com.edumy.app" },
-    "ios": { "bundleIdentifier": "com.edumy.app" }
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "android": {
+      "package": "com.edumy.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#2563eb"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.edumy.app"
+    },
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563eb"
+    }
   }
 }
