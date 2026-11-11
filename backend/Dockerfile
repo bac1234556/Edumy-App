@@ -5,6 +5,7 @@ COPY pom.xml ./
 COPY src ./src
 RUN --mount=type=secret,id=maven_settings,target=/root/.m2/settings.xml \
     --mount=type=secret,id=proxy_ca \
+    set -eu; \
     if [ -f /run/secrets/proxy_ca ]; then keytool -importcert -noprompt -alias cloud-proxy -file /run/secrets/proxy_ca -cacerts -storepass changeit; fi; \
     mvn -B -DskipTests package
 FROM eclipse-temurin:21-jre
