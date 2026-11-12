@@ -39,9 +39,18 @@ def tap(node):
     adb('shell', 'input', 'tap', str((x1+x2)//2), str((y1+y2)//2))
 
 def field(label, value):
-    tap(wait_node(lambda a: a.get('class') == 'android.widget.EditText' and a.get('content-desc') == label))
-    adb('shell', 'input', 'text', value)
+    is_field = lambda a: a.get('class') == 'android.widget.EditText' and a.get('content-desc') == label
+    tap(wait_node(is_field))
+    # Wait for focus and keyboard-driven layout changes before injecting keys.
+    wait_node(lambda a: is_field(a) and a.get('focused') == 'true')
+    for character in value:
+        adb('shell', 'input', 'text', character)
+        time.sleep(0.12)
+    wait_node(lambda a: is_field(a) and (a.get('text') == value if label == 'Email'
+              else len(a.get('text', '')) == len(value)))
     adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+    # Take a fresh, settled tree before choosing the next field's bounds.
+    tree()
 
 email = 'android-' + uuid.uuid4().hex[:12] + '@example.com'
 password = 'Preview123456'
@@ -65,3 +74,4 @@ try:
 finally:
     (OUT / 'screen.png').write_bytes(adb('exec-out', 'screencap', '-p'))
     (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d', '-t', '1000'))
+
