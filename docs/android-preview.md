@@ -33,3 +33,14 @@ CI hiện có kiểm tra thêm migration MySQL và HTTP auth smoke.
 
 Chỉ ghi PASS cho 5 emulator sau khi cả 5 job thành công. Không lấy `expo export`
 làm bằng chứng APK cài đặt được; link run/artifacts là bằng chứng bàn giao.
+
+## Chạy lại kiểm thử với APK đã build
+
+Workflow **Android APK smoke regression** nhận input `source_run`: ID của một
+run **Android preview** còn giữ artifacts `edumy-emulator-apk` và `preview-backend`.
+Dùng chức năng này khi sửa adb automation để kiểm tra lại cùng binary đã build.
+APK và backend phải thuộc đúng phiên bản cần nghiệm thu; khi thay mã app/backend,
+chạy lại workflow Android preview để build artifacts mới.
+
+Script chờ đúng ô input có focus, nhập từng ký tự và xác nhận giá trị trước khi
+submit. Điều này tránh mất ký tự hoặc gõ vào ô trước đó khi bàn phím đổi layout.

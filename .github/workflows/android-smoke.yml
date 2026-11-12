@@ -1,11 +1,11 @@
 name: Android APK smoke regression
 on:
-  pull_request:
-    branches: [develop]
-    paths:
-      - 'mobile/scripts/android_auth_smoke.py'
-      - '.github/workflows/android-smoke.yml'
   workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'Android preview run ID containing APK and backend artifacts'
+        required: true
+        type: string
 permissions:
   contents: read
 jobs:
@@ -45,13 +45,13 @@ jobs:
         with:
           name: preview-backend
           path: preview-backend
-          run-id: 43082715323
+          run-id: ${{ inputs.source_run }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
         with:
           name: edumy-emulator-apk
           path: preview-apk
-          run-id: 43082715323
+          run-id: ${{ inputs.source_run }}
           github-token: ${{ github.token }}
       - name: Start isolated backend
         run: |
