@@ -31,6 +31,7 @@ def wait_node(predicate, timeout=60):
         except (subprocess.SubprocessError, ET.ParseError):
             pass
         time.sleep(2)
+    print((OUT / 'last-ui.xml').read_text(), flush=True)
     raise AssertionError('Expected Android UI not found; see last-ui.xml')
 
 def tap(node):
