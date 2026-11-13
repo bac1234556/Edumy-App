@@ -18,6 +18,10 @@ export const CourseCard = ({
 }) => {
   const [isWishlisted, setIsWishlisted] = useState(isWishlistedInitially);
 
+  React.useEffect(() => {
+    setIsWishlisted(isWishlistedInitially);
+  }, [isWishlistedInitially]);
+
   const handleWishlistPress = (e) => {
     e?.stopPropagation?.();
     const nextState = !isWishlisted;

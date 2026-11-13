@@ -16,6 +16,7 @@ import { CategoryChip } from '../components/common/CategoryChip';
 import { CATEGORIES_MOCK } from '../mock/categoriesMock';
 import { COURSES_MOCK } from '../mock/coursesMock';
 import { api } from '../api/client';
+import { getWishlistIds, addToWishlist, removeFromWishlist } from '../api/wishlist';
 
 export const HomeScreen = ({ navigation }) => {
   const [categories, setCategories] = useState(CATEGORIES_MOCK);
@@ -27,6 +28,37 @@ export const HomeScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [courses, setCourses] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState([]);
+
+  const fetchWishlist = useCallback(async () => {
+    try {
+      const ids = await getWishlistIds();
+      if (Array.isArray(ids)) {
+        setWishlistIds(ids);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleWishlistToggle = async (courseId, nextState) => {
+    // Optimistic update
+    setWishlistIds((prev) =>
+      nextState ? [...prev, courseId] : prev.filter((id) => id !== courseId)
+    );
+    try {
+      if (nextState) {
+        await addToWishlist(courseId);
+      } else {
+        await removeFromWishlist(courseId);
+      }
+    } catch {
+      // Revert if failed
+      setWishlistIds((prev) =>
+        nextState ? prev.filter((id) => id !== courseId) : [...prev, courseId]
+      );
+    }
+  };
 
   const fetchCoursesAndCategories = useCallback(async () => {
     setIsLoading(true);
@@ -63,11 +95,13 @@ export const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchCoursesAndCategories();
-  }, [fetchCoursesAndCategories]);
+    fetchWishlist();
+  }, [fetchCoursesAndCategories, fetchWishlist]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchCoursesAndCategories();
+    fetchWishlist();
   };
 
   // Filter courses by category and search keyword
@@ -149,6 +183,12 @@ export const HomeScreen = ({ navigation }) => {
             <Text style={styles.filterBtnText}>Lọc</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={styles.wishlistHeaderBtn}
+          onPress={() => navigation && navigation.navigate ? navigation.navigate('Wishlist') : null}
+        >
+          <Text style={styles.wishlistHeaderIcon}>❤️</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -221,6 +261,8 @@ export const HomeScreen = ({ navigation }) => {
                       key={`featured-${course.id}`}
                       course={course}
                       layout="horizontal"
+                      isWishlistedInitially={wishlistIds.includes(course.id)}
+                      onWishlistToggle={handleWishlistToggle}
                       onPress={handleCoursePress}
                     />
                   ))}
@@ -240,6 +282,8 @@ export const HomeScreen = ({ navigation }) => {
                     key={`latest-${course.id}`}
                     course={course}
                     layout="vertical"
+                    isWishlistedInitially={wishlistIds.includes(course.id)}
+                    onWishlistToggle={handleWishlistToggle}
                     onPress={handleCoursePress}
                   />
                 ))}
@@ -263,14 +307,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 46,
+  },
+  wishlistHeaderBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wishlistHeaderIcon: {
+    fontSize: 20,
   },
   searchIcon: {
     fontSize: 16,

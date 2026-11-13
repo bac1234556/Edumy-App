@@ -15,8 +15,11 @@ import {
 } from 'react-native';
 import { RatingStars } from '../components/common/RatingStars';
 import { PriceTag } from '../components/common/PriceTag';
+import { ReviewFormModal } from '../components/common/ReviewFormModal';
 import { COURSES_MOCK } from '../mock/coursesMock';
 import { api } from '../api/client';
+import { getCourseReviews } from '../api/reviews';
+import { getWishlistIds, addToWishlist, removeFromWishlist } from '../api/wishlist';
 
 export const CourseDetailScreen = ({ route, navigation }) => {
   const courseId = route?.params?.courseId || 1;
@@ -27,6 +30,19 @@ export const CourseDetailScreen = ({ route, navigation }) => {
 
   const [expandedSections, setExpandedSections] = useState({ 1: true });
   const [isWishlisted, setIsWishlisted] = useState(false);
+
+  // Reviews state
+  const [reviewsData, setReviewsData] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+    distribution: { star1: 0, star2: 0, star3: 0, star4: 0, star5: 0 },
+    reviews: [],
+    currentPage: 0,
+    totalPages: 1,
+    myReview: null,
+  });
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
 
   // Video Preview Modal state
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
@@ -52,13 +68,67 @@ export const CourseDetailScreen = ({ route, navigation }) => {
     }
   }, [courseId]);
 
+  const fetchReviews = useCallback(async (page = 0, append = false) => {
+    setReviewsLoading(true);
+    try {
+      const data = await getCourseReviews(courseId, page, 5);
+      if (data) {
+        setReviewsData((prev) => ({
+          ...data,
+          reviews: append ? [...prev.reviews, ...(data.reviews || [])] : (data.reviews || []),
+        }));
+        if (data.averageRating !== undefined && data.averageRating !== null) {
+          setCourse((prev) => ({
+            ...prev,
+            averageRating: data.averageRating,
+            totalReviews: data.totalReviews,
+          }));
+        }
+      }
+    } catch {
+      // offline or mock
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [courseId]);
+
+  const checkWishlistStatus = useCallback(async () => {
+    try {
+      const ids = await getWishlistIds();
+      if (Array.isArray(ids)) {
+        setIsWishlisted(ids.includes(Number(courseId)));
+      }
+    } catch {
+      // ignore
+    }
+  }, [courseId]);
+
   useEffect(() => {
     fetchCourseDetail();
-  }, [fetchCourseDetail]);
+    fetchReviews(0, false);
+    checkWishlistStatus();
+  }, [fetchCourseDetail, fetchReviews, checkWishlistStatus]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchCourseDetail();
+    fetchReviews(0, false);
+    checkWishlistStatus();
+  };
+
+  const handleToggleWishlist = async () => {
+    const nextState = !isWishlisted;
+    setIsWishlisted(nextState);
+    try {
+      if (nextState) {
+        await addToWishlist(courseId);
+      } else {
+        await removeFromWishlist(courseId);
+      }
+    } catch (err) {
+      setIsWishlisted(!nextState);
+      Alert.alert('Lỗi', 'Không thể cập nhật danh sách yêu thích');
+    }
   };
 
   const toggleSection = (sectionId) => {
@@ -151,7 +221,7 @@ export const CourseDetailScreen = ({ route, navigation }) => {
         </Text>
         <TouchableOpacity
           style={styles.navWishlistBtn}
-          onPress={() => setIsWishlisted(!isWishlisted)}
+          onPress={handleToggleWishlist}
         >
           <Text style={[styles.navHeart, isWishlisted && styles.navHeartActive]}>
             {isWishlisted ? '♥' : '♡'}
@@ -299,7 +369,117 @@ export const CourseDetailScreen = ({ route, navigation }) => {
             );
           })}
         </View>
+
+        {/* Reviews Section */}
+        <View style={styles.contentSection}>
+          <View style={styles.reviewSectionHeader}>
+            <Text style={styles.sectionHeading}>Đánh giá & Nhận xét</Text>
+            <TouchableOpacity
+              style={styles.writeReviewBtn}
+              onPress={() => setReviewModalVisible(true)}
+            >
+              <Text style={styles.writeReviewBtnText}>
+                {reviewsData.myReview ? '✏️ Sửa đánh giá' : '★ Viết đánh giá'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Rating Overview Block */}
+          <View style={styles.ratingOverviewBox}>
+            <View style={styles.ratingScoreCol}>
+              <Text style={styles.ratingScoreNumber}>
+                {course.averageRating != null ? Number(course.averageRating).toFixed(1) : '5.0'}
+              </Text>
+              <RatingStars rating={course.averageRating || 5.0} size={16} />
+              <Text style={styles.ratingCountText}>
+                {reviewsData.totalReviews || course.totalReviews || 0} đánh giá
+              </Text>
+            </View>
+
+            {/* Distribution Bars */}
+            <View style={styles.distributionCol}>
+              {[5, 4, 3, 2, 1].map((stars) => {
+                const count = reviewsData.distribution ? (reviewsData.distribution[`star${stars}`] || 0) : 0;
+                const total = reviewsData.totalReviews || 1;
+                const percent = Math.min(100, Math.round((count / (total || 1)) * 100));
+                return (
+                  <View key={stars} style={styles.distRow}>
+                    <Text style={styles.distStarLabel}>{stars} ★</Text>
+                    <View style={styles.distBarTrack}>
+                      <View style={[styles.distBarFill, { width: `${percent}%` }]} />
+                    </View>
+                    <Text style={styles.distCountLabel}>{count}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Reviews List */}
+          {reviewsData.reviews && reviewsData.reviews.length > 0 ? (
+            <View style={styles.reviewsList}>
+              {reviewsData.reviews.map((rev) => (
+                <View key={rev.id} style={styles.reviewCard}>
+                  <View style={styles.reviewCardHeader}>
+                    {rev.authorAvatar ? (
+                      <Image source={{ uri: rev.authorAvatar }} style={styles.reviewAvatar} />
+                    ) : (
+                      <View style={styles.reviewAvatarPlaceholder}>
+                        <Text style={styles.reviewAvatarInitial}>
+                          {rev.authorName ? rev.authorName.charAt(0).toUpperCase() : 'U'}
+                        </Text>
+                      </View>
+                    )}
+                    <View style={styles.reviewAuthorMeta}>
+                      <Text style={styles.reviewAuthorName}>{rev.authorName || 'Học viên Edumy'}</Text>
+                      <View style={styles.reviewStarsRow}>
+                        <RatingStars rating={rev.rating} size={12} />
+                        <Text style={styles.reviewDate}>
+                          {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('vi-VN') : ''}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  {rev.comment ? (
+                    <Text style={styles.reviewComment}>{rev.comment}</Text>
+                  ) : null}
+                </View>
+              ))}
+
+              {reviewsData.currentPage + 1 < reviewsData.totalPages && (
+                <TouchableOpacity
+                  style={styles.loadMoreReviewsBtn}
+                  disabled={reviewsLoading}
+                  onPress={() => fetchReviews(reviewsData.currentPage + 1, true)}
+                >
+                  {reviewsLoading ? (
+                    <ActivityIndicator size="small" color="#2563EB" />
+                  ) : (
+                    <Text style={styles.loadMoreReviewsText}>Xem thêm đánh giá</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <View style={styles.noReviewsBox}>
+              <Text style={styles.noReviewsText}>Chưa có đánh giá nào cho khóa học này.</Text>
+              <Text style={styles.noReviewsSub}>Hãy là người đầu tiên trải nghiệm và để lại nhận xét!</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
+
+      {/* Review Form Modal */}
+      <ReviewFormModal
+        visible={reviewModalVisible}
+        courseId={courseId}
+        initialReview={reviewsData.myReview}
+        onClose={() => setReviewModalVisible(false)}
+        onSubmitSuccess={() => {
+          fetchReviews(0, false);
+          fetchCourseDetail();
+        }}
+      />
 
       {/* Video Preview Modal */}
       <Modal
@@ -855,5 +1035,174 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  reviewSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  writeReviewBtn: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  writeReviewBtnText: {
+    color: '#2563EB',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  ratingOverviewBox: {
+    flexDirection: 'row',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  ratingScoreCol: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingRight: 16,
+    borderRightWidth: 1,
+    borderRightColor: '#E2E8F0',
+    minWidth: 110,
+  },
+  ratingScoreNumber: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  ratingCountText: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  distributionCol: {
+    flex: 1,
+    paddingLeft: 16,
+    gap: 4,
+  },
+  distRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  distStarLabel: {
+    fontSize: 11,
+    color: '#475569',
+    width: 24,
+    textAlign: 'right',
+  },
+  distBarTrack: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  distBarFill: {
+    height: '100%',
+    backgroundColor: '#F59E0B',
+    borderRadius: 3,
+  },
+  distCountLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    width: 20,
+    textAlign: 'right',
+  },
+  reviewsList: {
+    gap: 12,
+    marginTop: 4,
+  },
+  reviewCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  reviewCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reviewAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+  },
+  reviewAvatarPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  reviewAvatarInitial: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  reviewAuthorMeta: {
+    flex: 1,
+  },
+  reviewAuthorName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  reviewStarsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 2,
+  },
+  reviewDate: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  reviewComment: {
+    fontSize: 13,
+    color: '#334155',
+    lineHeight: 18,
+  },
+  loadMoreReviewsBtn: {
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  loadMoreReviewsText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#2563EB',
+  },
+  noReviewsBox: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  noReviewsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  noReviewsSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 4,
   },
 });
