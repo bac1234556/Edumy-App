@@ -10,6 +10,8 @@ export default function Catalog() {
           pathname: '/(student)/search',
           params: { initialKeyword: params?.initialKeyword || '' },
         });
+      } else if (screen === 'Wishlist') {
+        router.push('/(student)/wishlist');
       } else if (screen === 'CourseDetail') {
         router.push({
           pathname: '/(student)/courses/[id]',

@@ -7,6 +7,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { errorMessage } from '../api/client';
 import { fetchCourseCurriculum, fetchLesson } from '../api/player';
+import { ReviewFormModal } from '../components/common/ReviewFormModal';
 
 const SEEK_SECONDS = 10;
 const BLACK = '#000000';
@@ -117,6 +118,7 @@ export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy })
   const course = useQuery({ queryKey: ['player-course', courseId], queryFn: () => fetchCourseCurriculum(courseId) });
   const lessons = useMemo(() => flattenLessons(course.data?.curriculum), [course.data]);
   const [selectedId, setSelectedId] = useState(initialLessonId ? Number(initialLessonId) : null);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const lessonId = selectedId ?? lessons[0]?.id ?? null;
 
   const lesson = useQuery({
@@ -214,8 +216,14 @@ export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy })
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
         <Button onPress={onBack}>← Quay lại</Button>
         <Text variant="titleMedium" style={{ flex: 1 }} numberOfLines={1}>{course.data?.title || 'Học bài'}</Text>
+        <Button compact mode="text" onPress={() => setReviewModalVisible(true)} testID="player-review-btn">⭐ Đánh giá</Button>
       </View>
       {body}
+      <ReviewFormModal
+        visible={reviewModalVisible}
+        courseId={courseId}
+        onClose={() => setReviewModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
