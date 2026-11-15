@@ -42,6 +42,9 @@ public class Notification {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String body;
 
+    @Column(name = "reference_id")
+    private Long referenceId;
+
     /** false = chưa đọc (hiển thị chấm đỏ), true = đã đọc */
     @Column(name = "is_read", nullable = false)
     @Builder.Default

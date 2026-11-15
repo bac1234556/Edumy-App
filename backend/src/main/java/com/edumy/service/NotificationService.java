@@ -3,6 +3,7 @@ package com.edumy.service;
 import com.edumy.common.PageResponse;
 import com.edumy.dto.NotificationResponse;
 import com.edumy.entity.Notification;
+import com.edumy.entity.NotificationType;
 import com.edumy.exception.ResourceNotFoundException;
 import com.edumy.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,5 +39,16 @@ public class NotificationService {
     @Transactional
     public int markAllAsRead(Long userId) {
         return notificationRepository.markAllAsReadByUserId(userId);
+    }
+
+    @Transactional
+    public void createNotification(Long userId, NotificationType type, String title, String body, Long referenceId) {
+        notificationRepository.save(Notification.builder()
+                .userId(userId)
+                .type(type)
+                .title(title)
+                .body(body)
+                .referenceId(referenceId)
+                .build());
     }
 }

@@ -14,6 +14,9 @@ public enum NotificationType {
     /** Có câu trả lời mới cho câu hỏi của học viên */
     NEW_ANSWER,
 
+    /** Có câu hỏi mới trong khóa học của giảng viên */
+    NEW_QUESTION,
+
     /** Có học viên mới ghi danh vào khóa học của giảng viên */
     NEW_ENROLLMENT
 }

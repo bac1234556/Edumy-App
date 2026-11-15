@@ -249,8 +249,9 @@ Khi xây dựng màn hình, mỗi thành viên bắt buộc phải xử lý đ�
 - `POST /api/v1/admin/categories` - Tạo mới danh mục.
 - `PUT /api/v1/admin/categories/{id}` - Cập nhật danh mục.
 - `DELETE /api/v1/admin/categories/{id}` - Xóa danh mục nếu không còn khóa học hoặc danh mục con liên kết.
-- `GET /api/v1/lessons/{lessonId}/questions` - Danh sách câu hỏi thảo luận theo bài học.
-- `POST /api/v1/lessons/{lessonId}/questions` - Đặt câu hỏi mới.
-- `POST /api/v1/questions/{questionId}/answers` - Trả lời câu hỏi.
-- `PATCH /api/v1/answers/{answerId}/accept` - Giảng viên xác nhận câu trả lời đúng/hữu ích.
+- `GET /api/v1/lessons/{lessonId}/questions` (`/api/lessons/{lessonId}/questions`) - Danh sách phân trang câu hỏi và câu trả lời; chỉ người đã ghi danh hoặc giảng viên sở hữu khóa học được xem.
+- `POST /api/v1/lessons/{lessonId}/questions` (`/api/lessons/{lessonId}/questions`) - Đặt câu hỏi mới, yêu cầu đã ghi danh.
+- `POST /api/v1/questions/{questionId}/answers` (`/api/questions/{questionId}/answers`) - Trả lời với quyền học viên đã ghi danh hoặc giảng viên sở hữu khóa học.
+- `PATCH /api/v1/answers/{answerId}/accept` (`/api/answers/{answerId}/accept`) - Người đặt câu hỏi hoặc giảng viên sở hữu khóa học chấp nhận câu trả lời; mỗi câu hỏi chỉ có một câu trả lời được chấp nhận.
 - `GET /api/v1/notifications` - Danh sách thông báo của người dùng.
+- Thông báo `NEW_QUESTION` gửi đến giảng viên và `NEW_ANSWER` gửi đến người đặt câu hỏi; `referenceId` chứa ID câu hỏi để mobile điều hướng.
