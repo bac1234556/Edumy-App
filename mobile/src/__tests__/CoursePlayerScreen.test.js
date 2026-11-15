@@ -1,16 +1,78 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { useVideoPlayer } from 'expo-video';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Animated } from 'react-native';
 import { fetchCourseCurriculum, fetchLesson } from '../api/player';
+import {
+  acceptQuestionAnswer,
+  createLessonQuestion,
+  createQuestionAnswer,
+  fetchLessonQuestions,
+} from '../api/qa';
+import { useAuthStore } from '../store/authStore';
 import { CoursePlayerScreen, flattenLessons } from '../screens/CoursePlayerScreen';
 
-jest.mock('../api/player', () => ({ fetchCourseCurriculum: jest.fn(), fetchLesson: jest.fn() }));
+jest.mock('../api/player', () => ({
+  fetchCourseCurriculum: jest.fn(),
+  fetchLesson: jest.fn(),
+  fetchInstructorLesson: jest.fn(),
+}));
+jest.mock('../api/qa', () => ({
+  acceptQuestionAnswer: jest.fn(),
+  createLessonQuestion: jest.fn(),
+  createQuestionAnswer: jest.fn(),
+  fetchLessonQuestions: jest.fn(),
+}));
+jest.mock('../store/authStore', () => ({
+  useAuthStore: jest.fn((selector) => selector({ session: { user: { id: 5 } } })),
+}));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(), setItemAsync: jest.fn(), deleteItemAsync: jest.fn(),
 }));
+jest.mock('react-native-paper', () => {
+  const React = require('react');
+  const Paper = jest.requireActual('react-native-paper');
+  const {
+    Text: NativeText,
+    TextInput: NativeTextInput,
+    TouchableOpacity,
+    View: NativeView,
+  } = require('react-native');
+  return {
+    ...Paper,
+    TextInput: React.forwardRef((props, ref) => <NativeTextInput ref={ref} {...props} />),
+    ActivityIndicator: ({ accessibilityLabel, color, size, ...props }) => (
+      <NativeView accessible accessibilityLabel={accessibilityLabel} {...props} />
+    ),
+    Button: ({ children, disabled, loading, onPress, testID }) => (
+      <TouchableOpacity
+        accessibilityRole="button"
+        disabled={disabled || loading}
+        onPress={onPress}
+        testID={testID}
+      >
+        <NativeText>{children}</NativeText>
+      </TouchableOpacity>
+    ),
+    SegmentedButtons: ({ buttons, onValueChange }) => (
+      <NativeView>
+        {buttons.map((button) => (
+          <TouchableOpacity
+            key={button.value}
+            accessibilityRole="button"
+            onPress={() => onValueChange(button.value)}
+            testID={button.testID}
+          >
+            <NativeText>{button.label}</NativeText>
+          </TouchableOpacity>
+        ))}
+      </NativeView>
+    ),
+  };
+});
 jest.mock('expo-screen-orientation', () => ({
   lockAsync: jest.fn(() => Promise.resolve()),
   OrientationLock: { LANDSCAPE: 'LANDSCAPE', PORTRAIT_UP: 'PORTRAIT_UP' },
@@ -24,6 +86,7 @@ jest.mock('expo-video', () => {
 const COURSE = {
   id: 7,
   title: 'Java cơ bản',
+  instructor: { id: 2 },
   curriculum: [
     { id: 1, title: 'Bắt đầu học', lessons: [
       { id: 11, title: 'Giới thiệu', durationSeconds: 60, isPreview: true },
@@ -44,18 +107,32 @@ function renderPlayer(props = {}) {
 }
 
 beforeEach(() => {
-  jest.useFakeTimers();
+  const noAnimation = () => ({
+    start: (callback) => callback?.({ finished: true }),
+    stop: jest.fn(),
+    reset: jest.fn(),
+  });
+  jest.spyOn(Animated, 'timing').mockImplementation(noAnimation);
+  jest.spyOn(Animated, 'loop').mockImplementation(noAnimation);
+  useAuthStore.mockImplementation((selector) => selector({ session: { user: { id: 5 } } }));
+  fetchLessonQuestions.mockReset();
+  createLessonQuestion.mockReset();
+  createQuestionAnswer.mockReset();
+  acceptQuestionAnswer.mockReset();
   player = {
     playing: false, play: jest.fn(), pause: jest.fn(), seekBy: jest.fn(), replace: jest.fn(),
-    addListener: jest.fn(() => ({ remove: jest.fn() })),
+    addListener: jest.fn((event, listener) => {
+      if (event === 'playingChange') listener(false);
+      if (event === 'statusChange') listener('readyToPlay', 'loading', null);
+      return { remove: jest.fn() };
+    }),
   };
   useVideoPlayer.mockImplementation((source, setup) => { setup?.(player); return player; });
 });
 afterEach(() => {
   cleanup();
   clients.splice(0).forEach((c) => c.clear());
-  act(() => { jest.runOnlyPendingTimers(); });
-  jest.useRealTimers();
+  jest.restoreAllMocks();
 });
 
 test('flattenLessons keeps curriculum order', () => {
@@ -144,4 +221,181 @@ test('error state retries loading the course', async () => {
   expect(await view.findByText('Không kết nối được máy chủ. Kiểm tra mạng và thử lại.')).toBeTruthy();
   fireEvent.press(view.getByText('Thử lại'));
   expect(await view.findByTestId('player-video')).toBeTruthy();
+});
+
+test('Q&A tab has an empty state and submits a question that appears in the refreshed list', async () => {
+  fetchCourseCurriculum.mockResolvedValue(COURSE);
+  fetchLesson.mockImplementation((courseId, id) => Promise.resolve(lessonData(id)));
+  fetchLessonQuestions
+    .mockResolvedValueOnce({ content: [], page: 0, last: true })
+    .mockResolvedValue({ content: [{
+      id: 21,
+      lessonId: 11,
+      authorId: 5,
+      title: 'Câu hỏi mới',
+      content: 'Câu hỏi mới',
+      answerCount: 0,
+      hasAcceptedAnswer: false,
+      answers: [],
+    }], page: 0, last: true });
+  createLessonQuestion.mockResolvedValue({ id: 21 });
+
+  const view = renderPlayer();
+  await view.findByTestId('player-video');
+  fireEvent.press(view.getByText('Hỏi đáp'));
+  expect(await view.findByText('Chưa có câu hỏi nào cho bài học này.')).toBeTruthy();
+
+  fireEvent.press(view.getByTestId('qa-open-question-form'));
+  fireEvent.changeText(view.getByTestId('qa-question-content'), '  Câu hỏi mới  ');
+  fireEvent.press(view.getByTestId('qa-submit-question'));
+
+  await waitFor(() => expect(createLessonQuestion).toHaveBeenCalledWith(11, 'Câu hỏi mới'));
+  expect(await view.findByTestId('qa-question-21')).toBeTruthy();
+});
+
+test('Q&A validates an empty question without making an API request', async () => {
+  fetchCourseCurriculum.mockResolvedValue(COURSE);
+  fetchLesson.mockImplementation((courseId, id) => Promise.resolve(lessonData(id)));
+  fetchLessonQuestions.mockResolvedValue({ content: [], page: 0, last: true });
+
+  const view = renderPlayer();
+  await view.findByTestId('player-video');
+  fireEvent.press(view.getByText('Hỏi đáp'));
+  fireEvent.press(await view.findByTestId('qa-open-question-form'));
+  fireEvent.press(view.getByTestId('qa-submit-question'));
+
+  expect(await view.findByText('Nội dung câu hỏi không được để trống.')).toBeTruthy();
+  expect(createLessonQuestion).not.toHaveBeenCalled();
+});
+
+test('Q&A error state retries loading the lesson questions', async () => {
+  fetchCourseCurriculum.mockResolvedValue(COURSE);
+  fetchLesson.mockImplementation((courseId, id) => Promise.resolve(lessonData(id)));
+  fetchLessonQuestions
+    .mockRejectedValueOnce({ response: { data: { message: 'Không thể tải câu hỏi' } } })
+    .mockResolvedValue({ content: [], page: 0, last: true });
+
+  const view = renderPlayer();
+  await view.findByTestId('player-video');
+  fireEvent.press(view.getByText('Hỏi đáp'));
+  expect(await view.findByText('Không thể tải câu hỏi')).toBeTruthy();
+  fireEvent.press(view.getByText('Thử lại'));
+  expect(await view.findByText('Chưa có câu hỏi nào cho bài học này.')).toBeTruthy();
+});
+
+test('Q&A details show the instructor badge and accepted answer marker', async () => {
+  fetchCourseCurriculum.mockResolvedValue(COURSE);
+  fetchLesson.mockImplementation((courseId, id) => Promise.resolve(lessonData(id)));
+  fetchLessonQuestions.mockResolvedValue({
+    content: [{
+      id: 21,
+      lessonId: 11,
+      authorId: 5,
+      title: 'Câu hỏi',
+      content: 'Nội dung câu hỏi',
+      answerCount: 1,
+      hasAcceptedAnswer: true,
+      answers: [{ id: 31, authorId: 2, content: 'Câu trả lời của giảng viên', accepted: true }],
+    }],
+    page: 0,
+    last: true,
+  });
+
+  const view = renderPlayer();
+  await view.findByTestId('player-video');
+  fireEvent.press(view.getByText('Hỏi đáp'));
+  fireEvent.press(await view.findByTestId('qa-question-21'));
+
+  expect(await view.findByTestId('qa-instructor-badge-31')).toBeTruthy();
+  expect(view.getByTestId('qa-accepted-31')).toBeTruthy();
+  expect(view.getByText('Câu trả lời của giảng viên')).toBeTruthy();
+});
+
+test('instructor answer is persisted and visible to a student after reopening the lesson', async () => {
+  useAuthStore.mockImplementation((selector) => selector({ session: { user: { id: 2 } } }));
+  fetchCourseCurriculum.mockResolvedValue({
+    ...COURSE,
+    instructorId: 2,
+  });
+  const instructorLesson = { ...lessonData(11), durationSec: 60, durationSeconds: 60 };
+  const { fetchInstructorLesson } = require('../api/player');
+  fetchInstructorLesson.mockReturnValue(instructorLesson);
+  const unansweredQuestion = {
+    content: [{
+      id: 21,
+      lessonId: 11,
+      authorId: 5,
+      title: 'Câu hỏi',
+      content: 'Nội dung câu hỏi',
+      answerCount: 0,
+      hasAcceptedAnswer: false,
+      answers: [],
+    }],
+    page: 0,
+    last: true,
+  };
+  const answeredQuestion = {
+    content: [{
+      ...unansweredQuestion.content[0],
+      answerCount: 1,
+      answers: [{ id: 31, authorId: 2, content: 'Giải thích từ giảng viên', accepted: false }],
+    }],
+    page: 0,
+    last: true,
+  };
+  fetchLessonQuestions
+    .mockResolvedValueOnce(unansweredQuestion)
+    .mockResolvedValueOnce(answeredQuestion)
+    .mockResolvedValue(answeredQuestion);
+  createQuestionAnswer.mockResolvedValue({ id: 31 });
+
+  const instructorView = renderPlayer({ role: 'INSTRUCTOR' });
+  await instructorView.findByTestId('player-video');
+  fireEvent.press(instructorView.getByText('Hỏi đáp'));
+  fireEvent.press(await instructorView.findByTestId('qa-question-21'));
+  fireEvent.changeText(instructorView.getByTestId('qa-answer-content'), '  Giải thích từ giảng viên  ');
+  fireEvent.press(instructorView.getByTestId('qa-submit-answer'));
+
+  await waitFor(() => expect(createQuestionAnswer).toHaveBeenCalledWith(21, 'Giải thích từ giảng viên'));
+  expect(await instructorView.findByTestId('qa-instructor-badge-31')).toBeTruthy();
+
+  instructorView.unmount();
+  useAuthStore.mockImplementation((selector) => selector({ session: { user: { id: 5 } } }));
+  fetchCourseCurriculum.mockResolvedValue(COURSE);
+  fetchLesson.mockImplementation((courseId, id) => Promise.resolve(lessonData(id)));
+  const studentView = renderPlayer();
+  await studentView.findByTestId('player-video');
+  fireEvent.press(studentView.getByText('Hỏi đáp'));
+  fireEvent.press(await studentView.findByTestId('qa-question-21'));
+
+  expect(await studentView.findByText('Giải thích từ giảng viên')).toBeTruthy();
+  expect(studentView.getByTestId('qa-instructor-badge-31')).toBeTruthy();
+});
+
+test('question author can accept an answer', async () => {
+  fetchCourseCurriculum.mockResolvedValue(COURSE);
+  fetchLesson.mockImplementation((courseId, id) => Promise.resolve(lessonData(id)));
+  fetchLessonQuestions.mockResolvedValue({
+    content: [{
+      id: 21,
+      lessonId: 11,
+      authorId: 5,
+      title: 'Câu hỏi',
+      content: 'Nội dung câu hỏi',
+      answerCount: 1,
+      hasAcceptedAnswer: false,
+      answers: [{ id: 31, authorId: 8, content: 'Câu trả lời', accepted: false }],
+    }],
+    page: 0,
+    last: true,
+  });
+  acceptQuestionAnswer.mockResolvedValue({ id: 31, accepted: true });
+
+  const view = renderPlayer();
+  await view.findByTestId('player-video');
+  fireEvent.press(view.getByText('Hỏi đáp'));
+  fireEvent.press(await view.findByTestId('qa-question-21'));
+  fireEvent.press(view.getByTestId('qa-accept-31'));
+
+  await waitFor(() => expect(acceptQuestionAnswer.mock.calls[0][0]).toBe(31));
 });
