@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, ScrollView, StatusBar, TouchableOpacity, View } from 'react-native';
-import { ActivityIndicator, Button, Divider, Text } from 'react-native-paper';
+import { ActivityIndicator, Button, Divider, SegmentedButtons, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { errorMessage } from '../api/client';
-import { fetchCourseCurriculum, fetchLesson } from '../api/player';
+import { fetchCourseCurriculum, fetchInstructorLesson, fetchLesson } from '../api/player';
 import { ReviewFormModal } from '../components/common/ReviewFormModal';
+import LessonQASection from '../components/LessonQASection';
+import { useAuthStore } from '../store/authStore';
 
 const SEEK_SECONDS = 10;
 const BLACK = '#000000';
@@ -114,17 +116,24 @@ function LessonVideo({ url }) {
   );
 }
 
-export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy }) {
-  const course = useQuery({ queryKey: ['player-course', courseId], queryFn: () => fetchCourseCurriculum(courseId) });
+export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy, role = 'STUDENT' }) {
+  const currentUserId = useAuthStore((state) => state.session?.user?.id);
+  const course = useQuery({
+    queryKey: ['player-course', role, courseId],
+    queryFn: () => fetchCourseCurriculum(courseId, role),
+  });
   const lessons = useMemo(() => flattenLessons(course.data?.curriculum), [course.data]);
   const [selectedId, setSelectedId] = useState(initialLessonId ? Number(initialLessonId) : null);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState('lessons');
   const lessonId = selectedId ?? lessons[0]?.id ?? null;
 
   const lesson = useQuery({
-    queryKey: ['player-lesson', courseId, lessonId],
-    queryFn: () => fetchLesson(courseId, lessonId),
-    enabled: !!lessonId,
+    queryKey: ['player-lesson', role, courseId, lessonId],
+    queryFn: () => (role === 'INSTRUCTOR'
+      ? fetchInstructorLesson(course.data?.curriculum, lessonId)
+      : fetchLesson(courseId, lessonId)),
+    enabled: !!lessonId && (role !== 'INSTRUCTOR' || course.isSuccess),
     // Giữ link bài cũ khi đang tải bài mới để player không bị tạo lại.
     placeholderData: (previous) => previous,
     retry: (count, error) => error?.response?.status !== 403 && count < 1,
@@ -183,30 +192,48 @@ export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy })
           {lessons.find((l) => l.id === lessonId)?.title}
         </Text>
         <Divider style={{ marginTop: 8 }} />
-        <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-          {course.data.curriculum.map((section) => (
-            <View key={section.id}>
-              <Text variant="labelLarge" style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>{section.title}</Text>
-              {(section.lessons || []).map((item) => {
-                const active = item.id === lessonId;
-                return (
-                  <TouchableOpacity key={item.id} testID={`lesson-${item.id}`} onPress={() => setSelectedId(item.id)}
-                    accessibilityState={{ selected: active }}
-                    style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8,
-                      backgroundColor: active ? '#EFF6FF' : 'transparent' }}>
-                    <Text style={{ color: active ? '#2563EB' : '#64748B' }}>{active ? '▶' : '•'}</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: active ? '700' : '400', color: active ? '#2563EB' : '#0F172A' }}>{item.title}</Text>
-                      <Text variant="bodySmall">
-                        {formatDuration(item.durationSeconds)}{active ? ' · Đang phát' : ''}{item.isPreview ? ' · Xem thử' : ''}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ))}
-        </ScrollView>
+        <SegmentedButtons
+          value={activeTab}
+          onValueChange={setActiveTab}
+          buttons={[
+            { value: 'lessons', label: 'Bài học', testID: 'player-lessons-tab' },
+            { value: 'questions', label: 'Hỏi đáp', testID: 'player-qa-tab' },
+          ]}
+          style={{ marginHorizontal: 12, marginTop: 8 }}
+        />
+        {activeTab === 'questions' ? (
+          <LessonQASection
+            lessonId={lessonId}
+            instructorId={course.data?.instructor?.id ?? course.data?.instructorId}
+            currentUserId={currentUserId}
+            role={role}
+          />
+        ) : (
+          <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+            {course.data.curriculum.map((section) => (
+              <View key={section.id}>
+                <Text variant="labelLarge" style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>{section.title}</Text>
+                {(section.lessons || []).map((item) => {
+                  const active = item.id === lessonId;
+                  return (
+                    <TouchableOpacity key={item.id} testID={`lesson-${item.id}`} onPress={() => setSelectedId(item.id)}
+                      accessibilityState={{ selected: active }}
+                      style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8,
+                        backgroundColor: active ? '#EFF6FF' : 'transparent' }}>
+                      <Text style={{ color: active ? '#2563EB' : '#64748B' }}>{active ? '▶' : '•'}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontWeight: active ? '700' : '400', color: active ? '#2563EB' : '#0F172A' }}>{item.title}</Text>
+                        <Text variant="bodySmall">
+                          {formatDuration(item.durationSeconds)}{active ? ' · Đang phát' : ''}{item.isPreview ? ' · Xem thử' : ''}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+          </ScrollView>
+        )}
       </View>
     );
   }

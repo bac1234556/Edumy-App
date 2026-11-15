@@ -124,28 +124,36 @@ export const MyCoursesScreen = ({ navigation }) => {
           renderItem={({ item }) => {
             const badge = getStatusBadge(item.status);
             return (
-              <TouchableOpacity
-                style={styles.courseCard}
-                activeOpacity={0.8}
-                onPress={() => navigation.navigate('CurriculumEditor', { courseId: item.id })}
-              >
+              <View style={styles.courseCard}>
                 <Image
                   source={{ uri: item.thumbnailUrl || 'https://via.placeholder.com/150' }}
                   style={styles.cardImage}
                 />
                 <View style={styles.cardBody}>
-                  <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
-                  <View style={styles.badgeRow}>
-                    <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-                      <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => navigation.navigate('CurriculumEditor', { courseId: item.id })}
+                  >
+                    <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                    <View style={styles.badgeRow}>
+                      <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                        <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
+                      </View>
+                      <Text style={styles.cardPrice}>
+                        {!item.price || item.price === 0 ? 'Miễn phí' : `${Number(item.price).toLocaleString('vi-VN')} đ`}
+                      </Text>
                     </View>
-                    <Text style={styles.cardPrice}>
-                      {!item.price || item.price === 0 ? 'Miễn phí' : `${Number(item.price).toLocaleString('vi-VN')} đ`}
-                    </Text>
-                  </View>
-                  <Text style={styles.btnEditCurriculum}>Quản lý nội dung (Curriculum) →</Text>
+                    <Text style={styles.btnEditCurriculum}>Quản lý nội dung (Curriculum) →</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    testID={`instructor-course-qa-${item.id}`}
+                    style={styles.qaButton}
+                    onPress={() => navigation.navigate('CourseQA', { courseId: item.id })}
+                  >
+                    <Text style={styles.qaButtonText}>Mở phần hỏi đáp →</Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
+              </View>
             );
           }}
         />
@@ -179,6 +187,8 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: '600' },
   cardPrice: { fontSize: 13, fontWeight: '700', color: '#059669' },
   btnEditCurriculum: { fontSize: 12, color: '#2563EB', fontWeight: '600' },
+  qaButton: { alignSelf: 'flex-start', marginTop: 8, paddingVertical: 4 },
+  qaButtonText: { fontSize: 12, color: '#0F766E', fontWeight: '700' },
   stateMsg: { fontSize: 14, color: '#6B7280', marginTop: 8, textAlign: 'center' },
   errorTitle: { fontSize: 17, fontWeight: '700', color: '#DC2626' },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: '#374151' },

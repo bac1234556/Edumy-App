@@ -2,13 +2,17 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Button } from 'react-native-paper';
-import { MyCoursesScreen } from '../../src/modules/instructor/screens/MyCoursesScreen';
+import { MyCoursesScreen } from '../../src/screens/MyCoursesScreen';
 
 export default function InstructorHome() {
   const navigation = {
     navigate: (screen, params) => {
       if (screen === 'Notifications') {
         router.push('/(instructor)/notifications');
+        return;
+      }
+      if (screen === 'CourseQA') {
+        router.push({ pathname: '/(instructor)/learn/[courseId]', params: { courseId: params.courseId } });
         return;
       }
       // route to instructor course form or course details
