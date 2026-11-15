@@ -49,6 +49,25 @@ describe('Instructor Screens', () => {
       });
     });
 
+    it('opens the Q&A player for a course from the instructor account', async () => {
+      instructorApi.getMyCourses.mockResolvedValueOnce({
+        data: {
+          data: [{
+            id: 7,
+            title: 'Khóa học của giảng viên',
+            price: 150000,
+            status: 'PUBLISHED',
+          }],
+        },
+      });
+
+      const { getByTestId } = render(<MyCoursesScreen navigation={mockNavigation} />);
+      await waitFor(() => expect(getByTestId('instructor-course-qa-7')).toBeTruthy());
+
+      fireEvent.press(getByTestId('instructor-course-qa-7'));
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('CourseQA', { courseId: 7 });
+    });
+
     it('renders empty state when there are no courses', async () => {
       instructorApi.getMyCourses.mockResolvedValueOnce({
         data: { data: [] },
