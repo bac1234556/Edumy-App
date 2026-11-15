@@ -12,6 +12,8 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
+
 import java.util.Optional;
 
 @Repository
@@ -32,4 +34,10 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     long countByRole(Role role);
 
     long countByStatus(UserStatus status);
+
+    @Query("select u.role as role, count(u.id) as count from User u group by u.role")
+    List<RoleCountProjection> countUsersGroupedByRole();
+
+    @Query("select u.status as status, count(u.id) as count from User u group by u.status")
+    List<StatusCountProjection> countUsersGroupedByStatus();
 }

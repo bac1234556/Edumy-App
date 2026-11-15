@@ -2,12 +2,18 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
-import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../api/notifications';
+import { fetchNotifications, fetchUnreadCount, markNotificationAsRead, markAllNotificationsAsRead } from '../api/notifications';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
+import { useNotificationsStore } from '../store/notificationsStore';
+
+jest.mock('expo-router', () => ({
+  useFocusEffect: (callback) => require('react').useEffect(callback, [callback]),
+}));
 
 jest.mock('../api/notifications', () => ({
   fetchNotifications: jest.fn(),
   fetchUnreadCount: jest.fn(),
+  refreshUnreadCount: jest.fn(),
   markNotificationAsRead: jest.fn(),
   markAllNotificationsAsRead: jest.fn(),
 }));
@@ -32,6 +38,9 @@ function renderWithProviders(ui) {
 
 beforeEach(() => {
   jest.useFakeTimers();
+  fetchUnreadCount.mockResolvedValue(0);
+  require('../api/notifications').refreshUnreadCount.mockResolvedValue(0);
+  useNotificationsStore.getState().setUnreadCount(0);
 });
 
 afterEach(() => {
@@ -51,7 +60,7 @@ describe('NotificationsScreen', () => {
   });
 
   test('renders empty state when there are no notifications', async () => {
-    fetchNotifications.mockResolvedValue({ content: [], totalElements: 0 });
+    fetchNotifications.mockResolvedValue({ content: [], page: 0, last: true, totalElements: 0 });
     const view = renderWithProviders(<NotificationsScreen onBack={jest.fn()} />);
     expect(await view.findByText('Bạn chưa có thông báo nào.')).toBeTruthy();
   });
@@ -71,6 +80,8 @@ describe('NotificationsScreen', () => {
           isRead: true,
         },
       ],
+      page: 0,
+      last: true,
       totalElements: 1,
     });
     fireEvent.press(view.getByText('Thử lại'));
@@ -88,6 +99,8 @@ describe('NotificationsScreen', () => {
           isRead: false,
         },
       ],
+      page: 0,
+      last: true,
       totalElements: 1,
     });
     markNotificationAsRead.mockResolvedValue({ id: 10, isRead: true });
@@ -104,7 +117,7 @@ describe('NotificationsScreen', () => {
   });
 
   test('calls onBack when back button pressed', async () => {
-    fetchNotifications.mockResolvedValue({ content: [], totalElements: 0 });
+    fetchNotifications.mockResolvedValue({ content: [], page: 0, last: true, totalElements: 0 });
     const onBack = jest.fn();
     const view = renderWithProviders(<NotificationsScreen onBack={onBack} />);
     fireEvent.press(await view.findByText('← Quay lại'));
