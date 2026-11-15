@@ -34,6 +34,9 @@ public class Question {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(length = 255)
+    private String title;
+
     /** Nội dung câu hỏi */
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
