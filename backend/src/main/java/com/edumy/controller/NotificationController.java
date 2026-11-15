@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping({"/api/notifications", "/api/v1/notifications"})
+@RequestMapping({"/api/me/notifications", "/api/notifications", "/api/v1/notifications"})
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Notification API", description = "Thông báo của người dùng đang đăng nhập")
