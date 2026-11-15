@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { useVideoPlayer } from 'expo-video';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Animated } from 'react-native';
 import { fetchCourseCurriculum, fetchLesson } from '../api/player';
 import {
   acceptQuestionAnswer,
@@ -31,6 +32,47 @@ jest.mock('../store/authStore', () => ({
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(), setItemAsync: jest.fn(), deleteItemAsync: jest.fn(),
 }));
+jest.mock('react-native-paper', () => {
+  const React = require('react');
+  const Paper = jest.requireActual('react-native-paper');
+  const {
+    Text: NativeText,
+    TextInput: NativeTextInput,
+    TouchableOpacity,
+    View: NativeView,
+  } = require('react-native');
+  return {
+    ...Paper,
+    TextInput: React.forwardRef((props, ref) => <NativeTextInput ref={ref} {...props} />),
+    ActivityIndicator: ({ accessibilityLabel, color, size, ...props }) => (
+      <NativeView accessible accessibilityLabel={accessibilityLabel} {...props} />
+    ),
+    Button: ({ children, disabled, loading, onPress, testID }) => (
+      <TouchableOpacity
+        accessibilityRole="button"
+        disabled={disabled || loading}
+        onPress={onPress}
+        testID={testID}
+      >
+        <NativeText>{children}</NativeText>
+      </TouchableOpacity>
+    ),
+    SegmentedButtons: ({ buttons, onValueChange }) => (
+      <NativeView>
+        {buttons.map((button) => (
+          <TouchableOpacity
+            key={button.value}
+            accessibilityRole="button"
+            onPress={() => onValueChange(button.value)}
+            testID={button.testID}
+          >
+            <NativeText>{button.label}</NativeText>
+          </TouchableOpacity>
+        ))}
+      </NativeView>
+    ),
+  };
+});
 jest.mock('expo-screen-orientation', () => ({
   lockAsync: jest.fn(() => Promise.resolve()),
   OrientationLock: { LANDSCAPE: 'LANDSCAPE', PORTRAIT_UP: 'PORTRAIT_UP' },
@@ -65,6 +107,13 @@ function renderPlayer(props = {}) {
 }
 
 beforeEach(() => {
+  const noAnimation = () => ({
+    start: (callback) => callback?.({ finished: true }),
+    stop: jest.fn(),
+    reset: jest.fn(),
+  });
+  jest.spyOn(Animated, 'timing').mockImplementation(noAnimation);
+  jest.spyOn(Animated, 'loop').mockImplementation(noAnimation);
   useAuthStore.mockImplementation((selector) => selector({ session: { user: { id: 5 } } }));
   fetchLessonQuestions.mockReset();
   createLessonQuestion.mockReset();
@@ -72,14 +121,18 @@ beforeEach(() => {
   acceptQuestionAnswer.mockReset();
   player = {
     playing: false, play: jest.fn(), pause: jest.fn(), seekBy: jest.fn(), replace: jest.fn(),
-    addListener: jest.fn(() => ({ remove: jest.fn() })),
+    addListener: jest.fn((event, listener) => {
+      if (event === 'playingChange') listener(false);
+      if (event === 'statusChange') listener('readyToPlay', 'loading', null);
+      return { remove: jest.fn() };
+    }),
   };
   useVideoPlayer.mockImplementation((source, setup) => { setup?.(player); return player; });
 });
 afterEach(() => {
   cleanup();
   clients.splice(0).forEach((c) => c.clear());
-  jest.useRealTimers();
+  jest.restoreAllMocks();
 });
 
 test('flattenLessons keeps curriculum order', () => {

@@ -110,7 +110,7 @@ jobs:
           CI: 'true'
         run: npm run lint
       - name: Test auth and secure session
-        run: npm test -- --runInBand --json --outputFile="$RUNNER_TEMP/mobile-tests.json"
+        run: npm test -- --runInBand --forceExit --json --outputFile="$RUNNER_TEMP/mobile-tests.json"
       - name: Report mobile test failures
         if: ${{ failure() }}
         run: |

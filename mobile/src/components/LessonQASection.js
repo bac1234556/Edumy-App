@@ -168,9 +168,10 @@ export default function LessonQASection({ lessonId, instructorId, currentUserId,
         >
           <View style={{ padding: 20, borderRadius: 12, backgroundColor: '#FFFFFF', gap: 12 }}>
             <Text variant="titleLarge">Đặt câu hỏi</Text>
+            <Text variant="labelLarge">Nội dung câu hỏi</Text>
             <TextInput
               mode="outlined"
-              label="Nội dung câu hỏi"
+              placeholder="Nhập câu hỏi của bạn"
               multiline
               maxLength={MAX_CONTENT_LENGTH}
               value={questionContent}
@@ -276,9 +277,10 @@ export default function LessonQASection({ lessonId, instructorId, currentUserId,
                   {errorMessage(acceptMutation.error)}
                 </Text>
               )}
+              <Text variant="labelLarge">Câu trả lời của bạn</Text>
               <TextInput
                 mode="outlined"
-                label="Câu trả lời của bạn"
+                placeholder="Nhập câu trả lời của bạn"
                 multiline
                 maxLength={MAX_CONTENT_LENGTH}
                 value={answerContent}
