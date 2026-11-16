@@ -134,6 +134,27 @@ describe('MyLearningScreen', () => {
     expect(onOpenCourse).toHaveBeenCalledWith(ENROLLMENTS_MOCK[0]);
   });
 
+  test('"Tiếp tục học" opens the course, "Học lại" for a finished one', async () => {
+    fetchMyCourses.mockResolvedValue(ENROLLMENTS_MOCK);
+    const onOpenCourse = jest.fn();
+    const view = renderWithProviders(<MyLearningScreen onOpenCourse={onOpenCourse} />);
+    await view.findByText(ENROLLMENTS_MOCK[0].courseTitle);
+    expect(view.getByText('Tiếp tục học')).toBeTruthy();
+    expect(view.getByText('Học lại')).toBeTruthy();
+    fireEvent.press(view.getByTestId('continue-1'));
+    expect(onOpenCourse).toHaveBeenCalledWith(ENROLLMENTS_MOCK[0]);
+  });
+
+  test('only a finished course has a "Chứng chỉ" button', async () => {
+    fetchMyCourses.mockResolvedValue(ENROLLMENTS_MOCK);
+    const onCertificate = jest.fn();
+    const view = renderWithProviders(<MyLearningScreen onCertificate={onCertificate} />);
+    await view.findByText(ENROLLMENTS_MOCK[0].courseTitle);
+    expect(view.queryByTestId('certificate-1')).toBeNull();
+    fireEvent.press(view.getByTestId('certificate-2'));
+    expect(onCertificate).toHaveBeenCalledWith(ENROLLMENTS_MOCK[1]);
+  });
+
   test('empty state links to the catalog', async () => {
     fetchMyCourses.mockResolvedValue([]);
     const onExplore = jest.fn();

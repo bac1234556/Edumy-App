@@ -10,7 +10,7 @@ function Centered({ children }) {
   return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, gap: 12 }}>{children}</View>;
 }
 
-function EnrollmentCard({ item, onPress }) {
+function EnrollmentCard({ item, onPress, onCertificate }) {
   const percent = Math.max(0, Math.min(100, item.progressPercent || 0));
   const done = percent === 100;
   return (
@@ -25,13 +25,24 @@ function EnrollmentCard({ item, onPress }) {
             {done ? 'Đã hoàn thành' : `${percent}% hoàn thành`}
             {item.totalLessons ? ` · ${item.completedLessons || 0}/${item.totalLessons} bài` : ''}
           </Text>
+          {/* Player tự lấy điểm học tiếp (bài + giây xem dở) từ API resume khi mở. */}
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <Button compact mode="contained-tonal" testID={`continue-${item.id}`} onPress={() => onPress?.(item)}>
+              {done ? 'Học lại' : 'Tiếp tục học'}
+            </Button>
+            {done && (
+              <Button compact mode="outlined" testID={`certificate-${item.id}`} onPress={() => onCertificate?.(item)}>
+                Chứng chỉ
+              </Button>
+            )}
+          </View>
         </View>
       </View>
     </Card>
   );
 }
 
-export function MyLearningScreen({ onBack, onExplore, onOpenCourse }) {
+export function MyLearningScreen({ onBack, onExplore, onOpenCourse, onCertificate }) {
   const enrollments = useQuery({ queryKey: MY_COURSES_KEY, queryFn: fetchMyCourses });
 
   let body;
@@ -57,7 +68,7 @@ export function MyLearningScreen({ onBack, onExplore, onOpenCourse }) {
         data={enrollments.data}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={{ padding: 16, gap: 12 }}
-        renderItem={({ item }) => <EnrollmentCard item={item} onPress={onOpenCourse} />}
+        renderItem={({ item }) => <EnrollmentCard item={item} onPress={onOpenCourse} onCertificate={onCertificate} />}
         refreshing={enrollments.isRefetching}
         onRefresh={() => enrollments.refetch()}
       />

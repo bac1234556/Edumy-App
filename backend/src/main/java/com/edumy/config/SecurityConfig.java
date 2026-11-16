@@ -60,7 +60,8 @@ public class SecurityConfig {
                                 "/api/auth/logout", "/api/v1/auth/register", "/api/v1/auth/login",
                                 "/api/v1/auth/refresh-token", "/api/auth/refresh-token", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/courses/**", "/api/v1/courses/**",
-                                "/api/avatars/**", "/api/categories/**", "/api/v1/categories/**").permitAll()
+                                "/api/avatars/**", "/api/categories/**", "/api/v1/categories/**",
+                                "/api/certificates/*/verify", "/api/v1/certificates/*/verify").permitAll()
                         .requestMatchers("/api/admin/**", "/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/instructor/**", "/api/v1/instructor/**").hasRole("INSTRUCTOR")
                         .anyRequest().authenticated())

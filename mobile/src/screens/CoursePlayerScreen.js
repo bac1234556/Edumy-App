@@ -1,12 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, ScrollView, StatusBar, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, Button, Divider, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { errorMessage } from '../api/client';
+import { MY_COURSES_KEY } from '../api/learning';
 import { fetchCourseCurriculum, fetchLesson } from '../api/player';
+import { fetchResume, resumeKey, saveLessonProgress } from '../api/progress';
+import { useLessonProgress } from '../hooks/useLessonProgress';
 import { ReviewFormModal } from '../components/common/ReviewFormModal';
 
 const SEEK_SECONDS = 10;
@@ -38,7 +41,7 @@ async function lockOrientation(landscape) {
  * Một player cho cả màn học (kết luận spike W7-D2): tạo bằng link đầu tiên, đổi bài bằng replace().
  * expo-video 1.1 trên Android không nhận source null, nên chỉ mount khi đã có link video.
  */
-function LessonVideo({ url }) {
+function LessonVideo({ url, lessonId, startPositionSec = 0, trackProgress = false, onStartApplied, onSaved }) {
   const firstUrl = useRef(url).current;
   const player = useVideoPlayer(firstUrl, (p) => p.play());
   const [playing, setPlaying] = useState(false);
@@ -46,24 +49,50 @@ function LessonVideo({ url }) {
   const [error, setError] = useState(null);
   const [fullscreen, setFullscreen] = useState(false);
   const currentUrl = useRef(firstUrl);
+  const currentLesson = useRef(lessonId);
+  // W9-D2: tua tới điểm học tiếp khi video sẵn sàng; chỉ lưu tiến độ sau đó.
+  const readyRef = useRef(false);
+  const pendingStart = useRef(startPositionSec);
+  const startRef = useRef(startPositionSec);
+  const startAppliedRef = useRef(onStartApplied);
+  const trackRef = useRef(trackProgress);
+  startRef.current = startPositionSec;
+  startAppliedRef.current = onStartApplied;
+  trackRef.current = trackProgress;
+
+  useLessonProgress({ player, lessonId, canSave: () => trackRef.current && readyRef.current, onSaved });
 
   useEffect(() => {
+    const onReady = () => {
+      if (pendingStart.current > 0) {
+        try { player.currentTime = pendingStart.current; } catch { /* sẽ phát từ đầu */ }
+      }
+      pendingStart.current = 0;
+      readyRef.current = true;
+      startAppliedRef.current?.();
+    };
     const subs = [
       player.addListener('playingChange', (isPlaying) => setPlaying(isPlaying)),
       player.addListener('statusChange', (next, _old, err) => {
         setStatus(next);
         setError(next === 'error' ? err?.message || 'Không phát được video' : null);
+        if (next === 'readyToPlay') onReady();
       }),
     ];
+    if (player.status === 'readyToPlay') onReady();
     return () => subs.forEach((s) => s.remove());
   }, [player]);
 
   useEffect(() => {
-    if (url === currentUrl.current) return;
+    // Đổi bài thì nạp lại video kể cả khi hai bài dùng chung một URL (dữ liệu demo làm vậy).
+    if (url === currentUrl.current && lessonId === currentLesson.current) return;
     currentUrl.current = url;
+    currentLesson.current = lessonId;
+    readyRef.current = false;
+    pendingStart.current = startRef.current;
     player.replace(url);
     player.play();
-  }, [player, url]);
+  }, [player, url, lessonId]);
 
   useEffect(() => () => { lockOrientation(false); }, []);
 
@@ -114,21 +143,62 @@ function LessonVideo({ url }) {
   );
 }
 
-export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy }) {
+export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy, onCertificate }) {
   const course = useQuery({ queryKey: ['player-course', courseId], queryFn: () => fetchCourseCurriculum(courseId) });
   const lessons = useMemo(() => flattenLessons(course.data?.curriculum), [course.data]);
   const [selectedId, setSelectedId] = useState(initialLessonId ? Number(initialLessonId) : null);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
-  const lessonId = selectedId ?? lessons[0]?.id ?? null;
+  const queryClient = useQueryClient();
+
+  // W9-D2: điểm học tiếp. gcTime 0 để mỗi lần mở màn đều lấy vị trí mới nhất, không dùng bản cache cũ.
+  const resume = useQuery({
+    queryKey: resumeKey(courseId), queryFn: () => fetchResume(courseId), retry: false, gcTime: 0,
+  });
+  const trackProgress = resume.isSuccess;
+  const completedIds = useMemo(() => new Set(resume.data?.completedLessonIds || []), [resume.data]);
+  const startConsumed = useRef(false);
+  const waitingResume = selectedId == null && resume.isLoading;
+  const lessonId = selectedId ?? resume.data?.lessonId ?? lessons[0]?.id ?? null;
 
   const lesson = useQuery({
     queryKey: ['player-lesson', courseId, lessonId],
     queryFn: () => fetchLesson(courseId, lessonId),
-    enabled: !!lessonId,
+    enabled: !!lessonId && !waitingResume,
     // Giữ link bài cũ khi đang tải bài mới để player không bị tạo lại.
     placeholderData: (previous) => previous,
     retry: (count, error) => error?.response?.status !== 403 && count < 1,
   });
+
+  // Cập nhật dấu tick + tiến độ trong cache; làm mới My Learning khi số bài hoàn thành đổi.
+  const handleSaved = useCallback((result) => {
+    if (!result) return;
+    const previous = queryClient.getQueryData(resumeKey(courseId));
+    queryClient.setQueryData(resumeKey(courseId), (old) => {
+      if (!old) return old;
+      const ids = new Set(old.completedLessonIds || []);
+      if (result.completed) ids.add(result.lessonId);
+      return {
+        ...old,
+        completedLessonIds: [...ids],
+        progressPercent: result.progressPercent,
+        completedLessons: result.completedLessons,
+        totalLessons: result.totalLessons,
+      };
+    });
+    if (previous && previous.completedLessons !== result.completedLessons) {
+      queryClient.invalidateQueries({ queryKey: MY_COURSES_KEY });
+    }
+  }, [queryClient, courseId]);
+
+  const completeText = useMutation({
+    mutationFn: (id) => saveLessonProgress(id, { positionSec: 0, completed: true }),
+    onSuccess: handleSaved,
+  });
+
+  // Vị trí xem dở chỉ áp cho bài được tải đầu tiên của lần mở màn này.
+  const loadedId = lesson.data?.id;
+  const startPositionSec = !startConsumed.current && resume.data && !resume.data.completed
+    && resume.data.lessonId === loadedId ? resume.data.positionSec || 0 : 0;
 
   let videoArea;
   if (lesson.isError) {
@@ -146,12 +216,32 @@ export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy })
       </View>
     );
   } else if (lesson.data?.videoUrl) {
-    videoArea = <LessonVideo url={lesson.data.videoUrl} />;
+    videoArea = (
+      <LessonVideo
+        url={lesson.data.videoUrl}
+        lessonId={lesson.data.id}
+        startPositionSec={startPositionSec}
+        trackProgress={trackProgress}
+        onStartApplied={() => { startConsumed.current = true; }}
+        onSaved={handleSaved}
+      />
+    );
   } else if (lesson.isSuccess) {
+    // Bài không có video = bài TEXT: học viên tự bấm "Hoàn thành".
+    const done = completedIds.has(lesson.data?.id);
     videoArea = (
       <View style={{ aspectRatio: 16 / 9 }}>
         <Centered style={{ backgroundColor: '#0F172A' }}>
           <Text style={{ color: '#FFFFFF' }} testID="player-no-video">Bài học này chưa có video</Text>
+          {trackProgress && (
+            <Button mode="contained" testID="lesson-complete" disabled={done || completeText.isPending}
+              loading={completeText.isPending} onPress={() => completeText.mutate(lesson.data.id)}>
+              {done ? 'Đã hoàn thành ✓' : 'Hoàn thành'}
+            </Button>
+          )}
+          {completeText.isError && (
+            <Text style={{ color: '#FCA5A5' }} accessibilityRole="alert">{errorMessage(completeText.error)}</Text>
+          )}
         </Centered>
       </View>
     );
@@ -182,6 +272,19 @@ export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy })
         <Text variant="titleMedium" style={{ paddingHorizontal: 16 }} numberOfLines={2} testID="player-title">
           {lessons.find((l) => l.id === lessonId)?.title}
         </Text>
+        {resume.isSuccess && (
+          <Text variant="bodySmall" style={{ paddingHorizontal: 16 }} testID="player-progress">
+            Tiến độ: {resume.data.progressPercent || 0}% · {resume.data.completedLessons || 0}/{resume.data.totalLessons || lessons.length} bài
+          </Text>
+        )}
+        {resume.isSuccess && resume.data.progressPercent >= 100 && onCertificate && (
+          <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text testID="player-course-done" style={{ color: '#16A34A' }}>Bạn đã hoàn thành khóa học!</Text>
+            <Button compact mode="contained-tonal" testID="player-certificate" onPress={() => onCertificate(courseId)}>
+              Xem chứng chỉ
+            </Button>
+          </View>
+        )}
         <Divider style={{ marginTop: 8 }} />
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
           {course.data.curriculum.map((section) => (
@@ -189,12 +292,15 @@ export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy })
               <Text variant="labelLarge" style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>{section.title}</Text>
               {(section.lessons || []).map((item) => {
                 const active = item.id === lessonId;
+                const done = completedIds.has(item.id);
                 return (
                   <TouchableOpacity key={item.id} testID={`lesson-${item.id}`} onPress={() => setSelectedId(item.id)}
                     accessibilityState={{ selected: active }}
                     style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8,
                       backgroundColor: active ? '#EFF6FF' : 'transparent' }}>
-                    <Text style={{ color: active ? '#2563EB' : '#64748B' }}>{active ? '▶' : '•'}</Text>
+                    {done
+                      ? <Text style={{ color: '#16A34A' }} testID={`lesson-done-${item.id}`} accessibilityLabel="Đã hoàn thành">✓</Text>
+                      : <Text style={{ color: active ? '#2563EB' : '#64748B' }}>{active ? '▶' : '•'}</Text>}
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontWeight: active ? '700' : '400', color: active ? '#2563EB' : '#0F172A' }}>{item.title}</Text>
                       <Text variant="bodySmall">
