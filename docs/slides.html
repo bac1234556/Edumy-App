@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edumy Mobile Ecosystem — Architecture & Engineering Defense Deck</title>
+  <!-- Google Fonts: Space Grotesk, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <!-- Chart.js 4.4.1 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    /* ==========================================================================
+       1. THREE-LAYER DESIGN TOKENS (UI-UX-PRO-MAX & ANTI-AI-SLOP MANIFESTO)
+       ========================================================================== */
+    :root {
+      /* Layer 1: Primitive Tokens */
+      --slate-950: #090D16;
+      --slate-900: #0F172A;
+      --slate-850: #131C31;
+      --slate-800: #1E293B;
+      --slate-700: #334155;
+      --slate-400: #94A3B8;
+      --slate-300: #CBD5E1;
+      --slate-100: #F1F5F9;
+      --slate-50:  #F8FAFC;
+
+      --teal-600:  #0D9488;
+      --teal-500:  #14B8A6;
+      --teal-400:  #2DD4BF;
+      --teal-950:  rgba(13, 148, 136, 0.14);
+
+      --emerald-500: #10B981;
+      --emerald-400: #34D399;
+      --emerald-950: rgba(16, 185, 129, 0.12);
+
+      --cobalt-500: #3B82F6;
+      --cobalt-400: #60A5FA;
+      --cobalt-950: rgba(59, 130, 246, 0.12);
+
+      --amber-500: #F59E0B;
+      --amber-400: #FBBF24;
+      --amber-950: rgba(245, 158, 11, 0.12);
+
+      --rose-500: #EF4444;
+      --rose-400: #F87171;
+      --rose-950: rgba(239, 68, 68, 0.12);
+
+      /* Layer 2: Semantic Tokens */
+      --bg-canvas: #090D16;
+      --surface-card: rgba(15, 23, 42, 0.78);
+      --surface-elevated: rgba(19, 28, 49, 0.92);
+      --surface-code: #060911;
+      --border-subtle: 1px solid rgba(148, 163, 184, 0.12);
+      --border-strong: 1px solid rgba(148, 163, 184, 0.24);
+      --border-brand: 1px solid rgba(20, 184, 166, 0.45);
+      --brand-primary: #0D9488;
+      --accent-emerald: #10B981;
+      --accent-cobalt: #3B82F6;
+      --accent-amber: #F59E0B;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      /* Layer 3: Component & Typography Tokens */
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --card-radius: 10px;
+      --badge-radius: 6px;
+      --micro-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.22);
+      --transition-fast: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ==========================================================================
+       2. RESET & SWISS EDITORIAL CANVAS
+       ========================================================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #05070C;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Numerical discipline: strictly tabular numerals */
+    .mono, code, pre, .tabular, th, td, .kpi-value, .badge-num {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Top Progress Bar (3px sharp) */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--teal-500);
+      transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 2000;
+    }
+
+    /* 16:9 Aspect Ratio Locked Container */
+    .slide-deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-canvas);
+      background-image:
+        linear-gradient(to right, rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    @media (min-width: 1024px) {
+      .slide-deck {
+        max-width: calc(100vh * 16 / 9);
+        max-height: calc(100vw * 9 / 16);
+        margin: auto;
+        position: absolute;
+        inset: 0;
+        border: var(--border-subtle);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+      }
+    }
+
+    /* Slide Base */
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: clamp(24px, 3.2vw, 44px) clamp(28px, 4vw, 56px) clamp(52px, 5vw, 68px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(8px);
+      transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+                  visibility 260ms;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      z-index: 10;
+    }
+
+    /* Slide Top Editorial Header Bar */
+    .slide-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .slide-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-index {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal-400);
+      background: var(--teal-950);
+      border: 1px solid rgba(45, 212, 191, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .section-kicker {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .slide-topbar-right {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Slide Headline Block */
+    .slide-header {
+      margin-top: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    .slide-h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(22px, 2.3vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      color: var(--text-primary);
+    }
+
+    .slide-subtitle {
+      font-size: clamp(12px, 1.05vw, 14px);
+      color: var(--text-secondary);
+      line-height: 1.5;
+      max-width: 680px;
+      margin-top: 4px;
+    }
+
+    /* Slide Main Content Area */
+    .slide-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* ==========================================================================
+       3. SWISS EDITORIAL & ASYMMETRIC BENTO GRIDS
+       ========================================================================== */
+    .grid-12 {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: clamp(12px, 1.3vw, 18px);
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .col-12 { grid-column: span 12; }
+    .col-8  { grid-column: span 8; }
+    .col-7  { grid-column: span 7; }
+    .col-6  { grid-column: span 6; }
+    .col-5  { grid-column: span 5; }
+    .col-4  { grid-column: span 4; }
+    .col-3  { grid-column: span 3; }
+
+    .flex-col-stack {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1.2vw, 16px);
+      height: 100%;
+      min-height: 0;
+    }
+
+    /* Bento Card */
+    .bento-card {
+      background: var(--surface-card);
+      backdrop-filter: blur(12px);
+      border: var(--border-subtle);
+      border-radius: var(--card-radius);
+      padding: clamp(14px, 1.5vw, 22px);
+      box-shadow: var(--micro-shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .bento-card.highlight-teal {
+      border-color: rgba(20, 184, 166, 0.4);
+      background: linear-gradient(180deg, rgba(13, 148, 136, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .bento-card.highlight-emerald {
+      border-color: rgba(16, 185, 129, 0.38);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.07) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .bento-card.highlight-amber {
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .card-kicker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: clamp(15px, 1.35vw, 19px);
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: clamp(11.5px, 0.95vw, 13.5px);
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Badges & Pills */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: var(--badge-radius);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .badge-teal {
+      background: var(--teal-950);
+      color: var(--teal-400);
+      border: 1px solid rgba(45, 212, 191, 0.3);
+    }
+
+    .badge-emerald {
+      background: var(--emerald-950);
+      color: var(--emerald-400);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .badge-cobalt {
+      background: var(--cobalt-950);
+      color: var(--cobalt-400);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+    }
+
+    .badge-amber {
+      background: var(--amber-950);
+      color: var(--amber-400);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .badge-rose {
+      background: var(--rose-950);
+      color: var(--rose-400);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--emerald-400);
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    /* Tables */
+    .tech-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: clamp(11px, 0.9vw, 12.5px);
+    }
+
+    .tech-table th {
+      text-align: left;
+      padding: 7px 10px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: var(--border-strong);
+      background: rgba(9, 13, 22, 0.55);
+    }
+
+    .tech-table td {
+      padding: 7px 10px;
+      border-bottom: var(--border-subtle);
+      color: var(--slate-300);
+      font-family: var(--font-body);
+    }
+
+    .tech-table td.num, .tech-table th.num {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Code Block */
+    .code-box {
+      background: var(--surface-code);
+      border: var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: clamp(10px, 0.82vw, 11.5px);
+      line-height: 1.5;
+      color: #E2E8F0;
+      overflow-x: auto;
+    }
+
+    .code-kw { color: #2DD4BF; font-weight: 600; }
+    .code-fn { color: #60A5FA; }
+    .code-str { color: #34D399; }
+    .code-cm { color: #64748B; font-style: italic; }
+
+    /* KPI Stat Numbers */
+    .kpi-xl {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+
+    .kpi-md {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(18px, 1.8vw, 26px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Icon helper */
+    .icon-box {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: var(--border-subtle);
+      background: rgba(255, 255, 255, 0.03);
+      flex-shrink: 0;
+    }
+
+    /* Lists */
+    .spec-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .spec-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: clamp(11.5px, 0.92vw, 13px);
+      color: var(--slate-300);
+      line-height: 1.45;
+    }
+
+    .spec-list li svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Scrollable Audit Container on Slide 7 */
+    .audit-scroll {
+      overflow-y: auto;
+      max-height: 100%;
+      padding-right: 4px;
+    }
+
+    .audit-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .audit-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .audit-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 3px;
+    }
+
+    /* ==========================================================================
+       4. BOTTOM NAVIGATION & PRESENTER HUD
+       ========================================================================== */
+    .deck-footer {
+      position: absolute;
+      bottom: 12px;
+      left: clamp(28px, 4vw, 56px);
+      right: clamp(28px, 4vw, 56px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .footer-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-controls {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      border: var(--border-subtle);
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--slate-300);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(148, 163, 184, 0.25);
+      color: var(--text-primary);
+    }
+
+    .nav-btn:focus-visible {
+      outline: 2px solid var(--teal-400);
+      outline-offset: 1px;
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--slate-300);
+      padding: 0 8px;
+    }
+
+    /* Slide Dot Indicators */
+    .slide-dots {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0 6px;
+    }
+
+    .slide-dot {
+      width: 16px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(148, 163, 184, 0.22);
+      cursor: pointer;
+      border: none;
+      transition: background var(--transition-fast), width var(--transition-fast);
+    }
+
+    .slide-dot.active {
+      width: 26px;
+      background: var(--teal-400);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 960px) {
+      .grid-12 {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .slide {
+        overflow-y: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top 3px Progress Bar -->
+  <div class="progress-bar" id="progressBar" style="width: 12.5%;"></div>
+
+  <!-- 16:9 Presentation Deck -->
+  <main class="slide-deck" id="slideDeck" aria-label="Edumy Mobile Ecosystem Presentation">
+
+    <!-- ========================================================================
+         SLIDE 01: TITLE SLIDE (HERO & ARCHITECTURAL VISION)
+         ======================================================================== -->
+    <section class="slide active" data-slide="1">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">DECK // 01</span>
+          <span class="section-kicker">ARCHITECTURAL DEFENSE &amp; ENGINEERING HANDOVER</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span class="badge badge-emerald">
+            <span class="status-dot"></span>
+            SYSTEM STABLE: 106 TESTS PASS
+          </span>
+          <span>EDU-MOB-SRS-001</span>
+        </div>
+      </header>
+
+      <div class="slide-body">
+        <div class="grid-12" style="align-items: stretch;">
+          <!-- Left 7 Cols: Editorial Hero Statement -->
+          <div class="col-7 bento-card highlight-teal" style="padding: clamp(22px, 2.8vw, 38px);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                <span class="badge badge-teal">REACT NATIVE · EXPO SDK 51</span>
+                <span class="badge badge-cobalt">SPRING BOOT 3 MODULITH</span>
+              </div>
+
+              <h1 style="font-family: var(--font-heading); font-size: clamp(32px, 4.1vw, 56px); font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; color: var(--text-primary); margin-bottom: 16px;">
+                EDUMY MOBILE<br />
+                <span style="color: var(--teal-400);">ECOSYSTEM.</span>
+              </h1>
+
+              <p style="font-size: clamp(13.5px, 1.2vw, 16.5px); color: var(--slate-300); line-height: 1.6; max-width: 94%; margin-bottom: 22px;">
+                Nền tảng học trực tuyến đa thiết bị thế hệ mới — Kết nối đồng bộ 100% thời gian thực giữa ứng dụng di động <strong>React Native (Expo Router)</strong>, máy chủ <strong>Spring Boot Modulith</strong> và hệ quản trị cơ sở dữ liệu <strong>SQL Server</strong> duy nhất.
+              </p>
+            </div>
+
+            <div>
+              <div style="font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px;">
+                VERIFIED PRODUCTION STACK &amp; DESIGN GOVERNANCE
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <span class="badge" style="background: rgba(255,255,255,0.04); border: var(--border-subtle); color: var(--slate-100);">TypeScript 5 Strict</span>
+                <span class="badge" style="background: rgba(255,255,255,0.04); border: var(--border-subtle); color: var(--slate-100);">Expo SDK 51</span>
+                <span class="badge" style="background: rgba(255,255,255,0.04); border: var(--border-subtle); color: var(--slate-100);">Spring Boot 3.3</span>
+                <span class="badge" style="background: rgba(255,255,255,0.04); border: var(--border-subtle); color: var(--slate-100);">SQL Server (EduMyDb)</span>
+                <span class="badge" style="background: rgba(255,255,255,0.04); border: var(--border-subtle); color: var(--teal-400);">Zero AI Slop</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right 5 Cols: Asymmetric Telemetry Matrix -->
+          <div class="col-5 flex-col-stack">
+            <div class="bento-card" style="flex: 1;">
+              <div class="card-kicker">
+                <span>MOBILE QUALITY GATE</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 4px 0;">
+                <span class="kpi-xl" style="color: var(--emerald-400);">106 / 106</span>
+                <span class="badge badge-emerald">16 SUITES · 100%</span>
+              </div>
+              <p class="card-desc">
+                Toàn bộ unit tests kiểm thử logic nghiệp vụ, xác thực token, giỏ hàng, trình phát bài học và rút tiền giảng viên đều vượt qua với <strong>0 lỗi biên dịch</strong>.
+              </p>
+            </div>
+
+            <div class="bento-card" style="flex: 1;">
+              <div class="card-kicker">
+                <span>BACKEND SPRING MODULITH</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              </div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin: 4px 0;">
+                <span class="kpi-xl" style="color: var(--cobalt-400);">6 Modules</span>
+                <span class="badge badge-cobalt">16 / 16 TESTS PASS</span>
+              </div>
+              <p class="card-desc">
+                Kiểm chứng ranh giới kiến trúc bằng <code>ModularityTest</code>: <code>identity</code>, <code>catalog</code>, <code>authoring</code>, <code>commerce</code>, <code>learning</code> và <code>payout</code>.
+              </p>
+            </div>
+
+            <div class="bento-card" style="flex: 0.85;">
+              <div class="card-kicker">
+                <span>ACCEPTANCE &amp; SECURITY AUDIT</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px;">
+                <div style="background: rgba(9,13,22,0.6); padding: 8px; border-radius: 6px; border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 16px; font-weight: 700; color: var(--teal-400);">18 / 18</div>
+                  <div style="font-size: 10.5px; color: var(--text-secondary);">AC-M01..M18</div>
+                </div>
+                <div style="background: rgba(9,13,22,0.6); padding: 8px; border-radius: 6px; border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 16px; font-weight: 700; color: var(--emerald-400);">0 Leaks</div>
+                  <div style="font-size: 10.5px; color: var(--text-secondary);">SecureStore</div>
+                </div>
+                <div style="background: rgba(9,13,22,0.6); padding: 8px; border-radius: 6px; border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 16px; font-weight: 700; color: var(--slate-50);">0 Errors</div>
+                  <div style="font-size: 10.5px; color: var(--text-secondary);">TSC &amp; ESLint</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SLIDE 02: VẤN ĐỀ & BÀI TOÁN THỰC TẾ (PROBLEM & ARCHITECTURAL CHALLENGES)
+         ======================================================================== -->
+    <section class="slide" data-slide="2">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">02 // PROBLEM SPACE</span>
+          <span class="section-kicker">ARCHITECTURAL FRICTION IN MOBILE EDTECH</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span>BR-M01 · NFR-M01 · SINGLE DB</span>
+        </div>
+      </header>
+
+      <div class="slide-header">
+        <div>
+          <h2 class="slide-h2">Ba bài toán sống còn khi mở rộng nền tảng EdTech lên di động</h2>
+          <p class="slide-subtitle">Giải quyết triệt để rào cản phí chợ ứng dụng 30%, sự phân mảnh dữ liệu Web–App và rủi ro lộ lọt thông tin xác thực trên thiết bị đầu cuối.</p>
+        </div>
+        <span class="badge badge-amber">3 CRITICAL CHALLENGES RESOLVED</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-12">
+          <!-- Left 7 Cols: Deep-dive on Challenge 1 (30% IAP Trap & BR-M01) -->
+          <div class="col-7 bento-card highlight-amber">
+            <div>
+              <div class="card-kicker">
+                <span style="color: var(--amber-400);">BÀI TOÁN 01 // APP STORE &amp; GOOGLE PLAY IAP TRAP</span>
+                <span class="badge badge-amber">RULE BR-M01</span>
+              </div>
+              <h3 class="card-title" style="font-size: clamp(18px, 1.6vw, 22px); margin-bottom: 10px;">
+                Rào cản phí hoa hồng 30% In-App Purchase (IAP) &amp; Giải pháp Web-Handoff
+              </h3>
+              <p class="card-desc" style="margin-bottom: 14px;">
+                Nếu tích hợp cổng thanh toán trực tiếp trong ứng dụng di động, các chợ ứng dụng áp mức phí thu hộ <strong>15% – 30%</strong> trên tổng doanh thu, phá vỡ cấu trúc chia sẻ lợi nhuận <strong>70/30</strong> của giảng viên. Edumy giải quyết bằng mô hình <strong>Reader &amp; Cart Sync + Web Checkout Handoff</strong>.
+              </p>
+
+              <table class="tech-table" style="margin-bottom: 14px;">
+                <thead>
+                  <tr>
+                    <th>Tiêu chí đối chiếu</th>
+                    <th class="num">In-App Checkout Cũ</th>
+                    <th class="num" style="color: var(--teal-400);">Edumy BR-M01 (Web Handoff)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Phí hoa hồng chợ ứng dụng (Apple / Google)</td>
+                    <td class="num" style="color: var(--rose-400);">30.0%</td>
+                    <td class="num" style="color: var(--emerald-400);">0.0%</td>
+                  </tr>
+                  <tr>
+                    <td>Tỷ lệ giảng viên thực nhận trên giá bán</td>
+                    <td class="num">~49.0%</td>
+                    <td class="num" style="color: var(--emerald-400);">70.0% (7000 bps)</td>
+                  </tr>
+                  <tr>
+                    <td>Đồng bộ trạng thái khóa học sau thanh toán</td>
+                    <td class="num">Webhook trễ / Lệch</td>
+                    <td class="num" style="color: var(--teal-400);">Tức thì (useForegroundSync)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="code-box">
+              <span class="code-cm">// Quy tắc cứng trên Mobile: Tuyệt đối không gọi API tạo đơn / thanh toán</span><br />
+              <span class="code-kw">export const</span> webLinks = {<br />
+              &nbsp;&nbsp;<span class="code-fn">cart</span>: () =&gt; <span class="code-str">`${ENV.WEB_BASE_URL}/cart`</span>, <span class="code-cm">// Mở trình duyệt thanh toán VNPay</span><br />
+              &nbsp;&nbsp;<span class="code-fn">order</span>: (code: <span class="code-kw">string</span>) =&gt; <span class="code-str">`${ENV.WEB_BASE_URL}/orders/${code}`</span><br />
+              };
+            </div>
+          </div>
+
+          <!-- Right 5 Cols: Stacked Challenges 2 & 3 -->
+          <div class="col-5 flex-col-stack">
+            <!-- Challenge 2: Data Fragmentation -->
+            <div class="bento-card" style="flex: 1;">
+              <div>
+                <div class="card-kicker">
+                  <span style="color: var(--cobalt-400);">BÀI TOÁN 02 // DATA FRAGMENTATION</span>
+                  <span class="badge badge-cobalt">SYNC 100%</span>
+                </div>
+                <h3 class="card-title">Phân mảnh dữ liệu giữa Web SPA và Mobile App</h3>
+                <p class="card-desc" style="margin-bottom: 10px;">
+                  Nhiều dự án tạo bản sao backend hoặc tách database riêng cho mobile khiến giỏ hàng, tiến độ bài học và chứng chỉ bị lệch.
+                </p>
+                <ul class="spec-list">
+                  <li>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span><strong>Giải pháp:</strong> Hợp nhất 100% vào <code>EduMyDb</code> (SQL Server) và 1 Backend duy nhất ở cổng <code>5000</code>.</span>
+                  </li>
+                  <li>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span><strong>Tự động làm mới:</strong> Hook <code>useForegroundSync</code> tự động <code>invalidateQueries</code> khi người dùng quay lại app từ trình duyệt.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Challenge 3: Mobile Token Vulnerability -->
+            <div class="bento-card" style="flex: 1;">
+              <div>
+                <div class="card-kicker">
+                  <span style="color: var(--rose-400);">BÀI TOÁN 03 // TOKEN LEAKAGE &amp; 401 STORMS</span>
+                  <span class="badge badge-rose">NFR-M01 / M02</span>
+                </div>
+                <h3 class="card-title">Lỗ hổng lưu trữ AsyncStorage &amp; Đụng độ Refresh Token</h3>
+                <p class="card-desc" style="margin-bottom: 10px;">
+                  Lưu JWT trong <code>AsyncStorage</code> không mã hóa dễ bị trích xuất trên máy đã root; nhiều request hết hạn cùng lúc gây lỗi dây chuyền.
+                </p>
+                <ul class="spec-list">
+                  <li>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span><strong>Giải pháp:</strong> Access JWT chỉ lưu trên RAM; Refresh Token lưu trong phần cứng mã hóa <code>expo-secure-store</code>.</span>
+                  </li>
+                  <li>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span><strong>Single-Flight Queue:</strong> Gộp toàn bộ request bị <code>401</code> vào 1 tiến trình làm mới token duy nhất.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SLIDE 03: KIẾN TRÚC SINGLE SOURCE OF TRUTH (ECOSYSTEM ARCHITECTURE)
+         ======================================================================== -->
+    <section class="slide" data-slide="3">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">03 // SYSTEM ARCHITECTURE</span>
+          <span class="section-kicker">SINGLE SOURCE OF TRUTH · SPRING BOOT MODULITH</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span>1 DATABASE · 1 BACKEND · 2 CLIENTS</span>
+        </div>
+      </header>
+
+      <div class="slide-header">
+        <div>
+          <h2 class="slide-h2">Kiến trúc Single Source of Truth &amp; Ranh giới 6 Module Độc lập</h2>
+          <p class="slide-subtitle">Hai ứng dụng đầu cuối (Web SPA &amp; Mobile Expo) giao tiếp đồng thời với một lõi Spring Boot Modulith duy nhất, kiểm soát phụ thuộc nghiêm ngặt bằng ArchUnit.</p>
+        </div>
+        <span class="badge badge-teal">MODULARITY TEST: VERIFIED</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-12">
+          <!-- Left 8 Cols: 3-Tier Architectural Diagram -->
+          <div class="col-8 bento-card" style="justify-content: space-between; gap: 12px;">
+            <!-- Tier 1: Presentation Clients -->
+            <div style="border: var(--border-subtle); border-radius: 8px; padding: 10px 14px; background: rgba(9, 13, 22, 0.55);">
+              <div class="card-kicker" style="margin-bottom: 6px;">
+                <span style="color: var(--teal-400);">TIER 01 // CLIENT APPLICATIONS (STATELESS PRESENTATION)</span>
+                <span class="mono">REST JSON + RFC 7807</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(45, 212, 191, 0.35); background: rgba(13, 148, 136, 0.08);">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 13px; color: var(--text-primary);">Edumy Mobile App (Expo Router)</strong>
+                    <span class="mono" style="font-size: 11px; color: var(--teal-400);">10.0.2.2:5000/api/v1</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px;">
+                    Bearer JWT (RAM) + Opaque Refresh (SecureStore) · Học tập, Q&amp;A, Chứng chỉ, Thu nhập GV
+                  </div>
+                </div>
+                <div style="padding: 8px 12px; border-radius: 6px; border: var(--border-subtle); background: rgba(255, 255, 255, 0.02);">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 13px; color: var(--text-primary);">Edumy Web SPA (React + Vite)</strong>
+                    <span class="mono" style="font-size: 11px; color: var(--cobalt-400);">localhost:3000</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px;">
+                    HttpOnly Cookie Refresh · Thanh toán VNPay, Soạn thảo khóa học (Authoring), Admin Ops
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tier 2: Spring Boot Modulith Core -->
+            <div style="border: 1px solid rgba(59, 130, 246, 0.38); border-radius: 8px; padding: 12px 14px; background: rgba(30, 41, 59, 0.4);">
+              <div class="card-kicker" style="margin-bottom: 8px;">
+                <span style="color: var(--cobalt-400);">TIER 02 // SPRING BOOT 3 MODULITH CORE (PORT 5000)</span>
+                <span class="mono">@ApplicationModule BOUNDARIES</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <div style="padding: 8px 10px; border-radius: 6px; background: rgba(9, 13, 22, 0.75); border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 11px; color: var(--cobalt-400); font-weight: 700;">01. identity</div>
+                  <div style="font-size: 11px; color: var(--slate-300); margin-top: 2px;">Web &amp; Mobile Auth, Token Family, <code>UserPasswordVerificationApi</code></div>
+                </div>
+                <div style="padding: 8px 10px; border-radius: 6px; background: rgba(9, 13, 22, 0.75); border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 11px; color: var(--cobalt-400); font-weight: 700;">02. catalog</div>
+                  <div style="font-size: 11px; color: var(--slate-300); margin-top: 2px;">Tìm kiếm khóa học, bộ lọc, gợi ý ML, chi tiết &amp; bài học xem thử</div>
+                </div>
+                <div style="padding: 8px 10px; border-radius: 6px; background: rgba(9, 13, 22, 0.75); border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 11px; color: var(--cobalt-400); font-weight: 700;">03. authoring</div>
+                  <div style="font-size: 11px; color: var(--slate-300); margin-top: 2px;">Khóa học, chương, bài giảng, tỷ lệ chia sẻ đồng GV (<code>CourseInstructorsApi</code>)</div>
+                </div>
+                <div style="padding: 8px 10px; border-radius: 6px; background: rgba(9, 13, 22, 0.75); border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 11px; color: var(--cobalt-400); font-weight: 700;">04. commerce</div>
+                  <div style="font-size: 11px; color: var(--slate-300); margin-top: 2px;">Giỏ hàng, Đơn hàng, Đối soát VNPay, gọi đồng bộ <code>EarningApi</code></div>
+                </div>
+                <div style="padding: 8px 10px; border-radius: 6px; background: rgba(9, 13, 22, 0.75); border: var(--border-subtle);">
+                  <div class="mono" style="font-size: 11px; color: var(--cobalt-400); font-weight: 700;">05. learning</div>
+                  <div style="font-size: 11px; color: var(--slate-300); margin-top: 2px;">Ghi danh, tiến độ bài học, diễn đàn Q&amp;A, Review, OpenPDF Certificate</div>
+                </div>
+                <div style="padding: 8px 10px; border-radius: 6px; background: rgba(13, 148, 136, 0.14); border: 1px solid rgba(45, 212, 191, 0.4);">
+                  <div class="mono" style="font-size: 11px; color: var(--teal-400); font-weight: 700;">06. payout (NEW)</div>
+                  <div style="font-size: 11px; color: var(--slate-100); margin-top: 2px;">Sổ cái <code>EarningEntry</code>, <code>PayoutAccount</code>, <code>WithdrawalRequest</code></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tier 3: Database -->
+            <div style="border: var(--border-subtle); border-radius: 8px; padding: 10px 14px; background: rgba(9, 13, 22, 0.65); display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div class="mono" style="font-size: 11px; color: var(--emerald-400); font-weight: 700;">TIER 03 // PERSISTENCE LAYER — SQL SERVER (EduMyDb : 1433)</div>
+                <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
+                  Giao dịch ACID · Sổ cái thu nhập bất biến (Immutable Earning Ledger) · Khóa đồng thời theo Giảng viên
+                </div>
+              </div>
+              <span class="badge badge-emerald">SINGLE SOURCE OF TRUTH</span>
+            </div>
+          </div>
+
+          <!-- Right 4 Cols: Architectural Guarantees -->
+          <div class="col-4 flex-col-stack">
+            <div class="bento-card" style="flex: 1;">
+              <div class="card-kicker">
+                <span>MODULE DEPENDENCY RULES</span>
+                <span class="mono">ADR-016</span>
+              </div>
+              <h3 class="card-title">Cô lập phụ thuộc qua giao diện API nội bộ</h3>
+              <p class="card-desc" style="margin-bottom: 10px;">
+                Các module không bao giờ truy cập trực tiếp Repository hoặc Entity của nhau. Mọi giao tiếp liên module phải đi qua package <code>::api</code>:
+              </p>
+              <div class="code-box" style="font-size: 10.5px;">
+                <span class="code-cm">// commerce/package-info.java</span><br />
+                @ApplicationModule(<br />
+                &nbsp;&nbsp;allowedDependencies = {<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-str">"authoring :: api"</span>,<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-str">"learning :: api"</span>,<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-str">"payout :: api"</span>,<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-str">"identity :: api"</span><br />
+                &nbsp;&nbsp;}<br />
+                )
+              </div>
+            </div>
+
+            <div class="bento-card" style="flex: 0.9;">
+              <div class="card-kicker">
+                <span>ZERO CLIENT CALCULATION</span>
+                <span class="mono">BR-42..BR-50</span>
+              </div>
+              <h3 class="card-title">Máy chủ quyết định 100% nghiệp vụ tiền tệ</h3>
+              <p class="card-desc">
+                Mobile App <strong>chỉ hiển thị</strong> số liệu từ Backend trả về: không tự tính phí sàn, không tự chia tỷ lệ đồng giảng viên, không tự cộng phần trăm tiến độ khóa học.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SLIDE 04: CHUẨN BẢO MẬT CẤP NGÂN HÀNG (SECURITY & SESSION LIFECYCLE)
+         ======================================================================== -->
+    <section class="slide" data-slide="4">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">04 // SECURITY ARCHITECTURE</span>
+          <span class="section-kicker">NFR-M01 · NFR-M02 · ADR-015 MOBILE AUTH</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span>RAM JWT + KEYSTORE REFRESH + SINGLE-FLIGHT QUEUE</span>
+        </div>
+      </header>
+
+      <div class="slide-header">
+        <div>
+          <h2 class="slide-h2">Cơ chế Xác thực Di động Độc lập &amp; Phòng chống Đánh cắp Phiên</h2>
+          <p class="slide-subtitle">Mỗi thiết bị đăng nhập khởi tạo một Refresh-Token Family độc lập. Đăng xuất trên App không làm gián đoạn phiên Web, nhưng đổi mật khẩu sẽ thu hồi toàn bộ phiên khác.</p>
+        </div>
+        <span class="badge badge-emerald">SECURITY AUDIT: 100% CLEAN</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-12">
+          <!-- Left 6 Cols: 4-Stage Security Pipeline -->
+          <div class="col-6 flex-col-stack">
+            <div class="bento-card" style="flex: 1;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 100%;">
+                <div style="padding: 12px; border-radius: 8px; background: rgba(9, 13, 22, 0.65); border: var(--border-subtle);">
+                  <div class="badge badge-teal" style="margin-bottom: 8px;">01. RAM-ONLY ACCESS TOKEN</div>
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Zustand In-Memory Store</h4>
+                  <p class="card-desc" style="font-size: 11.5px;">
+                    JWT ngắn hạn (~15 phút) chỉ lưu trong bộ nhớ RAM (<code>session.accessToken</code>). Tự động xóa sạch khi đóng tiến trình, chống trích xuất file hệ thống.
+                  </p>
+                </div>
+
+                <div style="padding: 12px; border-radius: 8px; background: rgba(9, 13, 22, 0.65); border: var(--border-subtle);">
+                  <div class="badge badge-cobalt" style="margin-bottom: 8px;">02. HARDWARE KEYSTORE</div>
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Expo SecureStore</h4>
+                  <p class="card-desc" style="font-size: 11.5px;">
+                    Opaque Refresh Token lưu độc quyền tại <code>edumy.refreshToken</code> được mã hóa bằng iOS Keychain / Android Keystore.
+                  </p>
+                </div>
+
+                <div style="padding: 12px; border-radius: 8px; background: rgba(9, 13, 22, 0.65); border: var(--border-subtle);">
+                  <div class="badge badge-emerald" style="margin-bottom: 8px;">03. TOKEN ROTATION</div>
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Reuse Detection</h4>
+                  <p class="card-desc" style="font-size: 11.5px;">
+                    Mỗi lần gọi <code>/auth/mobile/refresh</code> sinh token mới và hủy token cũ. Nếu token cũ bị dùng lại, Server khóa ngay cả họ phiên (Family).
+                  </p>
+                </div>
+
+                <div style="padding: 12px; border-radius: 8px; background: rgba(9, 13, 22, 0.65); border: var(--border-subtle);">
+                  <div class="badge badge-amber" style="margin-bottom: 8px;">04. SENSITIVE RE-AUTH</div>
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Password Verification</h4>
+                  <p class="card-desc" style="font-size: 11.5px;">
+                    Khai báo hoặc sửa tài khoản ngân hàng bắt buộc xác thực lại <code>currentPassword</code>; xóa khỏi state ngay sau khi gửi.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right 6 Cols: Single-Flight Code & Static Audit Report -->
+          <div class="col-6 flex-col-stack">
+            <div class="bento-card" style="flex: 1.15;">
+              <div class="card-kicker">
+                <span>SINGLE-FLIGHT 401 REFRESH QUEUE (src/api/client.ts)</span>
+                <span class="mono">ZERO RACE CONDITION</span>
+              </div>
+              <div class="code-box" style="flex: 1;">
+                <span class="code-kw">let</span> refreshPromise: Promise&lt;<span class="code-kw">string</span> | <span class="code-kw">null</span>&gt; | <span class="code-kw">null</span> = <span class="code-kw">null</span>;<br /><br />
+                <span class="code-cm">// Nếu 5 request cùng gặp 401, chỉ 1 request gọi /auth/mobile/refresh</span><br />
+                <span class="code-kw">if</span> (!refreshPromise) {<br />
+                &nbsp;&nbsp;refreshPromise = <span class="code-fn">performTokenRefresh</span>().<span class="code-fn">finally</span>(() =&gt; {<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;refreshPromise = <span class="code-kw">null</span>;<br />
+                &nbsp;&nbsp;});<br />
+                }<br />
+                <span class="code-kw">const</span> newAccessToken = <span class="code-kw">await</span> refreshPromise;<br />
+                originalRequest.headers.Authorization = <span class="code-str">`Bearer ${newAccessToken}`</span>;<br />
+                <span class="code-kw">return</span> <span class="code-fn">client</span>(originalRequest);
+              </div>
+            </div>
+
+            <div class="bento-card highlight-emerald" style="flex: 0.85;">
+              <div class="card-kicker">
+                <span>STATIC CODEBASE SECURITY AUDIT (RULE 30)</span>
+                <span class="badge badge-emerald">PASSED</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px;">
+                <div style="padding: 10px; background: rgba(9,13,22,0.7); border-radius: 8px; border: var(--border-subtle);">
+                  <div class="kpi-md" style="color: var(--emerald-400);">0</div>
+                  <div style="font-size: 11.5px; font-weight: 600; color: var(--text-primary); margin-top: 2px;">AsyncStorage</div>
+                  <div style="font-size: 10.5px; color: var(--text-secondary);">Không dùng lưu trữ trần</div>
+                </div>
+                <div style="padding: 10px; background: rgba(9,13,22,0.7); border-radius: 8px; border: var(--border-subtle);">
+                  <div class="kpi-md" style="color: var(--emerald-400);">0</div>
+                  <div style="font-size: 11.5px; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Console Token Logs</div>
+                  <div style="font-size: 10.5px; color: var(--text-secondary);">Không in body nhạy cảm</div>
+                </div>
+                <div style="padding: 10px; background: rgba(9,13,22,0.7); border-radius: 8px; border: var(--border-subtle);">
+                  <div class="kpi-md" style="color: var(--emerald-400);">0</div>
+                  <div style="font-size: 11.5px; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Token in URLs</div>
+                  <div style="font-size: 10.5px; color: var(--text-secondary);">Header Bearer 100%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SLIDE 05: TRẢI NGHIỆM HỌC TẬP & CẤP CHỨNG CHỈ TỰ ĐỘNG (LEARNING ROOM)
+         ======================================================================== -->
+    <section class="slide" data-slide="5">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">05 // LEARNING &amp; CERTIFICATES</span>
+          <span class="section-kicker">ADAPTIVE VIDEO PLAYER · RULE D-33 · PDF CERTIFICATE</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span>UC-S08..S15 · AC-M01, AC-M02, AC-M08, AC-M12, AC-M13</span>
+        </div>
+      </header>
+
+      <div class="slide-header">
+        <div>
+          <h2 class="slide-h2">Phòng học Tương tác, Diễn đàn Q&amp;A &amp; Cấp Chứng chỉ Số</h2>
+          <p class="slide-subtitle">Trình phát bài giảng tự động thích ứng định dạng luồng video, kiểm soát hoàn thành bài học chính xác theo chuẩn D-33 và xuất chứng chỉ PDF có mã xác thực công khai.</p>
+        </div>
+        <span class="badge badge-teal">NATIVE VIDEO + PDF SHARING</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-12">
+          <!-- Left 6 Cols: Adaptive Player & D-33 -->
+          <div class="col-6 bento-card">
+            <div>
+              <div class="card-kicker">
+                <span style="color: var(--teal-400);">ADAPTIVE LEARNING ENGINE (M06)</span>
+                <span class="mono">D-33 · D-34 · BR-31</span>
+              </div>
+              <h3 class="card-title" style="font-size: 18px; margin-bottom: 10px;">
+                Phân giải Trình phát Thông minh &amp; Đồng bộ Tiến độ
+              </h3>
+
+              <!-- Simulated Dark Cinema Player UI -->
+              <div style="background: #050811; border: var(--border-strong); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span class="mono" style="font-size: 11px; color: var(--teal-400);">LESSON PLAYER // EXPO-VIDEO (HLS / MP4)</span>
+                  <span class="badge badge-emerald" style="font-size: 10px;">1080p STREAM</span>
+                </div>
+                <div style="height: 6px; background: #1E293B; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                  <div style="width: 78%; height: 100%; background: var(--teal-400);"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary);">
+                  <span class="mono">14:20 / 18:05</span>
+                  <span style="color: var(--emerald-400); font-weight: 600;">[✓] Đã đánh dấu hoàn thành (D-33)</span>
+                </div>
+              </div>
+
+              <ul class="spec-list">
+                <li>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span><strong>Bộ định tuyến Player (<code>resolvePlayerType</code>):</strong> URL kết thúc bằng <code>.mp4</code> hoặc <code>.m3u8</code> (bỏ qua query string) dùng <code>expo-video</code> native; nguồn nhúng khác tự động chuyển sang <code>WebView</code>.</span>
+                </li>
+                <li>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span><strong>Ghi nhận truy cập (D-34):</strong> Gọi <code>POST /learn/lessons/{id}/visit</code> đúng 1 lần khi mở bài để lưu <code>lastAccessedLessonId</code> cho nút "Học tiếp".</span>
+                </li>
+                <li>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span><strong>Hoàn thành chủ động (D-33):</strong> Người học tự bấm toggle hoàn thành; tuyệt đối không tự động đánh dấu khi tua hết video.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Right 6 Cols: Q&A, Reviews & Digital Certificates -->
+          <div class="col-6 flex-col-stack">
+            <div class="bento-card highlight-teal" style="flex: 1.1;">
+              <div>
+                <div class="card-kicker">
+                  <span style="color: var(--teal-400);">DIGITAL CERTIFICATE PIPELINE (M07)</span>
+                  <span class="badge badge-teal">OPENPDF + EXPO-SHARING</span>
+                </div>
+                <h3 class="card-title">Cấp phát, Tải xuống &amp; Xác thực Chứng chỉ PDF</h3>
+                <p class="card-desc" style="margin-bottom: 10px;">
+                  Khi bài giảng cuối cùng được đánh dấu hoàn thành và Server trả về <code>certificateIssued: true</code>, ứng dụng bật Modal chúc mừng và mở quyền tải chứng chỉ số:
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                  <div style="padding: 8px 10px; background: rgba(9,13,22,0.65); border-radius: 6px; border: var(--border-subtle);">
+                    <div class="mono" style="font-size: 11px; color: var(--teal-400); font-weight: 700;">STEP 01</div>
+                    <div style="font-size: 11.5px; color: var(--text-primary); font-weight: 600; margin-top: 2px;">Bearer Download</div>
+                    <div style="font-size: 10.5px; color: var(--text-secondary);">Tải PDF vào bộ nhớ đệm <code>FileSystem.cacheDirectory</code></div>
+                  </div>
+                  <div style="padding: 8px 10px; background: rgba(9,13,22,0.65); border-radius: 6px; border: var(--border-subtle);">
+                    <div class="mono" style="font-size: 11px; color: var(--teal-400); font-weight: 700;">STEP 02</div>
+                    <div style="font-size: 11.5px; color: var(--text-primary); font-weight: 600; margin-top: 2px;">Native Share</div>
+                    <div style="font-size: 10.5px; color: var(--text-secondary);">Mở hộp thoại chia sẻ hệ thống qua <code>expo-sharing</code></div>
+                  </div>
+                  <div style="padding: 8px 10px; background: rgba(9,13,22,0.65); border-radius: 6px; border: var(--border-subtle);">
+                    <div class="mono" style="font-size: 11px; color: var(--teal-400); font-weight: 700;">STEP 03</div>
+                    <div style="font-size: 11.5px; color: var(--text-primary); font-weight: 600; margin-top: 2px;">Public Verify</div>
+                    <div style="font-size: 10.5px; color: var(--text-secondary);">Sao chép URL xác thực công khai <code>/certificates/{code}</code></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bento-card" style="flex: 0.9;">
+              <div>
+                <div class="card-kicker">
+                  <span>Q&amp;A FORUM &amp; COURSE REVIEWS</span>
+                  <span class="mono">AC-M09..M11</span>
+                </div>
+                <h3 class="card-title">Thảo luận theo Bài học &amp; Đánh giá Khóa học</h3>
+                <ul class="spec-list">
+                  <li>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span><strong>Diễn đàn Q&amp;A:</strong> Đặt câu hỏi gắn với bài học (tiêu đề $\le 200$, nội dung $\le 5000$ ký tự), phản hồi chuỗi và đánh dấu <code>resolved</code>.</span>
+                  </li>
+                  <li>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span><strong>Đánh giá 1–5 sao:</strong> Ghi nhận nhận xét ($\le 2000$ ký tự); gửi lại tự động cập nhật đánh giá hiện có (AC-14) hoặc thu hồi.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SLIDE 06: CHẾ ĐỘ THU NHẬP GIẢNG VIÊN & BIỂU ĐỒ DOANH THU (PHÂN HỆ 06)
+         ======================================================================== -->
+    <section class="slide" data-slide="6">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">06 // INSTRUCTOR MONEY MODE</span>
+          <span class="section-kicker">REVENUE SHARE LEDGER · PAYOUT ACCOUNT · WITHDRAWALS</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span>B02..B04 · M08..M09 · BR-42..BR-56</span>
+        </div>
+      </header>
+
+      <div class="slide-header">
+        <div>
+          <h2 class="slide-h2">Chế độ Doanh thu Giảng viên &amp; Sổ cái Hạch toán Bất biến</h2>
+          <p class="slide-subtitle">Tự động phân bổ doanh thu ngay khi đơn hàng thanh toán thành công: khấu trừ 30% phí vận hành sàn, chia tỷ lệ phần trăm cho Đồng giảng viên và quản lý rút tiền an toàn.</p>
+        </div>
+        <span class="badge badge-emerald">70% INSTRUCTOR SHARE POOL</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-12">
+          <!-- Left 5 Cols: Chart.js Doughnut Chart + Exact Formula -->
+          <div class="col-5 bento-card">
+            <div class="card-kicker">
+              <span>REVENUE ALLOCATION FORMULA (BR-45)</span>
+              <span class="mono">BASIS POINTS (10,000 BPS)</span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px; my: 6px; height: 155px;">
+              <div style="width: 145px; height: 145px; position: relative; flex-shrink: 0;">
+                <canvas id="revenueSplitChart"></canvas>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11.5px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 10px; height: 10px; border-radius: 2px; background: #0D9488; display: inline-block;"></span>
+                  <span><strong>GV Chính:</strong> <span class="mono">56.0%</span> (Phần dư)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 10px; height: 10px; border-radius: 2px; background: #3B82F6; display: inline-block;"></span>
+                  <span><strong>Đồng GV:</strong> <span class="mono">14.0%</span> (20% của 70%)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 10px; height: 10px; border-radius: 2px; background: #334155; display: inline-block;"></span>
+                  <span><strong>Phí sàn Edumy:</strong> <span class="mono">30.0%</span> (3000 bps)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-box" style="font-size: 10.5px;">
+              <span class="code-cm">// Bất biến tổng chi: Không bao giờ lệch 1 đồng làm tròn</span><br />
+              netPool = <span class="code-fn">floor</span>(unitPrice * <span class="code-str">7000</span> / <span class="code-str">10000</span>);<br />
+              coAmount = <span class="code-fn">floor</span>(netPool * shareBps / <span class="code-str">10000</span>);<br />
+              mainAmount = netPool - <span class="code-fn">sum</span>(coAmount);
+            </div>
+          </div>
+
+          <!-- Right 7 Cols: Bento Grid of Instructor Financial Controls -->
+          <div class="col-7 flex-col-stack">
+            <!-- Top Row: Available Balance Hero & Maturity Policy -->
+            <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; flex: 1;">
+              <div class="bento-card highlight-emerald">
+                <div class="card-kicker">
+                  <span>SỐ DƯ KHẢ DỤNG ĐỂ RÚT</span>
+                  <span class="badge badge-emerald">AVAILABLE</span>
+                </div>
+                <div class="kpi-xl" style="color: var(--emerald-400); margin: 4px 0;">2.450.000 ₫</div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); border-top: var(--border-subtle); padding-top: 8px;">
+                  <span>Chờ đáo hạn: <strong class="mono" style="color: var(--slate-100);">840.000 ₫</strong></span>
+                  <span>Đã rút: <strong class="mono" style="color: var(--slate-100);">5.200.000 ₫</strong></span>
+                </div>
+              </div>
+
+              <div class="bento-card">
+                <div class="card-kicker">
+                  <span>CHÍNH SÁCH ĐÁO HẠN (MATURITY)</span>
+                  <span class="mono">BR-48</span>
+                </div>
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+                  Monthly vs. Immediate Demo
+                </h4>
+                <p class="card-desc" style="font-size: 11.5px;">
+                  Thu nhập tháng <code>M</code> tự động đáo hạn vào <strong>00:00 ngày 01 tháng M+1</strong> (giờ VN). Hỗ trợ cờ <code>maturityPolicy: "immediate"</code> phục vụ trình diễn bảo vệ đồ án.
+                </p>
+              </div>
+            </div>
+
+            <!-- Bottom Row: Payout Account & Withdrawal Safeguards -->
+            <div style="display: grid; grid-template-columns: 1fr 1.15fr; gap: 12px; flex: 1;">
+              <div class="bento-card">
+                <div class="card-kicker">
+                  <span>TÀI KHOẢN NHẬN TIỀN</span>
+                  <span class="mono">BR-52 · BR-54</span>
+                </div>
+                <div style="background: rgba(9,13,22,0.7); border: var(--border-subtle); border-radius: 6px; padding: 8px 10px; margin: 4px 0;">
+                  <div style="font-size: 11px; color: var(--text-secondary);">VIETCOMBANK · NGUYEN VAN A</div>
+                  <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--teal-400); letter-spacing: 0.08em; margin-top: 2px;">
+                    •••• •••• •••• 1234
+                  </div>
+                </div>
+                <p class="card-desc" style="font-size: 11px;">
+                  Chỉ hiển thị 4 số cuối. Cập nhật bắt buộc nhập mật khẩu hiện tại (<code>422 PASSWORD_INCORRECT</code> nếu sai).
+                </p>
+              </div>
+
+              <div class="bento-card">
+                <div class="card-kicker">
+                  <span>QUY TRÌNH RÚT TIỀN &amp; MÃ LỖI E1–E4</span>
+                  <span class="mono">UC-I27 · BR-51</span>
+                </div>
+                <ul class="spec-list" style="gap: 5px;">
+                  <li style="font-size: 11.5px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Số nguyên VNĐ, tối thiểu <strong class="mono">100.000 ₫</strong>, tối đa 1 yêu cầu <code>requested</code> mở cùng lúc.</span>
+                  </li>
+                  <li style="font-size: 11.5px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Xử lý đủ 4 mã lỗi: <code>WITHDRAWAL_BELOW_MINIMUM</code>, <code>EXCEEDS_BALANCE</code>, <code>ALREADY_OPEN</code>, <code>PAYOUT_ACCOUNT_REQUIRED</code>.</span>
+                  </li>
+                  <li style="font-size: 11.5px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Hỗ trợ hủy yêu cầu đang chờ (hoàn số dư tức thì).</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SLIDE 07: BẢNG ĐỐI CHIẾU NGHIỆM THU TOÀN DIỆN (AUDIT & ACCEPTANCE CRITERIA)
+         ======================================================================== -->
+    <section class="slide" data-slide="7">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">07 // VERIFICATION &amp; QA AUDIT</span>
+          <span class="section-kicker">106 JEST UNIT TESTS · 16 SPRING BOOT TESTS · AC-M01..M18</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span>ZERO ERRORS · ZERO WARNINGS</span>
+        </div>
+      </header>
+
+      <div class="slide-header">
+        <div>
+          <h2 class="slide-h2">Bảng Đối chiếu Nghiệm thu Kỹ thuật Toàn diện (AC-M01 → AC-M18)</h2>
+          <p class="slide-subtitle">Mọi phân hệ từ xác thực, danh mục, giỏ hàng, phòng học đến hạch toán doanh thu đều được chứng minh bằng bộ kiểm thử tự động.</p>
+        </div>
+        <span class="badge badge-emerald">ALL 18 ACCEPTANCE CRITERIA PASSED</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-12">
+          <!-- Left 5 Cols: KPI Grid + Chart.js Suite Breakdown -->
+          <div class="col-5 flex-col-stack">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="bento-card" style="padding: 12px 14px;">
+                <div class="card-kicker" style="margin-bottom: 2px;">MOBILE JEST TESTS</div>
+                <div class="kpi-md" style="color: var(--emerald-400);">106 / 106</div>
+                <div style="font-size: 11px; color: var(--text-secondary);">16 Test Suites Pass</div>
+              </div>
+              <div class="bento-card" style="padding: 12px 14px;">
+                <div class="card-kicker" style="margin-bottom: 2px;">BACKEND JUNIT 5</div>
+                <div class="kpi-md" style="color: var(--cobalt-400);">16 / 16</div>
+                <div style="font-size: 11px; color: var(--text-secondary);">Modularity + Payout</div>
+              </div>
+              <div class="bento-card" style="padding: 12px 14px;">
+                <div class="card-kicker" style="margin-bottom: 2px;">TYPESCRIPT STRICT</div>
+                <div class="kpi-md" style="color: var(--teal-400);">0 Errors</div>
+                <div style="font-size: 11px; color: var(--text-secondary);"><code>tsc --noEmit</code></div>
+              </div>
+              <div class="bento-card" style="padding: 12px 14px;">
+                <div class="card-kicker" style="margin-bottom: 2px;">ESLINT QUALITY</div>
+                <div class="kpi-md" style="color: var(--slate-50);">0 Warnings</div>
+                <div style="font-size: 11px; color: var(--text-secondary);"><code>--max-warnings=0</code></div>
+              </div>
+            </div>
+
+            <div class="bento-card" style="flex: 1;">
+              <div class="card-kicker">
+                <span>TEST DISTRIBUTION BY FEATURE DOMAIN</span>
+                <span class="mono">106 ASSERTIONS</span>
+              </div>
+              <div style="flex: 1; min-height: 130px; position: relative;">
+                <canvas id="testSuiteChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right 7 Cols: Scrollable 18 Acceptance Criteria Matrix -->
+          <div class="col-7 bento-card" style="padding: 14px 16px;">
+            <div class="card-kicker" style="margin-bottom: 8px;">
+              <span>ACCEPTANCE CRITERIA MATRIX (docs/ai/ac-checklist.md)</span>
+              <span class="mono" style="color: var(--teal-400);">CUỘN ĐỂ XEM CHI TIẾT 18 TIÊU CHÍ</span>
+            </div>
+            <div class="audit-scroll">
+              <table class="tech-table">
+                <thead>
+                  <tr>
+                    <th style="width: 78px;">Mã AC</th>
+                    <th>Nội dung nghiệm thu cốt lõi</th>
+                    <th style="width: 135px;">Phương pháp kiểm tra</th>
+                    <th class="num" style="width: 72px;">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td class="mono">AC-M01</td><td>My Learning hiển thị khóa đã mua (kể cả khóa ẩn BR-31) + % tiến độ server</td><td class="mono">learning/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M02</td><td>Phát video MP4/HLS (expo-video), ghi nhận visit (D-34), hoàn thành thủ công (D-33)</td><td class="mono">learning/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M03</td><td>Khôi phục phiên từ SecureStore; thu hồi phiên khi đổi mật khẩu trên Web</td><td class="mono">tokens.test + auth</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M04</td><td>Đăng xuất xóa sạch SecureStore &amp; QueryCache, 0 dùng AsyncStorage</td><td class="mono">auth/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M05</td><td>Giỏ hàng hiển thị 4 lý do khóa không thể mua bằng tiếng Việt</td><td class="mono">cart/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M06</td><td>Tuân thủ BR-M01: Không có nút thanh toán in-app, mở <code>${WEB_URL}/cart</code></td><td class="mono">cart/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M07</td><td>Lịch sử &amp; chi tiết đơn hàng chỉ đọc; đơn PENDING dẫn sang Web thanh toán tiếp</td><td class="mono">orders/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M08</td><td>Hoàn thành 100% bài học bật Modal chúc mừng &amp; dẫn tới trang Chứng chỉ</td><td class="mono">learning/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M09</td><td>Diễn đàn Q&amp;A phòng học: lọc câu hỏi, đặt câu hỏi mới ($\le 200 / 5000$ ký tự)</td><td class="mono">qa/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M10</td><td>Tác giả câu hỏi đánh dấu đã giải quyết / mở lại (<code>POST /resolve</code>)</td><td class="mono">qa/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M11</td><td>Đánh giá khóa học 1–5 sao ($\le 2000$ ký tự), gửi lại cập nhật đánh giá cũ</td><td class="mono">reviews/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M12</td><td>Danh sách chứng chỉ số &amp; sao chép liên kết xác thực công khai</td><td class="mono">certificates.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M13</td><td>Tải PDF chứng chỉ kèm Bearer token &amp; mở hộp thoại chia sẻ <code>expo-sharing</code></td><td class="mono">certificates.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M14</td><td>Tab Giảng viên bật khi có role <code>instructor</code> HOẶC <code>hasEarnings: true</code> (BR-53)</td><td class="mono">profile/logic.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M15</td><td>Bảng tổng kết số dư, doanh thu theo tháng/khóa &amp; bút toán chi tiết</td><td class="mono">instructor.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M16</td><td>Tài khoản nhận tiền chỉ hiện 4 số cuối, cập nhật bắt buộc nhập mật khẩu</td><td class="mono">instructor.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M17</td><td>Yêu cầu rút tiền $\ge 100.000$ ₫, nguyên VNĐ, xử lý đủ lỗi máy chủ E1–E4</td><td class="mono">instructor.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                  <tr><td class="mono">AC-M18</td><td>Lịch sử rút tiền 4 trạng thái, hiển thị mã GD / lý do từ chối, hủy yêu cầu</td><td class="mono">instructor.test</td><td class="num"><span class="badge badge-emerald">PASS</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SLIDE 08: KỊCH BẢN TRÌNH DIỄN & LỘ TRÌNH BÀN GIAO (LIVE DEMO FLOW)
+         ======================================================================== -->
+    <section class="slide" data-slide="8">
+      <header class="slide-topbar">
+        <div class="slide-topbar-left">
+          <span class="section-index">08 // LIVE DEMO &amp; HANDOVER</span>
+          <span class="section-kicker">END-TO-END ECOSYSTEM WALKTHROUGH</span>
+        </div>
+        <div class="slide-topbar-right">
+          <span>READY FOR PRODUCTION &amp; THESIS DEFENSE</span>
+        </div>
+      </header>
+
+      <div class="slide-header">
+        <div>
+          <h2 class="slide-h2">Kịch bản Trình diễn Liên thông 5 Bước &amp; Sẵn sàng Bàn giao</h2>
+          <p class="slide-subtitle">Chu trình khép kín chứng minh tính đồng bộ tức thì giữa Mobile App, Web SPA và Spring Boot Backend trên cùng một cơ sở dữ liệu.</p>
+        </div>
+        <span class="badge badge-teal">DEMO SCRIPT: docs/demo-script.md</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-12">
+          <!-- Top / Left 12 Cols: 5-Stage Horizontal Pipeline -->
+          <div class="col-12" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+            <div class="bento-card" style="padding: 14px;">
+              <div class="badge badge-teal" style="align-self: flex-start; margin-bottom: 8px;">STAGE 01 // MOBILE</div>
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Khám phá &amp; Thêm Giỏ hàng</h4>
+              <p class="card-desc" style="font-size: 11.5px;">
+                Học viên tìm kiếm khóa học trên App, xem bài học thử và thêm khóa học có phí vào giỏ hàng đồng bộ.
+              </p>
+            </div>
+
+            <div class="bento-card" style="padding: 14px;">
+              <div class="badge badge-cobalt" style="align-self: flex-start; margin-bottom: 8px;">STAGE 02 // WEB SPA</div>
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Thanh toán VNPay (BR-M01)</h4>
+              <p class="card-desc" style="font-size: 11.5px;">
+                Từ giỏ hàng Mobile bấm chuyển hướng sang Web <code>/cart</code>, hoàn tất thanh toán VNPay Sandbox.
+              </p>
+            </div>
+
+            <div class="bento-card" style="padding: 14px;">
+              <div class="badge badge-teal" style="align-self: flex-start; margin-bottom: 8px;">STAGE 03 // AUTO-SYNC</div>
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Đồng bộ Phòng học Tức thì</h4>
+              <p class="card-desc" style="font-size: 11.5px;">
+                Quay lại Mobile App, <code>useForegroundSync</code> tự động làm mới dữ liệu; khóa học xuất hiện ngay trong tab Học tập.
+              </p>
+            </div>
+
+            <div class="bento-card" style="padding: 14px;">
+              <div class="badge badge-emerald" style="align-self: flex-start; margin-bottom: 8px;">STAGE 04 // CERTIFICATE</div>
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Học Video &amp; Nhận Chứng chỉ</h4>
+              <p class="card-desc" style="font-size: 11.5px;">
+                Xem bài giảng, thảo luận Q&amp;A, đánh dấu hoàn thành 100% (D-33) để nhận và chia sẻ file PDF chứng chỉ.
+              </p>
+            </div>
+
+            <div class="bento-card highlight-teal" style="padding: 14px;">
+              <div class="badge badge-amber" style="align-self: flex-start; margin-bottom: 8px;">STAGE 05 // PAYOUT</div>
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Rút tiền &amp; Admin Duyệt chi</h4>
+              <p class="card-desc" style="font-size: 11.5px;">
+                Giảng viên kiểm tra bút toán 70/30, gửi lệnh rút tiền trên App; Admin duyệt chi kèm mã giao dịch trên Web.
+              </p>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Quick-Start Commands & Final Handover Summary -->
+          <div class="col-7 bento-card">
+            <div class="card-kicker">
+              <span>TERMINAL QUICK-START &amp; VERIFICATION COMMANDS</span>
+              <span class="mono">ZERO-ERROR BUILD</span>
+            </div>
+            <div class="code-box" style="font-size: 11px;">
+              <span class="code-cm"># 1. Khởi chạy Spring Boot Backend (Profile dev + demo immediate maturity)</span><br />
+              cd Edumy/Backend &amp;&amp; .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev<br /><br />
+              <span class="code-cm"># 2. Kiểm tra toàn diện Mobile App (TypeScript + ESLint + 106 Jest Tests)</span><br />
+              cd Edumy-App &amp;&amp; npm run typecheck &amp;&amp; npm run lint &amp;&amp; npm test<br /><br />
+              <span class="code-cm"># 3. Khởi chạy Expo Dev Server kết nối tới 10.0.2.2:5000/api/v1</span><br />
+              npx expo start
+            </div>
+          </div>
+
+          <div class="col-5 bento-card highlight-emerald" style="justify-content: center;">
+            <div class="card-kicker">
+              <span>PROJECT DEFENSE CONCLUSION</span>
+              <span class="badge badge-emerald">COMPLETE</span>
+            </div>
+            <h3 class="card-title" style="font-size: 20px; margin-bottom: 8px;">
+              Sẵn sàng Bảo vệ &amp; Vận hành Thực tế
+            </h3>
+            <p class="card-desc" style="margin-bottom: 12px;">
+              Hệ sinh thái <strong>Edumy Web + Mobile + Backend</strong> đã hoàn thiện đồng bộ từ kiến trúc cơ sở dữ liệu, bảo mật phiên đăng nhập đến trải nghiệm người dùng chuẩn mực.
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="badge badge-teal">B00–B05: DONE</span>
+              <span class="badge badge-emerald">M00–M10: DONE</span>
+              <span class="badge badge-cobalt">AC-M01..M18: 100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         DECK FOOTER & NAVIGATION HUD
+         ======================================================================== -->
+    <footer class="deck-footer">
+      <div class="footer-meta">
+        <span>EDUMY ECOSYSTEM // DEFENSE DECK</span>
+        <span>KEYS: [←/→] NAVIGATE · [F] FULLSCREEN · [HOME/END] JUMP</span>
+      </div>
+
+      <nav class="nav-controls" aria-label="Slide Navigation">
+        <button class="nav-btn" id="prevBtn" title="Slide trước (ArrowLeft)" aria-label="Slide trước">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <div class="slide-dots" id="slideDots" role="tablist"></div>
+
+        <span class="slide-counter">
+          <span id="currentSlideNum">01</span> / <span id="totalSlideNum">08</span>
+        </span>
+
+        <button class="nav-btn" id="nextBtn" title="Slide tiếp (ArrowRight / Space)" aria-label="Slide tiếp">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <button class="nav-btn" id="fullscreenBtn" title="Toàn màn hình (Phím F)" aria-label="Toàn màn hình">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+      </nav>
+    </footer>
+
+  </main>
+
+  <!-- ==========================================================================
+       5. INTERACTIVE NAVIGATION & CHART.JS INITIALIZATION
+       ========================================================================== -->
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const total = slides.length;
+      let current = 1;
+
+      const currentEl = document.getElementById('currentSlideNum');
+      const totalEl = document.getElementById('totalSlideNum');
+      const progressBar = document.getElementById('progressBar');
+      const dotsContainer = document.getElementById('slideDots');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+      totalEl.textContent = String(total).padStart(2, '0');
+
+      // Generate slide dots
+      slides.forEach((_, idx) => {
+        const dot = document.createElement('button');
+        dot.className = 'slide-dot' + (idx === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Chuyển tới slide ' + (idx + 1));
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showSlide(idx + 1);
+        });
+        dotsContainer.appendChild(dot);
+      });
+
+      const dots = Array.from(dotsContainer.querySelectorAll('.slide-dot'));
+
+      function showSlide(n) {
+        if (n < 1) n = 1;
+        if (n > total) n = total;
+        current = n;
+
+        slides.forEach((s, i) => {
+          s.classList.toggle('active', i === current - 1);
+        });
+
+        dots.forEach((d, i) => {
+          d.classList.toggle('active', i === current - 1);
+        });
+
+        currentEl.textContent = String(current).padStart(2, '0');
+        progressBar.style.width = ((current / total) * 100).toFixed(2) + '%';
+      }
+
+      function nextSlide() {
+        if (current < total) showSlide(current + 1);
+      }
+
+      function prevSlide() {
+        if (current > 1) showSlide(current - 1);
+      }
+
+      function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        prevSlide();
+      });
+
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nextSlide();
+      });
+
+      fullscreenBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFullScreen();
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter' || e.key === 'PageDown') {
+          e.preventDefault();
+          nextSlide();
+        } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+          e.preventDefault();
+          prevSlide();
+        } else if (e.key === 'Home' || e.key === 't' || e.key === 'T') {
+          e.preventDefault();
+          showSlide(1);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          showSlide(total);
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          toggleFullScreen();
+        }
+      });
+
+      // Touch swipe navigation
+      let touchStartX = 0;
+      let touchEndX = 0;
+      document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        const delta = touchStartX - touchEndX;
+        if (Math.abs(delta) > 50) {
+          if (delta > 0) nextSlide();
+          else prevSlide();
+        }
+      }, { passive: true });
+
+      // Initialize Chart.js Visualizations
+      window.addEventListener('DOMContentLoaded', () => {
+        if (typeof Chart === 'undefined') return;
+
+        Chart.defaults.color = '#94A3B8';
+        Chart.defaults.font.family = "'JetBrains Mono', monospace";
+
+        // 1. Slide 6: Revenue Split Doughnut Chart
+        const revCtx = document.getElementById('revenueSplitChart');
+        if (revCtx) {
+          new Chart(revCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['GV Chính (56%)', 'Đồng GV (14%)', 'Phí sàn Edumy (30%)'],
+              datasets: [{
+                data: [56, 14, 30],
+                backgroundColor: ['#0D9488', '#3B82F6', '#334155'],
+                borderColor: '#090D16',
+                borderWidth: 3,
+                hoverOffset: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '66%',
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: '#0F172A',
+                  borderColor: 'rgba(148,163,184,0.25)',
+                  borderWidth: 1,
+                  padding: 10
+                }
+              }
+            }
+          });
+        }
+
+        // 2. Slide 7: Unit Test Distribution Bar Chart
+        const testCtx = document.getElementById('testSuiteChart');
+        if (testCtx) {
+          new Chart(testCtx, {
+            type: 'bar',
+            data: {
+              labels: ['API/Auth', 'Catalog', 'Cart/Order', 'Learning', 'Q&A/Cert', 'Instructor'],
+              datasets: [{
+                label: 'Passed Unit Tests',
+                data: [24, 15, 18, 14, 19, 16],
+                backgroundColor: [
+                  'rgba(20, 184, 166, 0.75)',
+                  'rgba(59, 130, 246, 0.75)',
+                  'rgba(20, 184, 166, 0.75)',
+                  'rgba(59, 130, 246, 0.75)',
+                  'rgba(20, 184, 166, 0.75)',
+                  'rgba(16, 185, 129, 0.85)'
+                ],
+                borderColor: [
+                  '#14B8A6',
+                  '#3B82F6',
+                  '#14B8A6',
+                  '#3B82F6',
+                  '#14B8A6',
+                  '#10B981'
+                ],
+                borderWidth: 1,
+                borderRadius: 4
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                  ticks: { color: '#94A3B8', font: { size: 10 } }
+                },
+                y: {
+                  grid: { display: false },
+                  ticks: { color: '#E2E8F0', font: { size: 10 } }
+                }
+              }
+            }
+          });
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
