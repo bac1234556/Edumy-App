@@ -154,8 +154,12 @@ public class CoursePublicService {
 
     private CourseSummaryResponse mapToSummary(Course course) {
         Category category = categoryRepository.findById(course.getCategoryId()).orElse(null);
-        Double avgRating = reviewRepository.calculateAverageRatingByCourseId(course.getId());
-        Long totalReviews = reviewRepository.countByCourseId(course.getId());
+        Double avgRating = course.getAvgRating() != null && course.getAvgRating() > 0
+                ? course.getAvgRating()
+                : reviewRepository.calculateAverageRatingByCourseId(course.getId());
+        Long totalReviews = course.getRatingCount() != null && course.getRatingCount() > 0
+                ? course.getRatingCount().longValue()
+                : reviewRepository.countByCourseId(course.getId());
 
         return CourseSummaryResponse.builder()
                 .id(course.getId())

@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { CourseCard } from '../components/common/CourseCard';
+import { CourseCardSkeleton } from '../components/common/CourseCardSkeleton';
 import { getWishlist, removeFromWishlist } from '../api/wishlist';
 
 export const WishlistScreen = ({ navigation }) => {
@@ -65,9 +66,33 @@ export const WishlistScreen = ({ navigation }) => {
   if (isLoading && !refreshing) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={styles.loadingText}>Đang tải danh sách yêu thích...</Text>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Khóa học yêu thích</Text>
+          <Text style={styles.headerSubtitle}>Đang tải danh sách...</Text>
+        </View>
+        <View style={styles.listContent}>
+          <CourseCardSkeleton layout="vertical" />
+          <CourseCardSkeleton layout="vertical" />
+          <CourseCardSkeleton layout="vertical" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && !refreshing) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Khóa học yêu thích</Text>
+        </View>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>⚠️</Text>
+          <Text style={styles.emptyTitle}>Lỗi tải dữ liệu</Text>
+          <Text style={styles.emptyDesc}>{error}</Text>
+          <TouchableOpacity style={styles.exploreBtn} onPress={fetchWishlist}>
+            <Text style={styles.exploreBtnText}>Thử lại</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );

@@ -21,12 +21,16 @@ import { api } from '../api/client';
 import { getCourseReviews } from '../api/reviews';
 import { getWishlistIds, addToWishlist, removeFromWishlist } from '../api/wishlist';
 
+const DEFAULT_FALLBACK_THUMBNAIL =
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80';
+
 export const CourseDetailScreen = ({ route, navigation }) => {
   const courseId = route?.params?.courseId || 1;
   const [course, setCourse] = useState(() => COURSES_MOCK.find((c) => c.id === courseId) || COURSES_MOCK[0]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const [expandedSections, setExpandedSections] = useState({ 1: true });
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -241,9 +245,10 @@ export const CourseDetailScreen = ({ route, navigation }) => {
           onPress={() => handleOpenPreview(null)}
         >
           <Image
-            source={{ uri: course.thumbnailUrl }}
+            source={{ uri: (!imageError && course.thumbnailUrl) ? course.thumbnailUrl : DEFAULT_FALLBACK_THUMBNAIL }}
             style={styles.bannerImage}
             resizeMode="cover"
+            onError={() => setImageError(true)}
           />
           <View style={styles.playOverlay}>
             <View style={styles.playBtn}>
@@ -732,6 +737,7 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     marginTop: 12,
     gap: 8,
   },

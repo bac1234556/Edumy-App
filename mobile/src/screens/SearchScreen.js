@@ -13,6 +13,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { CourseCard } from '../components/common/CourseCard';
+import { CourseCardSkeleton } from '../components/common/CourseCardSkeleton';
 import { CATEGORIES_MOCK } from '../mock/categoriesMock';
 import { COURSES_MOCK } from '../mock/coursesMock';
 import { api } from '../api/client';
@@ -32,6 +33,7 @@ const PRICE_OPTIONS = [
 
 const SORT_OPTIONS = [
   { label: 'Mới nhất', value: 'newest' },
+  { label: 'Đánh giá cao', value: 'rating' },
   { label: 'Giá thấp đến cao', value: 'price_asc' },
   { label: 'Giá cao đến thấp', value: 'price_desc' },
 ];
@@ -117,6 +119,8 @@ export const SearchScreen = ({ navigation, route }) => {
         filtered.sort((a, b) => a.price - b.price);
       } else if (selectedSort === 'price_desc') {
         filtered.sort((a, b) => b.price - a.price);
+      } else if (selectedSort === 'rating') {
+        filtered.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
       }
       setCourses(filtered);
     } finally {
@@ -209,9 +213,10 @@ export const SearchScreen = ({ navigation, route }) => {
 
       {/* Main Content Area: Loading / Empty / List / Error */}
       {isLoading && !refreshing ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={styles.loadingText}>Đang tìm kiếm khóa học...</Text>
+        <View style={styles.listContainer}>
+          <CourseCardSkeleton layout="vertical" />
+          <CourseCardSkeleton layout="vertical" />
+          <CourseCardSkeleton layout="vertical" />
         </View>
       ) : hasError ? (
         <View style={styles.centerContainer}>

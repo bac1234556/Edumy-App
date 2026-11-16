@@ -3,6 +3,9 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { RatingStars } from './RatingStars';
 import { PriceTag } from './PriceTag';
 
+const DEFAULT_FALLBACK_THUMBNAIL =
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80';
+
 /**
  * Component thẻ khóa học dùng chung (Course Card)
  * Hỗ trợ 2 chế độ hiển thị:
@@ -17,10 +20,15 @@ export const CourseCard = ({
   isWishlistedInitially = false,
 }) => {
   const [isWishlisted, setIsWishlisted] = useState(isWishlistedInitially);
+  const [imageError, setImageError] = useState(false);
 
   React.useEffect(() => {
     setIsWishlisted(isWishlistedInitially);
   }, [isWishlistedInitially]);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [course?.thumbnailUrl]);
 
   const handleWishlistPress = (e) => {
     e?.stopPropagation?.();
@@ -32,6 +40,9 @@ export const CourseCard = ({
   };
 
   const isHoriz = layout === 'horizontal';
+  const imageSource = (!imageError && course.thumbnailUrl)
+    ? { uri: course.thumbnailUrl }
+    : { uri: DEFAULT_FALLBACK_THUMBNAIL };
 
   return (
     <TouchableOpacity
@@ -42,9 +53,10 @@ export const CourseCard = ({
       {/* Thumbnail + Wishlist Button */}
       <View style={isHoriz ? styles.imageWrapperHoriz : styles.imageWrapperVert}>
         <Image
-          source={{ uri: course.thumbnailUrl }}
+          source={imageSource}
           style={styles.image}
           resizeMode="cover"
+          onError={() => setImageError(true)}
         />
         <TouchableOpacity
           activeOpacity={0.8}
@@ -65,7 +77,7 @@ export const CourseCard = ({
       {/* Info Container */}
       <View style={styles.infoContainer}>
         {course.categoryName && (
-          <Text style={styles.categoryName} numberOfLines={1}>
+          <Text style={styles.categoryName} numberOfLines={1} ellipsizeMode="tail">
             {course.categoryName}
           </Text>
         )}
@@ -73,11 +85,12 @@ export const CourseCard = ({
         <Text
           style={[styles.title, isHoriz ? styles.titleHoriz : styles.titleVert]}
           numberOfLines={2}
+          ellipsizeMode="tail"
         >
           {course.title}
         </Text>
 
-        <Text style={styles.instructorName} numberOfLines={1}>
+        <Text style={styles.instructorName} numberOfLines={1} ellipsizeMode="tail">
           {course.instructor?.fullName || course.instructorName || 'Giảng viên Edumy'}
         </Text>
 
