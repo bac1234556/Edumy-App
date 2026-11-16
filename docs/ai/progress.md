@@ -1,0 +1,24 @@
+# Build progress — Edumy Mobile
+
+Resume from the first unit that is not `done`. Never redo a committed unit. One row per prompt run.
+
+| unit | status | commit | checks (tsc · lint · test) | notes / open questions |
+|---|---|---|---|---|
+| B00 backend plan + ADR-015/016 (backend repo) | todo | | | needs Q-M03 approval |
+| B01 mobile auth endpoints (backend repo) | todo | | | |
+| M00 bootstrap | done | pending | tsc: pass · lint: pass · test: 12/12 pass | Clean mono to mobile client, Expo SDK 51, Router, UI primitives |
+| M01 API client, errors, types | todo | | | |
+| M02 auth & session | todo | | | blocked by B01 |
+| M03 shell, account, profile | todo | | | |
+| M04 catalog & course page | todo | | | |
+| M05 cart & orders (no payment) | todo | | | Q-M02 cart URL |
+| M06 learning | todo | | | |
+| M07 Q&A, reviews, certificates | todo | | | G-01 |
+| B02 co-instructor shares (backend repo) | todo | | | |
+| B03 payout ledger (backend repo) | todo | | | |
+| B04 withdrawals + admin + mails (backend repo) | todo | | | |
+| B05 backend review & race tests (backend repo) | todo | | | |
+| M08 instructor earnings | todo | | | blocked by B03 |
+| M09 payout account & withdrawals | todo | | | blocked by B04 |
+| M10 polish & hand-over | todo | | | |
+| Ads | blocked | | | Q-M01 |

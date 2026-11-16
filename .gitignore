@@ -19,54 +19,38 @@ Thumbs.db
 *.sublime-workspace
 
 # ===============================
-# Backend (Java / Spring / Maven / Gradle)
-# ===============================
-backend/target/
-backend/build/
-backend/.gradle/
-backend/out/
-backend/bin/
-backend/*.log
-backend/logs/
-backend/application-local.yml
-backend/application-local.properties
-
-# ===============================
-# Mobile (Node / React Native / Expo)
-# ===============================
-mobile/node_modules/
-mobile/.expo/
-mobile/dist/
-mobile/web-build/
-mobile/*.log
-mobile/npm-debug.log*
-mobile/yarn-debug.log*
-mobile/yarn-error.log*
-
-# Android build outputs
-mobile/android/.gradle/
-mobile/android/build/
-mobile/android/app/build/
-mobile/android/*.iml
-mobile/android/local.properties
-mobile/android/.idea/
-
-# Native binaries
-*.apk
-*.aab
-
-# ===============================
-# Environment Variables & Secrets
+# Environment Variables (Secrets)
 # ===============================
 .env
-.env.local
-.env.*.local
-*.keystore
-*.jks
+.env*.local
 
-# Environment secrets and signing artifacts; keep shareable examples
-.env.*
-!.env.example
-!.env.*.example
-*.p12
-*.pfx
+# ===============================
+# Mobile (Expo / React Native)
+# ===============================
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Android / iOS Native Builds
+android/
+ios/
+*.orig.*
+
+# ===============================
+# Tests & Coverage
+# ===============================
+coverage/
+.nyc_output/
+
+# ===============================
+# Legacy Folders (Ignored heavy files)
+# ===============================
+legacy/**/target/
+legacy/**/node_modules/
+legacy/**/.expo/
+legacy/**/dist/
