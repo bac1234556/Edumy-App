@@ -1,10 +1,10 @@
 // src/components/ui/Text.tsx
 import React from 'react';
-import { Text as RNText, StyleSheet, TextStyle, TextProps as RNTextProps } from 'react-native';
+import { Text as RNText, StyleSheet, TextStyle, StyleProp, TextProps as RNTextProps } from 'react-native';
 
 interface CustomTextProps extends RNTextProps {
   variant?: 'h1' | 'h2' | 'h3' | 'body' | 'bodySmall' | 'caption' | 'label';
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
   children: React.ReactNode;
 }
 
