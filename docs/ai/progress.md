@@ -9,7 +9,7 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 | M00 bootstrap | done | 9d370d7 | tsc: pass · lint: pass · test: 12/12 pass | Clean mono to mobile client, Expo SDK 51, Router, UI primitives |
 | M01 API client, errors, types | done | pending | tsc: pass · lint: pass · test: 27/27 pass | Single-flight 401 refresh, ProblemDetail AppError, SecureStore tokens, schema.d.ts |
 | M02 auth & session | done | pending | tsc: pass · lint: pass · test: 36/36 pass | login, register, forgot-password, session restore, logout, password zod |
-| M03 shell, account, profile | todo | | | |
+| M03 shell, account, profile | done | pending | tsc: pass · lint: pass · test: 46/46 pass | D-M01 instructor tab, account menu, email unverified banner + 429 countdown, profile & password |
 | M04 catalog & course page | todo | | | |
 | M05 cart & orders (no payment) | todo | | | Q-M02 cart URL |
 | M06 learning | todo | | | |

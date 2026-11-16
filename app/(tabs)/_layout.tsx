@@ -2,8 +2,13 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSessionStore } from '../../src/store/session';
+import { shouldShowInstructorTab } from '../../src/features/profile/logic';
 
 export default function TabsLayout() {
+  const { me } = useSessionStore();
+  const showInstructor = shouldShowInstructorTab(me);
+
   return (
     <Tabs
       screenOptions={{
@@ -48,6 +53,17 @@ export default function TabsLayout() {
           tabBarLabel: 'Giỏ hàng',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cart-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="instructor"
+        options={{
+          title: 'Giảng viên',
+          tabBarLabel: 'Giảng viên',
+          href: showInstructor ? '/(tabs)/instructor' : null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cash-outline" size={size} color={color} />
           ),
         }}
       />
