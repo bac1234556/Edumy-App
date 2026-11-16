@@ -7,6 +7,8 @@ import com.edumy.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,17 +34,33 @@ public class CoursePublicService {
     /**
      * Lấy danh sách khóa học có trạng thái PUBLISHED, có phân trang và lọc theo danh mục
      */
-    public PageResponse<CourseSummaryResponse> getPublishedCourses(Long categoryId, Pageable pageable) {
-        Page<Course> coursePage;
-        if (categoryId != null && categoryId > 0) {
-            coursePage = courseRepository.findByCategoryIdAndStatus(categoryId, CourseStatus.PUBLISHED, pageable);
-        } else {
-            coursePage = courseRepository.findByStatus(CourseStatus.PUBLISHED, pageable);
-        }
+    public PageResponse<CourseSummaryResponse> getPublishedCourses(
+            String keyword,
+            Long categoryId,
+            Boolean isFree,
+            CourseLevel level,
+            Pageable pageable
+    ) {
+        Specification<Course> spec = CourseSpecification.filterCourses(keyword, categoryId, isFree, level);
+        Page<Course> coursePage = courseRepository.findAll(spec, pageable);
 
-        // Nếu DB rỗng, fallback sang dữ liệu seed mẫu cho Swagger/testing
         if (coursePage.isEmpty()) {
-            return PageResponse.from(getSeedCoursesPage(pageable));
+            boolean hasSpecificFilters = StringUtils.hasText(keyword)
+                    || (categoryId != null && categoryId > 0)
+                    || isFree != null
+                    || level != null;
+
+            if (!hasSpecificFilters) {
+                return PageResponse.from(getSeedCoursesPage(pageable));
+            }
+            return PageResponse.<CourseSummaryResponse>builder()
+                    .content(Collections.emptyList())
+                    .page(coursePage.getNumber())
+                    .size(coursePage.getSize())
+                    .totalElements(0)
+                    .totalPages(0)
+                    .last(true)
+                    .build();
         }
 
         List<CourseSummaryResponse> summaries = coursePage.getContent().stream()
@@ -57,6 +75,10 @@ public class CoursePublicService {
                 .totalPages(coursePage.getTotalPages())
                 .last(coursePage.isLast())
                 .build();
+    }
+
+    public PageResponse<CourseSummaryResponse> getPublishedCourses(Long categoryId, Pageable pageable) {
+        return getPublishedCourses(null, categoryId, null, null, pageable);
     }
 
     /**

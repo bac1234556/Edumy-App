@@ -70,3 +70,6 @@ mobile/android/.idea/
 !.env.*.example
 *.p12
 *.pfx
+
+# Local avatar uploads
+backend/uploads/

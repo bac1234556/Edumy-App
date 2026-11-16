@@ -39,6 +39,26 @@ public class CoursePublicControllerTest {
     }
 
     @Test
+    @DisplayName("Issue #41: GET /api/courses hỗ trợ tìm kiếm theo từ khóa keyword và lọc đa tiêu chí")
+    void testSearchAndFilterCourses() throws Exception {
+        mockMvc.perform(get("/api/courses?keyword=React&categoryId=1&isFree=false&level=ALL_LEVELS&sort=price_asc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray());
+    }
+
+    @Test
+    @DisplayName("Issue #41: GET /api/courses lọc khóa học miễn phí isFree=true")
+    void testFilterFreeCourses() throws Exception {
+        mockMvc.perform(get("/api/courses?isFree=true&sort=newest")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray());
+    }
+
+    @Test
     @DisplayName("Acceptance Criteria 2: Bài học không phải preview TUYỆT ĐỐI không lộ videoUrl")
     void testLockedLessonsDoNotExposeVideoUrl() {
         CourseDetailResponse detail = coursePublicService.getCourseDetail(1L);

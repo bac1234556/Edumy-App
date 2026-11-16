@@ -89,6 +89,96 @@ Chi tiết phân công từng ngày và từng thành viên xem tại:
 
 ---
 
+## 🚀 Hướng Dẫn Cài Đặt & Chạy Dự Án (Step-by-Step Setup)
+
+> Mục tiêu: Đảm bảo bất kỳ thành viên nào trong nhóm hoặc người chấm khi clone dự án về đều có thể tự cài đặt và chạy thành công mà không gặp trở ngại.
+
+### 1. Yêu cầu môi trường chuẩn bị (Prerequisites)
+- **Java Development Kit (JDK):** Phiên bản **21** (Khuyên dùng [Eclipse Temurin 21](https://adoptium.net/) hoặc Oracle OpenJDK 21).
+- **Node.js:** Phiên bản **v18.x** hoặc **v20.x LTS** kèm `npm` (hoặc `yarn`).
+- **Docker & Docker Compose:** Đã cài đặt [Docker Desktop](https://www.docker.com/products/docker-desktop/) (dùng để chạy container MySQL 8).
+- **Thiết bị chạy Mobile:**
+  - Thiết bị Android thật cài sẵn ứng dụng **Expo Go** từ Google Play Store, **hoặc**
+  - Trình giả lập Android Studio (Android Emulator).
+
+---
+
+### 2. Khởi động Cơ sở dữ liệu (MySQL 8)
+Dự án đã cấu hình sẵn file `docker-compose.yml` chuẩn tại thư mục gốc:
+
+```bash
+# Tại thư mục gốc của dự án (Edumy-App):
+docker compose up -d
+```
+
+*Thông số kết nối mặc định của CSDL:*
+- **Host / Port:** `localhost:3306`
+- **Database:** `edumy_db`
+- **Username:** `edumy_user`
+- **Password:** `edumy_password`
+
+---
+
+### 3. Cài đặt và Chạy Backend (Spring Boot 3 API)
+
+1. Mở cửa sổ Terminal và di chuyển vào thư mục `backend`:
+   ```bash
+   cd backend
+   ```
+
+2. Khởi chạy ứng dụng Spring Boot:
+   - Trên **Windows (PowerShell / CMD)**:
+     ```powershell
+     mvn spring-boot:run
+     ```
+   - *Cách khác:* Mở thư mục `backend` bằng **IntelliJ IDEA**, đợi Maven đồng bộ thư viện (dependencies) và nhấn nút **Run** tại file `com.edumy.BackendApplication`.
+
+3. Cơ chế **Flyway Migration** sẽ tự động khởi tạo toàn bộ bảng trong cơ sở dữ liệu và nạp dữ liệu mẫu ban đầu (admin user, danh mục, v.v.).
+
+4. **Kiểm tra hoạt động:**
+   - Truy cập tài liệu API tự động (Swagger UI):  
+     👉 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+   - Kiểm tra API Docs JSON:  
+     👉 [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+---
+
+### 4. Cài đặt và Chạy Ứng dụng Mobile (React Native / Expo)
+
+1. Mở một cửa sổ Terminal mới và di chuyển vào thư mục `mobile`:
+   ```bash
+   cd mobile
+   ```
+
+2. Cài đặt các gói phụ thuộc (Dependencies):
+   ```bash
+   npm install
+   ```
+
+3. Khởi chạy Expo Dev Server:
+   ```bash
+   npm start
+   # hoặc: npx expo start
+   ```
+
+4. **Trải nghiệm ứng dụng:**
+   - **Trên điện thoại Android thật:** Mở ứng dụng **Expo Go**, chọn *Scan QR Code* và quét mã QR hiển thị trên màn hình Terminal (lưu ý điện thoại và máy tính kết nối cùng mạng Wi-Fi hoặc sử dụng `npx expo start --tunnel`).
+   - **Trên Android Emulator:** Nhấn phím `a` trên cửa sổ Terminal sau khi Expo khởi động.
+   - **Trên Trình duyệt Web:** Nhấn phím `w` trên Terminal để chạy bản xem trước giao diện.
+
+---
+
+### 5. Kiểm thử các màn hình trên ứng dụng Mobile
+Ứng dụng đã được tích hợp thanh điều hướng nhanh ở cuối màn hình giúp việc chấm điểm và review thuận tiện:
+- 🏠 **Trang chủ (Home):** Danh mục khóa học, thanh tìm kiếm, danh sách khóa học nổi bật (Issue [W7-B3]).
+- 📚 **Khóa học (Course Detail):** Chi tiết bài giảng, thông tin giảng viên, đề cương chương học.
+- 🛡️ **Admin Dashboard:** 4 thẻ chỉ số thống kê (Học viên, Khóa học, Doanh thu, Khóa chờ duyệt), lối tắt tác vụ nhanh và nhật ký hoạt động gần đây (Issue [W7-E3]).
+- 👥 **Quản lý người dùng (Users):** Danh sách người dùng, thanh tìm kiếm họ tên/email, chip lọc theo vai trò (*Tất cả / Học viên / Giảng viên / Quản trị viên*), trạng thái hoạt động và tính năng khóa/mở khóa tài khoản (Issue [W7-E3]).
+- 📝 **Duyệt khóa học & Thông báo:** API cho Admin duyệt hoặc từ chối khóa học kèm lý do (Issue #47 [W8-E1]), gửi thông báo kết quả lập tức cho giảng viên.
+- 📋 **Hàng chờ duyệt trên Mobile:** Admin xem chi tiết giáo trình và video, phê duyệt có xác nhận hoặc từ chối kèm lý do bắt buộc (Issue #52 [W8-E2]).
+
+---
+
 ## 💡 Giá trị & Tính ứng dụng thực tế
 
 - 🎓 **Học viên:** Tự học linh hoạt mọi lúc mọi nơi, ghi nhớ tiến độ bài học, nhận chứng chỉ hoàn thành xác thực.
@@ -116,3 +206,74 @@ Chi tiết phân công từng ngày và từng thành viên xem tại:
    - API có tài liệu trên Swagger, validate dữ liệu đầy đủ.
    - Màn hình Mobile có đủ 3 trạng thái: *Loading*, *Empty Data*, *Error*.
    - Đã kiểm thử trực tiếp trên thiết bị Android hoặc Emulator.
+
+## Xác thực (W7-A4)
+
+- `POST /api/auth/register`: `{email, password, fullName, role}`; role chỉ nhận
+  `STUDENT` hoặc `INSTRUCTOR`, mật khẩu tối thiểu 8 ký tự (tối đa 72 byte UTF-8).
+- `POST /api/auth/login`: `{email, password}`. Cả đăng ký và đăng nhập trả
+  `data: {accessToken, refreshToken, tokenType, expiresIn, user}`.
+- `POST /api/auth/refresh`: `{refreshToken}`. Mỗi lần refresh thay token cũ bằng
+  token mới; cần lưu lại cả hai token. `POST /api/auth/logout` thu hồi refresh token.
+- `GET /api/users/me`: gửi `Authorization: Bearer <accessToken>`.
+- Token thiếu/hết hạn/không hợp lệ trả 401; sai role trả 403. Header role và mock
+  token không được dùng để xác thực. Tài khoản bị khóa không thể login/refresh.
+
+Access token sống 15 phút, refresh token sống 7 ngày và chỉ lưu SHA-256 trong DB.
+Đặt `JWT_SECRET` (ít nhất 32 byte) bằng giá trị riêng trong cấu hình môi trường
+để giữ phiên qua lần khởi động; khi không đặt, backend tạo khóa ngẫu nhiên trong
+bộ nhớ và access token cũ sẽ hết hiệu lực sau restart. Không commit khóa này.
+Đổi `JWT_ACCESS_SECONDS` để cấu hình thời hạn access token. Chỉ dùng HTTPS khi
+triển khai ngoài local.
+
+## Mobile: cấu hình API và phiên đăng nhập
+
+```bash
+cd mobile
+cp .env.example .env
+npm ci
+npm run lint
+npm test -- --runInBand
+npx expo start --clear
+```
+
+`EXPO_PUBLIC_API_URL` bao gồm `/api`. Emulator Android dùng
+`http://10.0.2.2:8080/api`; điện thoại thật dùng IP LAN của máy chạy backend và
+cùng mạng Wi-Fi (không dùng `localhost` của điện thoại). Cần khởi động lại Metro
+sau khi đổi biến. Dùng Expo Go tương thích **SDK 51** hoặc development build;
+bản Expo Go mới nhất có thể không còn hỗ trợ SDK 51.
+
+Ứng dụng dùng Expo Router với `(auth)`, `(student)`, `(instructor)`, `(admin)`.
+Trang chào hiển thị kết quả thật từ `/api/health`, có trạng thái đang tải,
+chưa có dữ liệu và lỗi kèm nút thử lại. Token được lưu chung một bản ghi trong
+SecureStore, khôi phục khi mở app. Các request 401 dùng chung một lần refresh,
+lưu token mới rồi retry một lần; refresh token không hợp lệ sẽ xóa phiên.
+Mỗi nhóm route chặn người dùng chưa đăng nhập hoặc sai role. API vẫn là nơi
+kiểm tra quyền cuối cùng. Test Android cần kiểm tra health UP, mở lại app và
+luồng điều hướng theo role; bundle/lint không thay thế kiểm thử thiết bị.
+
+## Kiểm tra luồng đăng ký và đăng nhập
+
+Trong app, chọn **Tạo tài khoản**, nhập họ tên, email, mật khẩu từ 8 ký tự và
+chọn Học viên hoặc Giảng viên. Đăng ký thành công mở màn đăng nhập; đăng nhập
+sẽ lưu phiên và mở đúng nhóm route. ADMIN chỉ được cấp bởi hệ thống, không có
+lựa chọn đăng ký admin. Các form khóa nút gửi khi đang xử lý và hiển thị lỗi từ
+server. Đăng xuất xóa token cục bộ và cố gắng thu hồi refresh token trên server.
+
+Khi backend đang chạy với MySQL, chạy:
+
+```bash
+cd backend
+python3 scripts/smoke_auth.py
+```
+
+Script tạo tài khoản thử ngẫu nhiên, kiểm tra register/login/me, 403 cho admin,
+409 email trùng, 401 mật khẩu sai, refresh rotation và logout; không in token.
+CI chạy script với MySQL 8 thật sau build, cùng lint, test mobile và bundle Android.
+Kiểm thử tự động không thay thế review PR độc lập hoặc thử ứng dụng trên thiết bị.
+
+DB demo có admin `admin@edumy.vn` với mật khẩu công khai `Admin@123456` theo seed
+của dự án. Chỉ dùng tài khoản này cho local/demo và đổi thông tin xác thực trước
+khi triển khai. Migration bổ sung sửa hash seed cũ bị sai, có điều kiện giữ nguyên
+mật khẩu đã tùy chỉnh. Trên DB local/CI mới, thêm `--check-seeded-admin` khi chạy
+smoke script để kiểm tra cả login admin và quyền truy cập admin.

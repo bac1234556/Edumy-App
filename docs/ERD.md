@@ -102,33 +102,37 @@ erDiagram
 
     ORDERS {
         bigint id PK
-        string order_code UK
         bigint user_id FK
         bigint course_id FK
-        decimal total_amount
-        string status "PENDING | PAID | CANCELLED"
+        decimal amount
+        string status "PENDING | PAID | FAILED"
         string payment_method "MOCK | VNPAY"
+        string txn_ref UK
         datetime paid_at
         datetime created_at
+        datetime updated_at
     }
 
     ENROLLMENTS {
         bigint id PK
         bigint user_id FK
         bigint course_id FK
-        bigint order_id FK
-        string status "ACTIVE | COMPLETED"
-        datetime enrolled_at
+        bigint order_id FK "NULL nếu khóa miễn phí"
+        int progress_percent "0..100"
         datetime completed_at
+        datetime created_at
+        datetime updated_at
     }
 
     LESSON_PROGRESS {
         bigint id PK
         bigint enrollment_id FK
         bigint lesson_id FK
-        boolean is_completed
-        int last_watched_seconds
+        int last_position_sec
+        boolean completed
         datetime completed_at
+        datetime created_at
+        datetime updated_at
     }
 
     REVIEWS {
@@ -149,10 +153,10 @@ erDiagram
 
     CERTIFICATES {
         bigint id PK
-        bigint enrollment_id FK
-        string certificate_code UK
-        string pdf_url
+        bigint enrollment_id FK, UK
+        string code UK
         datetime issued_at
+        string pdf_url
     }
 
     QUESTIONS {
@@ -214,10 +218,24 @@ erDiagram
   * `is_preview`: Cờ cho phép học viên chưa mua xem thử (Preview lesson).
 
 ### 2.4. Phân hệ Đơn hàng, Học tập & Chứng chỉ (Member D)
-* **`orders`**: Ghi nhận giao dịch mua khóa học. Tạo mã `order_code` ngẫu nhiên. Trạng thái `PENDING` $\rightarrow$ `PAID`. Hỗ trợ phương thức `MOCK` và `VNPAY`.
-* **`enrollments`**: Xác nhận quyền học. Một học viên chỉ có 1 bản ghi enrollment cho mỗi khóa học (`UNIQUE(user_id, course_id)`).
-* **`lesson_progress`**: Ghi nhận tiến độ xem từng bài học. Tự động chuyển `is_completed = true` khi xem $\ge 90\%$.
-* **`certificates`**: Cấp khi toàn bộ bài học trong khóa đều đạt `is_completed = true`. Mã chứng chỉ `certificate_code` định dạng `EDUMY-<YEAR>-<RANDOM>` có thể tra cứu công khai.
+> Cập nhật theo W7-D1 (Issue #13), migration `V20261102_10__create_order_enrollment_progress_certificate.sql`.
+
+* **`orders`**: Ghi nhận giao dịch mua khóa học.
+  * `amount`: Số tiền thanh toán tại thời điểm mua (`DECIMAL(12,2)`, `>= 0`).
+  * `status`: `PENDING` $\rightarrow$ `PAID` hoặc `FAILED`.
+  * `payment_method`: `MOCK` hoặc `VNPAY`.
+  * `txn_ref`: Mã tham chiếu duy nhất gửi sang cổng thanh toán (`vnp_TxnRef`), dùng để đối soát callback.
+  * `paid_at`: Thời điểm thanh toán thành công.
+* **`enrollments`**: Xác nhận quyền học. Một học viên chỉ có 1 bản ghi cho mỗi khóa học (`UNIQUE(user_id, course_id)`).
+  * `order_id`: Đơn hàng tạo ra quyền học (`NULL` với khóa miễn phí, `SET NULL` khi xóa đơn).
+  * `progress_percent`: Tiến độ 0–100 (CHECK), tính từ số bài đã hoàn thành.
+  * `completed_at`: Thời điểm hoàn thành toàn bộ khóa.
+* **`lesson_progress`**: Tiến độ xem từng bài học (`UNIQUE(enrollment_id, lesson_id)`).
+  * `last_position_sec`: Vị trí xem gần nhất (giây) để tiếp tục phát.
+  * `completed`: Tự động chuyển `true` khi xem $\ge 90\%$; `completed_at` ghi thời điểm đó.
+* **`certificates`**: Cấp khi toàn bộ bài học trong khóa đều `completed = true`; mỗi enrollment tối đa 1 chứng chỉ (`UNIQUE(enrollment_id)`).
+  * `code`: Mã duy nhất định dạng `EDUMY-<YEAR>-<RANDOM>`, tra cứu công khai.
+  * `issued_at`, `pdf_url`: Ngày cấp và đường dẫn file PDF.
 
 ### 2.5. Phân hệ Quản trị & Hỏi đáp Cộng đồng (Member E)
 * **`questions`**: Thắc mắc của học viên gắn với từng bài học cụ thể.

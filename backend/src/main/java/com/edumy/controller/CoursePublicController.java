@@ -4,6 +4,7 @@ import com.edumy.common.ApiResponse;
 import com.edumy.common.PageResponse;
 import com.edumy.dto.course.CourseDetailResponse;
 import com.edumy.dto.course.CourseSummaryResponse;
+import com.edumy.entity.CourseLevel;
 import com.edumy.service.CoursePublicService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,11 +28,20 @@ public class CoursePublicController {
     @GetMapping
     @Operation(
             summary = "Lấy danh sách khóa học công khai",
-            description = "Chỉ trả về các khóa học có trạng thái PUBLISHED, hỗ trợ phân trang và lọc theo danh mục."
+            description = "Chỉ trả về các khóa học có trạng thái PUBLISHED, hỗ trợ tìm kiếm đa tiêu chí bằng JPA Specification (từ khóa, danh mục, miễn phí, cấp độ), phân trang và sắp xếp."
     )
     public ResponseEntity<ApiResponse<PageResponse<CourseSummaryResponse>>> getPublishedCourses(
+            @Parameter(description = "Từ khóa tìm kiếm theo tiêu đề hoặc phụ đề (tùy chọn)")
+            @RequestParam(required = false) String keyword,
+
             @Parameter(description = "ID của danh mục cần lọc (tùy chọn)")
             @RequestParam(required = false) Long categoryId,
+
+            @Parameter(description = "Lọc khóa học miễn phí (true: giá = 0, false: giá > 0)")
+            @RequestParam(required = false) Boolean isFree,
+
+            @Parameter(description = "Trình độ khóa học (BEGINNER, INTERMEDIATE, ADVANCED, ALL_LEVELS)")
+            @RequestParam(required = false) CourseLevel level,
 
             @Parameter(description = "Số thứ tự trang (0-indexed, mặc định 0)")
             @RequestParam(defaultValue = "0") int page,
@@ -39,17 +49,14 @@ public class CoursePublicController {
             @Parameter(description = "Số lượng khóa học trên mỗi trang (mặc định 10)")
             @RequestParam(defaultValue = "10") int size,
 
-            @Parameter(description = "Sắp xếp theo trường, ví dụ: 'createdAt,desc' hoặc 'price,asc'")
-            @RequestParam(defaultValue = "createdAt,desc") String sort
+            @Parameter(description = "Sắp xếp: 'newest', 'price_asc', 'price_desc', hoặc 'field,asc/desc'")
+            @RequestParam(defaultValue = "newest") String sort
     ) {
-        String[] sortParts = sort.split(",");
-        String sortField = sortParts[0];
-        Sort.Direction direction = (sortParts.length > 1 && sortParts[1].equalsIgnoreCase("asc"))
-                ? Sort.Direction.ASC
-                : Sort.Direction.DESC;
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
-        PageResponse<CourseSummaryResponse> response = coursePublicService.getPublishedCourses(categoryId, pageable);
+        Sort sorting = parseSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        PageResponse<CourseSummaryResponse> response = coursePublicService.getPublishedCourses(
+                keyword, categoryId, isFree, level, pageable
+        );
 
         return ResponseEntity.ok(ApiResponse.ok(response, "Lấy danh sách khóa học thành công"));
     }
@@ -66,5 +73,23 @@ public class CoursePublicController {
     ) {
         CourseDetailResponse response = coursePublicService.getCourseDetail(id);
         return ResponseEntity.ok(ApiResponse.ok(response, "Lấy chi tiết khóa học thành công"));
+    }
+
+    private Sort parseSort(String sort) {
+        if (sort == null || sort.isBlank() || sort.equalsIgnoreCase("newest")) {
+            return Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+        if (sort.equalsIgnoreCase("price_asc")) {
+            return Sort.by(Sort.Direction.ASC, "price");
+        }
+        if (sort.equalsIgnoreCase("price_desc")) {
+            return Sort.by(Sort.Direction.DESC, "price");
+        }
+        String[] parts = sort.split(",");
+        String field = parts[0];
+        Sort.Direction direction = (parts.length > 1 && parts[1].equalsIgnoreCase("asc"))
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        return Sort.by(direction, field);
     }
 }

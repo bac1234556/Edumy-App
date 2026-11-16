@@ -1,0 +1,60 @@
+name: edumy-demo
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-edumy_db}
+      MYSQL_USER: ${DB_USER:-edumy}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, --silent]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  backend:
+    image: edumy-backend:${APP_VERSION:?Set APP_VERSION to a Git commit SHA}
+    build:
+      context: ../backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-edumy_db}
+      DB_USER: ${DB_USER:-edumy}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - avatar_data:/app/uploads
+    expose:
+      - '8080'
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DEMO_DOMAIN: ${DEMO_DOMAIN:?Set DEMO_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL}
+      NO_PROXY: backend,localhost,127.0.0.1
+      no_proxy: backend,localhost,127.0.0.1
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+volumes:
+  mysql_data:
+  avatar_data:
+  caddy_data:
+  caddy_config:

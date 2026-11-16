@@ -1,0 +1,9 @@
+# Docker Compose >= 2.24.4. Local-only HTTPS acceptance environment.
+services:
+  caddy:
+    ports: !override
+      - '127.0.0.1:18443:443'
+    volumes: !override
+      - ./Caddyfile.virtual:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config

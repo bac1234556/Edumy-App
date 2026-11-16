@@ -1,0 +1,4 @@
+https://localhost, https://caddy {
+    tls internal
+    reverse_proxy backend:8080
+}

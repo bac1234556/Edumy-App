@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,35 +15,93 @@ import { CourseCard } from '../components/common/CourseCard';
 import { CategoryChip } from '../components/common/CategoryChip';
 import { CATEGORIES_MOCK } from '../mock/categoriesMock';
 import { COURSES_MOCK } from '../mock/coursesMock';
+import { api } from '../api/client';
+import { getWishlistIds, addToWishlist, removeFromWishlist } from '../api/wishlist';
 
 export const HomeScreen = ({ navigation }) => {
+  const [categories, setCategories] = useState(CATEGORIES_MOCK);
   const [selectedCategoryId, setSelectedCategoryId] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   // 3 UI States
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [courses, setCourses] = useState(COURSES_MOCK);
+  const [courses, setCourses] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState([]);
 
-  const fetchCourses = () => {
-    setIsLoading(true);
-    setHasError(false);
-    // Simulate fast mock load
-    setTimeout(() => {
-      setCourses(COURSES_MOCK);
-      setIsLoading(false);
-      setRefreshing(false);
-    }, 400);
+  const fetchWishlist = useCallback(async () => {
+    try {
+      const ids = await getWishlistIds();
+      if (Array.isArray(ids)) {
+        setWishlistIds(ids);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleWishlistToggle = async (courseId, nextState) => {
+    // Optimistic update
+    setWishlistIds((prev) =>
+      nextState ? [...prev, courseId] : prev.filter((id) => id !== courseId)
+    );
+    try {
+      if (nextState) {
+        await addToWishlist(courseId);
+      } else {
+        await removeFromWishlist(courseId);
+      }
+    } catch {
+      // Revert if failed
+      setWishlistIds((prev) =>
+        nextState ? prev.filter((id) => id !== courseId) : [...prev, courseId]
+      );
+    }
   };
 
-  useEffect(() => {
-    fetchCourses();
+  const fetchCoursesAndCategories = useCallback(async () => {
+    setIsLoading(true);
+    setHasError(false);
+    try {
+      const [coursesRes, catRes] = await Promise.allSettled([
+        api.get('/courses', { params: { page: 0, size: 20 } }),
+        api.get('/categories'),
+      ]);
+
+      let loadedCourses = [];
+      if (coursesRes.status === 'fulfilled' && coursesRes.value?.data?.data) {
+        const raw = coursesRes.value.data.data;
+        loadedCourses = Array.isArray(raw) ? raw : (raw.content || []);
+      }
+
+      if (loadedCourses.length > 0) {
+        setCourses(loadedCourses);
+      } else {
+        setCourses(COURSES_MOCK);
+      }
+
+      if (catRes.status === 'fulfilled' && Array.isArray(catRes.value?.data?.data)) {
+        setCategories(catRes.value.data.data);
+      }
+    } catch {
+      // Fallback gracefully to mock data
+      setCourses(COURSES_MOCK);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchCoursesAndCategories();
+    fetchWishlist();
+  }, [fetchCoursesAndCategories, fetchWishlist]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchCourses();
+    fetchCoursesAndCategories();
+    fetchWishlist();
   };
 
   // Filter courses by category and search keyword
@@ -66,6 +124,12 @@ export const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const handleSearchSubmit = () => {
+    if (navigation && navigation.navigate) {
+      navigation.navigate('Search', { initialKeyword: searchKeyword });
+    }
+  };
+
   // 1. Loading State View
   if (isLoading && !refreshing) {
     return (
@@ -83,7 +147,7 @@ export const HomeScreen = ({ navigation }) => {
         <Text style={styles.errorIcon}>⚠️</Text>
         <Text style={styles.errorTitle}>Không thể kết nối đến máy chủ</Text>
         <Text style={styles.stateText}>Vui lòng kiểm tra lại kết nối mạng và thử lại.</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={fetchCourses}>
+        <TouchableOpacity style={styles.retryBtn} onPress={fetchCoursesAndCategories}>
           <Text style={styles.retryBtnText}>Thử lại</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -104,13 +168,27 @@ export const HomeScreen = ({ navigation }) => {
             placeholderTextColor="#94A3B8"
             value={searchKeyword}
             onChangeText={setSearchKeyword}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
           />
           {searchKeyword.length > 0 && (
             <TouchableOpacity onPress={() => setSearchKeyword('')}>
               <Text style={styles.clearSearch}>✕</Text>
             </TouchableOpacity>
           )}
+          <TouchableOpacity
+            style={styles.filterBtn}
+            onPress={handleSearchSubmit}
+          >
+            <Text style={styles.filterBtnText}>Lọc</Text>
+          </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={styles.wishlistHeaderBtn}
+          onPress={() => navigation && navigation.navigate ? navigation.navigate('Wishlist') : null}
+        >
+          <Text style={styles.wishlistHeaderIcon}>❤️</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -136,7 +214,7 @@ export const HomeScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesContainer}
         >
-          {CATEGORIES_MOCK.map((cat) => (
+          {categories.map((cat) => (
             <CategoryChip
               key={cat.id}
               name={cat.name}
@@ -183,6 +261,8 @@ export const HomeScreen = ({ navigation }) => {
                       key={`featured-${course.id}`}
                       course={course}
                       layout="horizontal"
+                      isWishlistedInitially={wishlistIds.includes(course.id)}
+                      onWishlistToggle={handleWishlistToggle}
                       onPress={handleCoursePress}
                     />
                   ))}
@@ -202,6 +282,8 @@ export const HomeScreen = ({ navigation }) => {
                     key={`latest-${course.id}`}
                     course={course}
                     layout="vertical"
+                    isWishlistedInitially={wishlistIds.includes(course.id)}
+                    onWishlistToggle={handleWishlistToggle}
                     onPress={handleCoursePress}
                   />
                 ))}
@@ -225,14 +307,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 46,
+  },
+  wishlistHeaderBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wishlistHeaderIcon: {
+    fontSize: 20,
   },
   searchIcon: {
     fontSize: 16,
@@ -247,6 +344,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#94A3B8',
     padding: 4,
+    marginRight: 4,
+  },
+  filterBtn: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    marginLeft: 4,
+  },
+  filterBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   scrollContent: {
     paddingBottom: 40,

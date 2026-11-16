@@ -60,6 +60,14 @@ public class Course {
     @Builder.Default
     private Integer totalDurationSeconds = 0;
 
+    @Column(name = "avg_rating")
+    @Builder.Default
+    private Double avgRating = 0.0;
+
+    @Column(name = "rating_count")
+    @Builder.Default
+    private Integer ratingCount = 0;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
