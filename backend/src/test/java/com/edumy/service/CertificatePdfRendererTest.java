@@ -7,6 +7,7 @@ import org.openpdf.text.pdf.PdfReader;
 import org.openpdf.text.pdf.parser.PdfTextExtractor;
 
 import java.time.LocalDateTime;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,6 +38,23 @@ class CertificatePdfRendererTest {
         PdfReader reader = read(new CertificateView("EDUMY-2026-K7M2QX4P", 1L, longTitle,
                 "Nguyễn Hoàng Phương Thảo Nguyên Vĩnh An", "Lê Hoàng Nam", LocalDateTime.of(2026, 11, 16, 10, 30)));
         assertEquals(1, reader.getNumberOfPages());
+    }
+
+    @Test
+    @DisplayName("Ngày cấp hiển thị theo giờ Việt Nam dù server chạy múi giờ UTC")
+    void issueDateIsShownInVietnamTime() throws Exception {
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            // 19:00 UTC ngày 16/11 = 02:00 ngày 17/11 theo giờ Việt Nam
+            PdfReader reader = read(new CertificateView("EDUMY-2026-K7M2QX4P", 1L, "Khóa học", "Học viên", "Giảng viên",
+                    LocalDateTime.of(2026, 11, 16, 19, 0)));
+            String text = new PdfTextExtractor(reader).getTextFromPage(1);
+            assertTrue(text.contains("17/11/2026"), text);
+            assertFalse(text.contains("16/11/2026"), text);
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 
     @Test

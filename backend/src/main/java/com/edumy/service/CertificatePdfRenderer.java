@@ -16,6 +16,7 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -28,6 +29,7 @@ public class CertificatePdfRenderer {
     private static final String REGULAR_FONT = "fonts/Roboto-Regular.ttf";
     private static final String BOLD_FONT = "fonts/Roboto-Bold.ttf";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final ZoneId VIETNAM = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private static final Color BLUE = new Color(0x25, 0x63, 0xEB);
     private static final Color DARK = new Color(0x0F, 0x17, 0x2A);
@@ -59,7 +61,9 @@ public class CertificatePdfRenderer {
                 line(document, "Giảng viên: " + view.instructorName(), font(regular, 14, DARK), 0, 4);
             }
             if (view.issuedAt() != null) {
-                line(document, "Ngày cấp: " + view.issuedAt().format(DATE), font(regular, 14, DARK), 0, 14);
+                // issuedAt là giờ của JVM (thường UTC trên server): đổi sang giờ Việt Nam để ngày cấp không lệch.
+                String issued = view.issuedAt().atZone(ZoneId.systemDefault()).withZoneSameInstant(VIETNAM).format(DATE);
+                line(document, "Ngày cấp: " + issued, font(regular, 14, DARK), 0, 14);
             }
             line(document, "Mã chứng chỉ: " + view.code(), font(bold, 16, DARK), 0, 6);
             line(document, "Mã này có thể được xác minh công khai trên hệ thống Edumy.", font(regular, 10, GREY), 0, 0);

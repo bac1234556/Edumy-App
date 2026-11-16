@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Certificate API", description = "Chứng chỉ hoàn thành khóa học: lấy, tải PDF và xác minh công khai")
@@ -43,7 +46,7 @@ public class CertificateController {
                 .courseTitle(view.courseTitle())
                 .studentName(view.studentName())
                 .instructorName(view.instructorName())
-                .issuedAt(view.issuedAt())
+                .issuedAt(toOffset(view))
                 .pdfPath("/api/certificates/" + view.code() + "/pdf")
                 .build(), "Lấy chứng chỉ thành công"));
     }
@@ -61,8 +64,13 @@ public class CertificateController {
                 .studentName(view.studentName())
                 .courseTitle(view.courseTitle())
                 .instructorName(view.instructorName())
-                .issuedAt(view.issuedAt())
+                .issuedAt(toOffset(view))
                 .build(), "Chứng chỉ hợp lệ"));
+    }
+
+    // issuedAt lưu theo giờ JVM; gửi kèm offset để app đổi đúng sang múi giờ của thiết bị.
+    private static OffsetDateTime toOffset(CertificateView view) {
+        return view.issuedAt() == null ? null : view.issuedAt().atZone(ZoneId.systemDefault()).toOffsetDateTime();
     }
 
     @GetMapping({"/api/certificates/{code}/pdf", "/api/v1/certificates/{code}/pdf"})

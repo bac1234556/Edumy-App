@@ -3,7 +3,7 @@ package com.edumy.dto.learning;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -20,5 +20,6 @@ public class CertificateVerifyResponse {
     private String studentName;
     private String courseTitle;
     private String instructorName;
-    private LocalDateTime issuedAt;
+    @Schema(description = "Thời điểm cấp (kèm múi giờ)", example = "2026-11-16T19:00:00Z")
+    private OffsetDateTime issuedAt;
 }

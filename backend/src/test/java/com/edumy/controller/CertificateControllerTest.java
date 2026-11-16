@@ -124,6 +124,27 @@ public class CertificateControllerTest {
     }
 
     @Test
+    @DisplayName("Giảng viên thêm bài mới sau khi hoàn thành: tiến độ tụt dưới 100% nhưng chứng chỉ đã cấp vẫn lấy và tải được")
+    void issuedCertificateSurvivesNewLessons() throws Exception {
+        finishCourse();
+        String code = certificateCode();
+
+        Long sectionId = lessonRepository.findById(lessonA).orElseThrow().getSectionId();
+        lessonRepository.save(Lesson.builder().sectionId(sectionId).title("Bài mới").videoUrl("https://cdn/new.mp4")
+                .durationSeconds(100).orderIndex(9).build());
+        save(lessonA, "{\"positionSec\":5}")
+                .andExpect(jsonPath("$.data.progressPercent").value(66))
+                .andExpect(jsonPath("$.data.courseCompleted").value(false))
+                .andExpect(jsonPath("$.data.certificateCode").value(code));
+
+        assertEquals(code, certificateCode());
+        mockMvc.perform(get("/api/certificates/" + code + "/pdf").with(as(studentId)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+        mockMvc.perform(get("/api/certificates/" + code + "/verify")).andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("Chưa hoàn thành khóa thì chưa có chứng chỉ (404), chưa mua thì 403, chưa đăng nhập 401")
     void notEligible() throws Exception {
         save(lessonA, "{\"positionSec\":100}").andExpect(status().isOk());

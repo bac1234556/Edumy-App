@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Year;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * W9-D3 (Issue #75): cấp chứng chỉ khi enrollment đạt 100%, tra cứu công khai và xuất PDF.
@@ -39,17 +40,23 @@ public class CertificateService {
     private final UserRepository userRepository;
     private final CertificatePdfRenderer pdfRenderer;
 
-    /** Cấp chứng chỉ nếu enrollment đã đạt 100% và chưa có; trả null nếu chưa đủ điều kiện. */
+    /**
+     * Trả chứng chỉ đã cấp; nếu chưa có thì cấp khi enrollment đạt 100%, chưa đủ điều kiện thì trả null.
+     * Chứng chỉ đã cấp luôn được giữ, kể cả khi giảng viên thêm bài mới làm tiến độ tụt dưới 100%.
+     */
     @Transactional
     public Certificate issueIfEligible(Enrollment enrollment) {
+        Optional<Certificate> existing = certificateRepository.findByEnrollmentId(enrollment.getId());
+        if (existing.isPresent()) {
+            return existing.get();
+        }
         if (enrollment.getProgressPercent() == null || enrollment.getProgressPercent() < 100) {
             return null;
         }
-        return certificateRepository.findByEnrollmentId(enrollment.getId())
-                .orElseGet(() -> certificateRepository.save(Certificate.builder()
-                        .enrollmentId(enrollment.getId())
-                        .code(newUniqueCode())
-                        .build()));
+        return certificateRepository.save(Certificate.builder()
+                .enrollmentId(enrollment.getId())
+                .code(newUniqueCode())
+                .build());
     }
 
     /** Chứng chỉ của học viên cho một khóa; tự cấp bù nếu đã đủ 100% từ trước khi có tính năng này. */
