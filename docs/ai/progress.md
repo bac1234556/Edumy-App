@@ -7,7 +7,7 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 | B00 backend plan + ADR-015/016 (backend repo) | todo | | | needs Q-M03 approval |
 | B01 mobile auth endpoints (backend repo) | done | 7b77faf | test: 8/8 pass · ModularityTest pass | MobileTokens, rotation, reuse detection |
 | M00 bootstrap | done | 9d370d7 | tsc: pass · lint: pass · test: 12/12 pass | Clean mono to mobile client, Expo SDK 51, Router, UI primitives |
-| M01 API client, errors, types | todo | | | |
+| M01 API client, errors, types | done | pending | tsc: pass · lint: pass · test: 27/27 pass | Single-flight 401 refresh, ProblemDetail AppError, SecureStore tokens, schema.d.ts |
 | M02 auth & session | todo | | | blocked by B01 |
 | M03 shell, account, profile | todo | | | |
 | M04 catalog & course page | todo | | | |
