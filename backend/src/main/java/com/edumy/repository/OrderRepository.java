@@ -20,4 +20,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "WHERE o.status = com.edumy.entity.OrderStatus.PAID " +
             "AND o.courseId IN (SELECT c.id FROM Course c WHERE c.instructorId = :instructorId)")
     BigDecimal sumPaidAmountByInstructorId(@Param("instructorId") Long instructorId);
+
+    @Query("SELECT SUM(o.amount) FROM Order o " +
+            "WHERE o.status = com.edumy.entity.OrderStatus.PAID AND o.courseId = :courseId")
+    BigDecimal sumPaidAmountByCourseId(@Param("courseId") Long courseId);
 }
