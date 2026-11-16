@@ -23,6 +23,13 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Long countByCourseId(Long courseId);
 
+// <<<<<<< feature/70-instructor-stats-api
+//     @Query("SELECT AVG(r.rating) FROM Review r " +
+//             "WHERE r.courseId IN (SELECT c.id FROM Course c WHERE c.instructorId = :instructorId)")
+//     Double calculateAverageRatingByInstructorId(@Param("instructorId") Long instructorId);
+
+// =======
+// >>>>>>> develop
     @Query("SELECT r.rating, COUNT(r) FROM Review r WHERE r.courseId = :courseId GROUP BY r.rating")
     List<Object[]> countRatingsGroupedByStars(@Param("courseId") Long courseId);
 

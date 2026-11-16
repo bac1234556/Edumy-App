@@ -18,6 +18,10 @@ public interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecif
     Page<Course> findByCategoryIdAndStatus(Long categoryId, CourseStatus status, Pageable pageable);
     Optional<Course> findByIdAndStatus(Long id, CourseStatus status);
     List<Course> findByInstructorId(Long instructorId);
+// <<<<<<< feature/70-instructor-stats-api
+//     long countByInstructorId(Long instructorId);
+// =======
+// >>>>>>> develop
     Optional<Course> findByIdAndInstructorId(Long id, Long instructorId);
     boolean existsByCategoryId(Long categoryId);
     long countByCategoryId(Long categoryId);
