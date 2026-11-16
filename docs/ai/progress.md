@@ -13,7 +13,7 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 | M04 catalog & course page | done | 992d01f | tsc: pass · lint: pass · test: 55/55 pass | Table D-M02 resolveCourseAction, catalog filters, reviews, preview player |
 | M05 cart & orders (no payment) | done | ca5b5d1 | tsc: pass · lint: pass · test: 70/70 pass | BR-M01 web checkout redirect, cart reasons, order history & detail, foreground sync. Q-M02 cart URL: ${WEB_BASE_URL}/cart |
 | M06 learning | done | 617cc5c | tsc: pass · lint: pass · test: 75/75 pass | my enrollments, outline, expo-video/webview stream, visit tracking, manual completion & cert toast |
-| M07 Q&A, reviews, certificates | todo | | | G-01 |
+| M07 Q&A, reviews, certificates | done | 71d879f | tsc: pass · lint: pass · test: 91/91 pass | course Q&A thread & answers, reviews write & submit (AC-14), certificates list, PDF download (with Bearer) & sharing, copy verification link | G-01 noted |
 | B02 co-instructor shares (backend repo) | todo | | | |
 | B03 payout ledger (backend repo) | todo | | | |
 | B04 withdrawals + admin + mails (backend repo) | todo | | | |

@@ -25,3 +25,23 @@ jest.mock('react-native-webview', () => {
   };
 });
 
+jest.mock('expo-file-system', () => ({
+  documentDirectory: 'file:///data/user/0/host.exp.exponent/files/',
+  downloadAsync: jest.fn(async (url, fileUri) => ({
+    uri: fileUri,
+    status: 200,
+    headers: {},
+  })),
+}));
+
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(async () => true),
+  shareAsync: jest.fn(async () => {}),
+}));
+
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn(async () => true),
+  getStringAsync: jest.fn(async () => ''),
+}));
+
+

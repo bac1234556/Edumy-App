@@ -166,6 +166,17 @@ export default function AccountScreen() {
 
           <TouchableOpacity
             style={styles.menuItem}
+            onPress={() => router.push('/account/certificates' as const)}
+          >
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="ribbon-outline" size={22} color="#475569" />
+              <Text style={styles.menuItemText}>Chứng chỉ của tôi</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
             onPress={() => refetch()}
           >
             <View style={styles.menuItemLeft}>

@@ -108,6 +108,13 @@ export default function CourseLearnRoomScreen() {
               style={styles.continueButton}
             />
           )}
+
+          <Button
+            title="Diễn đàn Hỏi & Đáp (Q&A)"
+            variant="outline"
+            onPress={() => router.push(`/learn/${room.courseId}/qa` as const)}
+            style={styles.qaButton}
+          />
         </View>
 
         {/* Chapters and Lessons */}
@@ -246,6 +253,9 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     marginTop: 4,
+  },
+  qaButton: {
+    marginTop: 10,
   },
   curriculumSection: {
     gap: 12,

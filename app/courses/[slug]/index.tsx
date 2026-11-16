@@ -129,6 +129,16 @@ export default function CourseDetailScreen() {
               </TouchableOpacity>
             </View>
 
+            {isLoggedIn && (
+              <TouchableOpacity
+                style={styles.writeReviewBtn}
+                onPress={() => router.push(`/courses/${slug}/write-review` as const)}
+              >
+                <Ionicons name="create-outline" size={14} color="#0D9488" />
+                <Text style={styles.writeReviewText}>Viết đánh giá</Text>
+              </TouchableOpacity>
+            )}
+
             {Boolean(course.totalLessons) && (
               <View style={styles.statItem}>
                 <Ionicons name="play-circle-outline" size={16} color="#64748B" />
@@ -305,6 +315,20 @@ const styles = StyleSheet.create({
     color: '#0D9488',
     fontSize: 13,
     fontWeight: '600',
+  },
+  writeReviewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F0FDFA',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  writeReviewText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0D9488',
   },
   statText: {
     fontSize: 13,
