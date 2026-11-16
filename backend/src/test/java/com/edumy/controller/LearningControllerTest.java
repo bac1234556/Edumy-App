@@ -174,7 +174,7 @@ public class LearningControllerTest {
     }
 
     @Test
-    @DisplayName("Thiếu courseId hoặc phương thức khác MOCK trả 400 đúng format lỗi")
+    @DisplayName("Thiếu courseId hoặc phương thức không hợp lệ trả 400 đúng format lỗi")
     void validation() throws Exception {
         mockMvc.perform(post("/api/v1/orders/checkout").with(student())
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
@@ -183,9 +183,33 @@ public class LearningControllerTest {
                 .andExpect(jsonPath("$.errors[*].field", hasItem("courseId")));
         mockMvc.perform(post("/api/v1/orders/checkout").with(student())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"courseId\":" + paidCourseId + ",\"paymentMethod\":\"VNPAY\"}"))
+                        .content("{\"courseId\":" + paidCourseId + ",\"paymentMethod\":\"CASH\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[*].field", hasItem("paymentMethod")));
+    }
+
+    @Test
+    @DisplayName("Cổng mặc định là mock: yêu cầu VNPAY bị từ chối 400 và không tạo đơn")
+    void vnpayRejectedWhenProviderIsMock() throws Exception {
+        mockMvc.perform(post("/api/v1/orders/checkout").with(student())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"courseId\":" + paidCourseId + ",\"paymentMethod\":\"VNPAY\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+        assertTrue(orderRepository.findByUserIdOrderByCreatedAtDesc(userId).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Không gửi paymentMethod vẫn checkout mock được; endpoint provider trả mock")
+    void providerDefaultsToMock() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/provider").with(student()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("mock"));
+        mockMvc.perform(post("/api/v1/orders/checkout").with(student())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"courseId\":" + paidCourseId + "}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.status").value("PAID"))
+                .andExpect(jsonPath("$.data.paymentUrl").doesNotExist());
     }
 
     @Test

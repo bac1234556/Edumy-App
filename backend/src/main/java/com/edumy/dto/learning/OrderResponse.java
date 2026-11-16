@@ -24,11 +24,15 @@ public class OrderResponse {
     private String courseTitle;
     private BigDecimal amount;
 
-    @Schema(description = "Trạng thái đơn; FREE khi khóa 0đ được ghi danh trực tiếp", allowableValues = {"PAID", "FREE"})
+    @Schema(description = "PAID (mock đã thanh toán), PENDING (chờ thanh toán VNPay), FAILED, " +
+            "hoặc FREE khi khóa 0đ được ghi danh trực tiếp", allowableValues = {"PAID", "PENDING", "FAILED", "FREE"})
     private String status;
 
-    @Schema(allowableValues = {"MOCK"})
+    @Schema(allowableValues = {"MOCK", "VNPAY"})
     private String paymentMethod;
+
+    @Schema(description = "URL trang thanh toán VNPay (đã ký HMAC-SHA512); chỉ có khi payment.provider=vnpay và status=PENDING")
+    private String paymentUrl;
 
     private LocalDateTime paidAt;
     private Long enrollmentId;

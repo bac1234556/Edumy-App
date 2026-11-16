@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, View } from 'react-native';
 import { ActivityIndicator, Button, Card, Divider, HelperText, RadioButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import * as WebBrowser from 'expo-web-browser';
 import { errorMessage } from '../api/client';
-import { MY_COURSES_KEY, checkoutCourse, fetchCheckoutCourse } from '../api/learning';
+import {
+  MY_COURSES_KEY, PROVIDER_KEY, checkoutCourse, fetchCheckoutCourse, fetchOrder, fetchPaymentProvider, paymentReturnUri,
+} from '../api/learning';
 import { PriceTag } from '../components/common/PriceTag';
 
 function Centered({ children }) {
@@ -18,10 +21,30 @@ export function CheckoutScreen({ courseId, onBack, onSuccess, onLearn }) {
     queryFn: () => fetchCheckoutCourse(courseId),
     enabled: !!courseId,
   });
+  // Cổng thanh toán do server quyết định (mock | vnpay); lỗi thì coi như mock.
+  const provider = useQuery({ queryKey: PROVIDER_KEY, queryFn: fetchPaymentProvider, retry: false, staleTime: 5 * 60 * 1000 });
+  const isVnpay = provider.data?.provider === 'vnpay';
+  const [notice, setNotice] = useState(null);
+  const mounted = useRef(true);
+  useEffect(() => () => { mounted.current = false; }, []);
+
   const order = useMutation({
-    mutationFn: () => checkoutCourse({ courseId, paymentMethod: 'MOCK' }),
+    mutationFn: async () => {
+      setNotice(null);
+      const created = await checkoutCourse({ courseId });
+      if (!created.paymentUrl) return created;
+      // VNPay: mở trang thanh toán trong trình duyệt; khi quay về (hoặc đóng) hỏi lại server trạng thái đơn,
+      // vì server mới là nơi xác minh checksum.
+      await WebBrowser.openAuthSessionAsync(created.paymentUrl, paymentReturnUri());
+      return fetchOrder(created.txnRef);
+    },
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: MY_COURSES_KEY });
+      if (!mounted.current) return; // deep link đã đưa người dùng tới màn kết quả
+      if (result.status === 'PENDING') {
+        setNotice('Bạn chưa hoàn tất thanh toán. Bạn có thể thử lại.');
+        return;
+      }
       onSuccess?.(result);
     },
   });
@@ -60,10 +83,15 @@ export function CheckoutScreen({ courseId, onBack, onSuccess, onLearn }) {
         {!isFree && (
           <View>
             <Text variant="titleSmall">Phương thức thanh toán</Text>
-            <RadioButton.Group onValueChange={() => {}} value="MOCK">
-              <RadioButton.Item mode="android" value="MOCK" label="Thanh toán mô phỏng (Mock)" />
+            <RadioButton.Group onValueChange={() => {}} value="selected">
+              <RadioButton.Item mode="android" value="selected"
+                label={isVnpay ? 'VNPay (sandbox)' : 'Thanh toán mô phỏng (Mock)'} />
             </RadioButton.Group>
-            <Text variant="bodySmall">Thanh toán mô phỏng luôn thành công, không trừ tiền thật.</Text>
+            <Text variant="bodySmall">
+              {isVnpay
+                ? 'Bạn sẽ được chuyển sang trang thanh toán VNPay sandbox, dùng thẻ test, không trừ tiền thật.'
+                : 'Thanh toán mô phỏng luôn thành công, không trừ tiền thật.'}
+            </Text>
           </View>
         )}
 
@@ -72,6 +100,7 @@ export function CheckoutScreen({ courseId, onBack, onSuccess, onLearn }) {
           <Text variant="titleMedium">Tổng thanh toán</Text>
           <PriceTag price={c.price} originalPrice={c.originalPrice} size="large" />
         </View>
+        {notice ? <Text testID="checkout-notice">{notice}</Text> : null}
         <HelperText type="error" visible={order.isError}>{order.isError ? errorMessage(order.error) : ''}</HelperText>
         {alreadyOwned ? (
           <Button mode="contained" testID="checkout-learn" onPress={() => onLearn?.(courseId)}>Vào học</Button>
@@ -83,7 +112,7 @@ export function CheckoutScreen({ courseId, onBack, onSuccess, onLearn }) {
             disabled={order.isPending}
             onPress={() => order.mutate()}
           >
-            {isFree ? 'Đăng ký miễn phí' : 'Thanh toán'}
+            {isFree ? 'Đăng ký miễn phí' : isVnpay ? 'Thanh toán qua VNPay' : 'Thanh toán'}
           </Button>
         )}
       </ScrollView>

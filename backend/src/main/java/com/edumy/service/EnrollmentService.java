@@ -1,5 +1,6 @@
 package com.edumy.service;
 
+import com.edumy.config.PaymentProperties;
 import com.edumy.dto.learning.CreateOrderRequest;
 import com.edumy.dto.learning.EnrollmentResponse;
 import com.edumy.dto.learning.OrderResponse;
@@ -37,9 +38,13 @@ public class EnrollmentService {
     private final OrderRepository orderRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
+    private final PaymentProperties paymentProperties;
+    private final VnpayGateway vnpayGateway;
 
     @Transactional
-    public OrderResponse checkout(Long userId, CreateOrderRequest request) {
+    public OrderResponse checkout(Long userId, CreateOrderRequest request, String clientIp) {
+        requireConfiguredMethod(request.getPaymentMethod());
+        String appRedirect = resolveAppRedirect(request.getReturnUri());
         Course course = courseRepository.findByIdAndStatus(request.getCourseId(), CourseStatus.PUBLISHED)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy khóa học đang mở bán với ID: " + request.getCourseId()));
@@ -59,6 +64,28 @@ public class EnrollmentService {
                     .status("FREE")
                     .enrollmentId(enrollment.getId())
                     .enrolledAt(enrollment.getCreatedAt())
+                    .build();
+        }
+
+        if (paymentProperties.isVnpay()) {
+            // Chưa ghi danh: chỉ tạo đơn PENDING, ghi danh khi VNPay báo thành công (Return URL / IPN đã xác minh checksum).
+            Order pending = orderRepository.saveAndFlush(Order.builder()
+                    .userId(userId)
+                    .courseId(course.getId())
+                    .amount(price)
+                    .status(OrderStatus.PENDING)
+                    .paymentMethod(PaymentMethod.VNPAY)
+                    .txnRef(newTxnRef())
+                    .build());
+            return OrderResponse.builder()
+                    .orderId(pending.getId())
+                    .txnRef(pending.getTxnRef())
+                    .courseId(course.getId())
+                    .courseTitle(course.getTitle())
+                    .amount(pending.getAmount())
+                    .status(OrderStatus.PENDING.name())
+                    .paymentMethod(PaymentMethod.VNPAY.name())
+                    .paymentUrl(vnpayGateway.buildPaymentUrl(pending, clientIp, appRedirect))
                     .build();
         }
 
@@ -91,6 +118,23 @@ public class EnrollmentService {
                 .enrollmentId(enrollment.getId())
                 .enrolledAt(enrollment.getCreatedAt())
                 .build();
+    }
+
+    /** Phương thức gửi lên (nếu có) phải trùng cổng đang bật, để không dùng MOCK qua mặt thanh toán thật. */
+    private void requireConfiguredMethod(String requested) {
+        if (requested != null && !requested.equalsIgnoreCase(paymentProperties.providerName())) {
+            throw new IllegalArgumentException("Phương thức thanh toán " + requested + " hiện không khả dụng");
+        }
+    }
+
+    private String resolveAppRedirect(String returnUri) {
+        if (returnUri == null || returnUri.isBlank()) {
+            return paymentProperties.getAppRedirect();
+        }
+        if (!paymentProperties.isAllowedRedirect(returnUri)) {
+            throw new IllegalArgumentException("Địa chỉ quay về app không hợp lệ");
+        }
+        return returnUri;
     }
 
     public List<EnrollmentResponse> getMyCourses(Long userId) {
