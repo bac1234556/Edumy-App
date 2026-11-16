@@ -6,9 +6,11 @@ import com.edumy.dto.learning.EnrollmentResponse;
 import com.edumy.dto.learning.OrderResponse;
 import com.edumy.entity.*;
 import com.edumy.exception.ConflictException;
+import com.edumy.exception.ForbiddenException;
 import com.edumy.exception.ResourceNotFoundException;
 import com.edumy.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,13 +51,16 @@ public class EnrollmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy khóa học đang mở bán với ID: " + request.getCourseId()));
 
+        if (userId.equals(course.getInstructorId())) {
+            throw new ForbiddenException("Bạn không thể mua khóa học do chính mình giảng dạy");
+        }
         if (enrollmentRepository.existsByUserIdAndCourseId(userId, course.getId())) {
             throw new ConflictException("Bạn đã sở hữu khóa học này");
         }
 
         BigDecimal price = course.getPrice() == null ? BigDecimal.ZERO : course.getPrice();
         if (price.signum() == 0) {
-            Enrollment enrollment = enrollmentRepository.saveAndFlush(Enrollment.builder()
+            Enrollment enrollment = enroll(Enrollment.builder()
                     .userId(userId).courseId(course.getId()).build());
             return OrderResponse.builder()
                     .courseId(course.getId())
@@ -103,7 +108,7 @@ public class EnrollmentService {
         order.setPaidAt(LocalDateTime.now());
         orderRepository.save(order);
 
-        Enrollment enrollment = enrollmentRepository.saveAndFlush(Enrollment.builder()
+        Enrollment enrollment = enroll(Enrollment.builder()
                 .userId(userId).courseId(course.getId()).orderId(order.getId()).build());
 
         return OrderResponse.builder()
@@ -118,6 +123,18 @@ public class EnrollmentService {
                 .enrollmentId(enrollment.getId())
                 .enrolledAt(enrollment.getCreatedAt())
                 .build();
+    }
+
+    /**
+     * Hai lần bấm thanh toán gần như đồng thời cùng qua bước kiểm tra "đã sở hữu"; lần chậm hơn vi phạm
+     * ràng buộc UNIQUE (user, course). Báo đúng lỗi "đã sở hữu" thay vì lỗi hệ thống chung; giao dịch bị hoàn tác nên không mất đơn thừa.
+     */
+    private Enrollment enroll(Enrollment enrollment) {
+        try {
+            return enrollmentRepository.saveAndFlush(enrollment);
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("Bạn đã sở hữu khóa học này");
+        }
     }
 
     /** Phương thức gửi lên (nếu có) phải trùng cổng đang bật, để không dùng MOCK qua mặt thanh toán thật. */

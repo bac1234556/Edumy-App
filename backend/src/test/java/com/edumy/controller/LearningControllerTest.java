@@ -162,6 +162,20 @@ public class LearningControllerTest {
     }
 
     @Test
+    @DisplayName("Giảng viên không thể mua khóa học do chính mình giảng dạy (403), không tạo đơn")
+    void instructorCannotBuyOwnCourse() throws Exception {
+        Long ownCourseId = courseRepository.save(Course.builder().instructorId(userId).categoryId(1L)
+                .title("Khóa của tôi").price(new BigDecimal("99000.00")).status(CourseStatus.PUBLISHED).build()).getId();
+        mockMvc.perform(post("/api/v1/orders/checkout").with(student())
+                        .contentType(MediaType.APPLICATION_JSON).content(body(ownCourseId)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Bạn không thể mua khóa học do chính mình giảng dạy"));
+        assertTrue(orderRepository.findByUserIdOrderByCreatedAtDesc(userId).isEmpty());
+        assertFalse(enrollmentRepository.existsByUserIdAndCourseId(userId, ownCourseId));
+    }
+
+    @Test
     @DisplayName("Khóa không tồn tại hoặc chưa xuất bản trả 404")
     void unknownOrDraftCourseNotFound() throws Exception {
         mockMvc.perform(post("/api/v1/orders/checkout").with(student())
