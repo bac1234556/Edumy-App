@@ -4,10 +4,12 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSessionStore } from '../../src/store/session';
 import { shouldShowInstructorTab } from '../../src/features/profile/logic';
+import { useEarningsSummary } from '../../src/features/instructor/hooks';
 
 export default function TabsLayout() {
   const { me } = useSessionStore();
-  const showInstructor = shouldShowInstructorTab(me);
+  const { data: summary } = useEarningsSummary();
+  const showInstructor = shouldShowInstructorTab(me, summary);
 
   return (
     <Tabs
