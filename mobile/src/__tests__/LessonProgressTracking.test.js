@@ -255,6 +255,26 @@ describe('saving the watch position', () => {
     expect(saveLessonProgress).not.toHaveBeenCalledWith(11, expect.anything());
   });
 
+  test('two lessons that share the same video URL still reload the video and track each lesson separately', async () => {
+    fetchLesson.mockImplementation((courseId, id) => Promise.resolve({ ...lessonData(id), videoUrl: 'https://cdn/shared.mp4' }));
+    const view = await openAndReady();
+    expect(fetchLesson).toHaveBeenCalledWith(7, 12);
+    player.currentTime = 50;
+    player.playing = true;
+    act(() => { jest.advanceTimersByTime(1000); });
+
+    fireEvent.press(view.getByTestId('lesson-11'));
+    await waitFor(() => expect(player.replace).toHaveBeenCalledWith('https://cdn/shared.mp4'));
+    // bài cũ được lưu đúng vị trí của nó, bài mới chưa được ghi gì cho tới khi video nạp xong
+    expect(saveLessonProgress).toHaveBeenCalledWith(12, { positionSec: 50, completed: false });
+    expect(saveLessonProgress).not.toHaveBeenCalledWith(11, expect.anything());
+
+    player.currentTime = 7;
+    act(() => { player.emit('statusChange', 'readyToPlay', 'loading'); });
+    act(() => { jest.advanceTimersByTime(10000); });
+    expect(saveLessonProgress).toHaveBeenCalledWith(11, { positionSec: 7, completed: false });
+  });
+
   test('does not track progress for someone who is not enrolled (resume returns 403)', async () => {
     fetchResume.mockRejectedValue({ response: { status: 403 } });
     const view = renderPlayer();
