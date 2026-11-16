@@ -85,8 +85,17 @@ public class CoursePublicController {
         if (sort.equalsIgnoreCase("price_desc")) {
             return Sort.by(Sort.Direction.DESC, "price");
         }
+        if (sort.equalsIgnoreCase("rating") || sort.equalsIgnoreCase("rating_desc")) {
+            return Sort.by(Sort.Direction.DESC, "avgRating");
+        }
+        if (sort.equalsIgnoreCase("rating_asc")) {
+            return Sort.by(Sort.Direction.ASC, "avgRating");
+        }
         String[] parts = sort.split(",");
         String field = parts[0];
+        if (field.equalsIgnoreCase("rating")) {
+            field = "avgRating";
+        }
         Sort.Direction direction = (parts.length > 1 && parts[1].equalsIgnoreCase("asc"))
                 ? Sort.Direction.ASC
                 : Sort.Direction.DESC;

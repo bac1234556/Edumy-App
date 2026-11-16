@@ -62,7 +62,12 @@ export const ReviewFormModal = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={process.env.NODE_ENV === 'test' ? 'none' : 'slide'}
+      onRequestClose={onClose}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.backdrop}

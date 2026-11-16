@@ -12,6 +12,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { CourseCard } from '../components/common/CourseCard';
+import { CourseCardSkeleton } from '../components/common/CourseCardSkeleton';
 import { CategoryChip } from '../components/common/CategoryChip';
 import { CATEGORIES_MOCK } from '../mock/categoriesMock';
 import { COURSES_MOCK } from '../mock/coursesMock';
@@ -130,12 +131,36 @@ export const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // 1. Loading State View
+  // 1. Loading State View (Skeleton)
   if (isLoading && !refreshing) {
     return (
-      <SafeAreaView style={styles.stateContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.stateText}>Đang tải danh mục khóa học Edumy...</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.header}>
+          <View style={styles.searchBar}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 13, flex: 1, marginLeft: 8 }}>
+              Đang tải danh mục khóa học...
+            </Text>
+          </View>
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>🔥 Khóa học nổi bật</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredContainer}>
+            <CourseCardSkeleton layout="horizontal" />
+            <CourseCardSkeleton layout="horizontal" />
+          </ScrollView>
+          <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+            <Text style={styles.sectionTitle}>⚡ Mới xuất bản</Text>
+          </View>
+          <View style={styles.verticalList}>
+            <CourseCardSkeleton layout="vertical" />
+            <CourseCardSkeleton layout="vertical" />
+            <CourseCardSkeleton layout="vertical" />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
