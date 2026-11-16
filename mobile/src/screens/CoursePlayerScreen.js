@@ -49,6 +49,7 @@ function LessonVideo({ url, lessonId, startPositionSec = 0, trackProgress = fals
   const [error, setError] = useState(null);
   const [fullscreen, setFullscreen] = useState(false);
   const currentUrl = useRef(firstUrl);
+  const currentLesson = useRef(lessonId);
   // W9-D2: tua tới điểm học tiếp khi video sẵn sàng; chỉ lưu tiến độ sau đó.
   const readyRef = useRef(false);
   const pendingStart = useRef(startPositionSec);
@@ -83,13 +84,15 @@ function LessonVideo({ url, lessonId, startPositionSec = 0, trackProgress = fals
   }, [player]);
 
   useEffect(() => {
-    if (url === currentUrl.current) return;
+    // Đổi bài thì nạp lại video kể cả khi hai bài dùng chung một URL (dữ liệu demo làm vậy).
+    if (url === currentUrl.current && lessonId === currentLesson.current) return;
     currentUrl.current = url;
+    currentLesson.current = lessonId;
     readyRef.current = false;
     pendingStart.current = startRef.current;
     player.replace(url);
     player.play();
-  }, [player, url]);
+  }, [player, url, lessonId]);
 
   useEffect(() => () => { lockOrientation(false); }, []);
 
