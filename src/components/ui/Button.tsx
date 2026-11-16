@@ -7,7 +7,9 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
+  StyleProp,
 } from 'react-native';
+import { semantic, radius } from '../../theme/tokens';
 
 interface ButtonProps {
   title: string;
@@ -15,8 +17,8 @@ interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   loading?: boolean;
   disabled?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   icon?: React.ReactNode;
 }
 
@@ -34,9 +36,11 @@ export function Button({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.78}
       onPress={isInteractive ? onPress : undefined}
       disabled={!isInteractive}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !isInteractive, busy: loading }}
       style={[
         styles.base,
         styles[variant],
@@ -47,7 +51,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'outline' || variant === 'secondary' ? '#0F172A' : '#ffffff'}
+          color={variant === 'outline' || variant === 'secondary' ? semantic.textPrimary : '#FFFFFF'}
         />
       ) : (
         <>
@@ -55,7 +59,7 @@ export function Button({
           <Text
             style={[
               styles.textBase,
-              styles[`${variant}Text` as keyof typeof styles],
+              styles[`${variant}Text` as keyof typeof styles] as TextStyle,
               disabled && styles.disabledText,
               Boolean(icon) && styles.textWithIcon,
               textStyle,
@@ -71,48 +75,55 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    minHeight: 46,
+    borderRadius: radius.md,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   primary: {
-    backgroundColor: '#0D9488', // Deep teal brand primary
+    backgroundColor: semantic.brandPrimary,
+    borderColor: semantic.brandPrimaryStrong,
   },
   secondary: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#F1F5F9',
+    borderColor: semantic.borderSubtle,
   },
   outline: {
-    backgroundColor: '#ffffff',
+    backgroundColor: semantic.surfaceCard,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: semantic.borderStrong,
   },
   danger: {
-    backgroundColor: '#EF4444',
+    backgroundColor: semantic.danger,
+    borderColor: '#B91C1C',
   },
   disabled: {
     backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   textBase: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: -0.1,
     textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
   primaryText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
   },
   secondaryText: {
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
   outlineText: {
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
   dangerText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
   },
   disabledText: {
     color: '#94A3B8',

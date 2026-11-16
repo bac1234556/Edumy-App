@@ -1,4 +1,4 @@
-// app/(tabs)/cart.tsx — Giỏ hàng (Read-only + Checkout on Web theo BR-M01)
+// app/(tabs)/cart.tsx — Giỏ hàng đồng bộ (Read-only + Web Handoff theo BR-M01)
 import React from 'react';
 import {
   View,
@@ -24,6 +24,7 @@ import { MoneyText } from '../../src/components/ui/MoneyText';
 import { webLinks } from '../../src/lib/web-links';
 import { AppError } from '../../src/api/problem';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius, monoFontFamily, microShadow } from '../../src/theme/tokens';
 
 export default function CartScreen() {
   const router = useRouter();
@@ -38,9 +39,9 @@ export default function CartScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          icon={<Ionicons name="cart-outline" size={56} color="#94A3B8" />}
-          title="Đăng nhập để xem giỏ hàng"
-          description="Đăng nhập để xem các khóa học bạn đã thêm vào giỏ hàng và đồng bộ cùng website."
+          icon={<Ionicons name="cart-outline" size={26} color={semantic.brandPrimary} />}
+          title="Đăng nhập để đồng bộ giỏ hàng"
+          description="Đăng nhập để xem các khóa học bạn đã lưu và đồng bộ tức thì cùng website Edumy."
           actionTitle="Đăng nhập"
           onAction={() => router.push('/(auth)/login')}
         />
@@ -49,7 +50,7 @@ export default function CartScreen() {
   }
 
   if (isLoading) {
-    return <Loading message="Đang tải giỏ hàng..." />;
+    return <Loading message="Đang đồng bộ giỏ hàng..." />;
   }
 
   if (isError) {
@@ -67,9 +68,9 @@ export default function CartScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          icon={<Ionicons name="cart-outline" size={56} color="#94A3B8" />}
-          title="Giỏ hàng trống"
-          description="Bạn chưa chọn khóa học nào. Hãy khám phá danh mục để chọn khóa học phù hợp."
+          icon={<Ionicons name="cart-outline" size={26} color={semantic.brandPrimary} />}
+          title="Giỏ hàng đang trống"
+          description="Bạn chưa chọn khóa học nào. Hãy khám phá danh mục để thêm khóa học phù hợp."
           actionTitle="Khám phá khóa học"
           onAction={() => router.push('/')}
         />
@@ -120,13 +121,13 @@ export default function CartScreen() {
     const reasonInfo = getUnavailableReasonInfo(item.unavailableReason);
 
     return (
-      <View style={styles.itemCard}>
+      <View style={[styles.itemCard, microShadow]}>
         <View style={styles.itemMainRow}>
           {item.thumbnailUrl ? (
             <Image source={{ uri: item.thumbnailUrl }} style={styles.thumbnail} />
           ) : (
             <View style={styles.placeholderThumbnail}>
-              <Ionicons name="school-outline" size={24} color="#0D9488" />
+              <Ionicons name="layers-outline" size={22} color={semantic.brandPrimary} />
             </View>
           )}
 
@@ -138,7 +139,7 @@ export default function CartScreen() {
             </TouchableOpacity>
 
             <Text style={styles.instructorName}>
-              Giảng viên: {item.instructor?.fullName || 'Chưa cập nhật'}
+              GV: {item.instructor?.fullName || 'Chưa cập nhật'}
             </Text>
 
             <MoneyText
@@ -151,15 +152,17 @@ export default function CartScreen() {
             style={styles.deleteButton}
             onPress={() => handleConfirmRemove(item.courseId, item.title)}
             disabled={isRemoving}
+            accessibilityRole="button"
+            accessibilityLabel="Xóa khỏi giỏ hàng"
           >
-            <Ionicons name="trash-outline" size={20} color="#EF4444" />
+            <Ionicons name="trash-outline" size={18} color={semantic.danger} />
           </TouchableOpacity>
         </View>
 
         {/* Unavailable Reason Banner */}
         {reasonInfo && (
           <View style={styles.reasonBanner}>
-            <Ionicons name="alert-circle-outline" size={16} color="#B45309" />
+            <Ionicons name="information-circle-outline" size={16} color="#B45309" />
             <Text style={styles.reasonText}>{reasonInfo.label}</Text>
             {reasonInfo.isNowFree && (
               <TouchableOpacity
@@ -181,6 +184,14 @@ export default function CartScreen() {
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.courseId)}
+        ListHeaderComponent={
+          <View style={styles.headerNoticeCard}>
+            <Ionicons name="sync-outline" size={16} color={semantic.brandPrimary} />
+            <Text style={styles.headerNoticeText}>
+              Giỏ hàng được đồng bộ hai chiều theo thời gian thực với tài khoản Edumy trên Website.
+            </Text>
+          </View>
+        }
         renderItem={renderCartItem}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
@@ -189,22 +200,29 @@ export default function CartScreen() {
       {/* Sticky Bottom Summary — BR-M01 No In-App Checkout */}
       <View style={styles.bottomBar}>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>
-            Tổng cộng ({cart?.purchasableCount || 0} khóa học mua được):
-          </Text>
+          <View>
+            <Text style={styles.summaryOverline}>TỔNG CỘNG TẠM TÍNH</Text>
+            <Text style={styles.summaryLabel}>
+              {cart?.purchasableCount || 0} khóa học hợp lệ
+            </Text>
+          </View>
           <MoneyText
             amount={cart?.totalAmount || 0}
             style={styles.totalAmountText}
           />
         </View>
 
-        <Text style={styles.webNotice}>
-          Vui lòng truy cập website để tiến hành thanh toán
-        </Text>
+        <View style={styles.webNoticeBox}>
+          <Ionicons name="globe-outline" size={14} color={semantic.textMuted} />
+          <Text style={styles.webNotice}>
+            Mở trình duyệt tới trang giỏ hàng trên Website Edumy để hoàn tất đăng ký khóa học (BR-M01).
+          </Text>
+        </View>
 
         <Button
           title="Mở website"
           onPress={handleOpenWebCart}
+          icon={<Ionicons name="open-outline" size={16} color="#FFFFFF" />}
           style={styles.openWebButton}
         />
       </View>
@@ -215,35 +233,56 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   listContent: {
     padding: 16,
-    paddingBottom: 140,
+    paddingBottom: 185,
+  },
+  headerNoticeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
+    borderRadius: radius.md,
+    padding: 12,
+    marginBottom: 14,
+  },
+  headerNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    color: semantic.brandPrimaryStrong,
+    lineHeight: 17,
   },
   itemCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.md,
+    padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   itemMainRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   thumbnail: {
-    width: 80,
-    height: 56,
-    borderRadius: 8,
+    width: 84,
+    height: 58,
+    borderRadius: radius.sm,
     backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
   },
   placeholderThumbnail: {
-    width: 80,
-    height: 56,
-    borderRadius: 8,
-    backgroundColor: '#E6FFFA',
+    width: 84,
+    height: 58,
+    borderRadius: radius.sm,
+    backgroundColor: semantic.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -253,48 +292,55 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
-    lineHeight: 18,
+    fontWeight: '700',
+    color: semantic.textPrimary,
+    lineHeight: 19,
   },
   instructorName: {
     fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
+    color: semantic.textMuted,
+    marginTop: 3,
   },
   itemPrice: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#0D9488',
-    marginTop: 4,
+    color: semantic.brandPrimary,
+    marginTop: 5,
   },
   deleteButton: {
-    padding: 8,
-    marginLeft: 6,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: semantic.dangerSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
   reasonBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 10,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    padding: 10,
+    borderRadius: radius.sm,
+    marginTop: 12,
   },
   reasonText: {
     flex: 1,
     fontSize: 12,
-    color: '#B45309',
+    color: '#92400E',
     marginLeft: 6,
+    fontWeight: '500',
   },
   enrollNowBtn: {
-    backgroundColor: '#0D9488',
+    backgroundColor: semantic.brandPrimary,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 6,
   },
   enrollNowText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   bottomBar: {
@@ -302,39 +348,55 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
+    backgroundColor: semantic.surfaceCard,
+    paddingHorizontal: 16,
     paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 8,
+    borderTopColor: semantic.borderStrong,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#475569',
-  },
-  totalAmountText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  webNotice: {
-    fontSize: 12,
-    color: '#64748B',
-    textAlign: 'center',
     marginBottom: 10,
   },
+  summaryOverline: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    letterSpacing: 0.7,
+  },
+  summaryLabel: {
+    fontFamily: monoFontFamily,
+    fontSize: 12,
+    color: semantic.textSecondary,
+    fontVariant: ['tabular-nums'],
+    marginTop: 1,
+  },
+  totalAmountText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: semantic.textPrimary,
+  },
+  webNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: semantic.surfaceCanvas,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    marginBottom: 10,
+  },
+  webNotice: {
+    flex: 1,
+    fontSize: 11,
+    color: semantic.textSecondary,
+    lineHeight: 16,
+  },
   openWebButton: {
-    backgroundColor: '#0D9488',
+    backgroundColor: semantic.brandPrimary,
   },
 });

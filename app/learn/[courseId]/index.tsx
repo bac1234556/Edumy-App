@@ -1,4 +1,4 @@
-// app/learn/[courseId]/index.tsx — Phòng học & Đề cương bài học
+// app/learn/[courseId]/index.tsx — Phòng học & Đề cương kỹ thuật (Technical Curriculum)
 import React from 'react';
 import {
   View,
@@ -16,6 +16,7 @@ import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { AppError } from '../../../src/api/problem';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius, monoFontFamily } from '../../../src/theme/tokens';
 
 export default function CourseLearnRoomScreen() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
@@ -27,7 +28,7 @@ export default function CourseLearnRoomScreen() {
   );
 
   if (isLoading) {
-    return <Loading message="Đang tải phòng học..." />;
+    return <Loading message="Đang tải đề cương phòng học..." />;
   }
 
   if (isError || !room) {
@@ -66,27 +67,28 @@ export default function CourseLearnRoomScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       >
-        {/* Course Header Banner */}
+        {/* Dark Slate Editorial Header Card */}
         <View style={styles.headerCard}>
+          <Text style={styles.headerOverline}>EDUMY LEARNING ROOM // ĐỒNG BỘ TIẾN ĐỘ</Text>
           <Text variant="h2" style={styles.courseTitle}>
             {room.title}
           </Text>
 
           {isInstructorMode ? (
             <View style={styles.instructorModeBanner}>
-              <Ionicons name="information-circle-outline" size={18} color="#0D9488" />
+              <Ionicons name="shield-checkmark-outline" size={16} color="#2DD4BF" />
               <Text style={styles.instructorModeText}>
-                Chế độ xem của giảng viên: Chỉ đọc, không lưu tiến độ học tập.
+                Chế độ giảng viên: Xem trước toàn bộ bài giảng (không ghi nhận tiến độ học viên).
               </Text>
             </View>
           ) : (
             <View style={styles.progressBox}>
               <View style={styles.progressRow}>
                 <Text style={styles.progressPercent}>
-                  {room.progress?.percent || 0}% hoàn thành
+                  {room.progress?.percent || 0}% HOÀN THÀNH
                 </Text>
                 <Text style={styles.progressCount}>
-                  {room.progress?.completedLessons || 0}/{room.progress?.totalLessons || 0} bài học
+                  {room.progress?.completedLessons || 0}/{room.progress?.totalLessons || 0} BÀI HỌC
                 </Text>
               </View>
 
@@ -101,34 +103,38 @@ export default function CourseLearnRoomScreen() {
             </View>
           )}
 
-          {nextLessonId && (
-            <Button
-              title="Tiếp tục học"
-              onPress={() => router.push(`/learn/lesson/${nextLessonId}` as const)}
-              style={styles.continueButton}
-            />
-          )}
+          <View style={styles.headerActions}>
+            {nextLessonId && (
+              <Button
+                title="Tiếp tục bài đang học"
+                onPress={() => router.push(`/learn/lesson/${nextLessonId}` as const)}
+                style={styles.continueButton}
+              />
+            )}
 
-          <Button
-            title="Diễn đàn Hỏi & Đáp (Q&A)"
-            variant="outline"
-            onPress={() => router.push(`/learn/${room.courseId}/qa` as const)}
-            style={styles.qaButton}
-          />
+            <Button
+              title="Diễn đàn Hỏi & Đáp (Q&A)"
+              variant="outline"
+              onPress={() => router.push(`/learn/${room.courseId}/qa` as const)}
+              style={styles.qaButton}
+            />
+          </View>
         </View>
 
-        {/* Chapters and Lessons */}
+        {/* Technical Boxed Chapters & Lessons */}
         <View style={styles.curriculumSection}>
+          <Text style={styles.sectionOverline}>DANH MỤC CHƯƠNG TRÌNH</Text>
           <Text variant="h3" style={styles.sectionTitle}>
-            Nội dung khóa học
+            Đề cương chi tiết
           </Text>
 
           {room.chapters?.map((chapter, chapterIndex) => (
             <View key={chapter.id} style={styles.chapterCard}>
               <View style={styles.chapterHeader}>
-                <Text style={styles.chapterTitle}>
-                  Chương {chapterIndex + 1}: {chapter.title}
+                <Text style={styles.chapterIndex}>
+                  CHƯƠNG {String(chapterIndex + 1).padStart(2, '0')}
                 </Text>
+                <Text style={styles.chapterTitle}>{chapter.title}</Text>
               </View>
 
               <View style={styles.lessonsList}>
@@ -137,11 +143,11 @@ export default function CourseLearnRoomScreen() {
                     key={lesson.id}
                     style={styles.lessonItem}
                     onPress={() => router.push(`/learn/lesson/${lesson.id}` as const)}
-                    activeOpacity={0.7}
+                    activeOpacity={0.75}
                   >
                     <View style={styles.lessonStatusIcon}>
                       {lesson.completed ? (
-                        <Ionicons name="checkmark-circle" size={20} color="#059669" />
+                        <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
                       ) : (
                         <Ionicons name="ellipse-outline" size={20} color="#CBD5E1" />
                       )}
@@ -149,7 +155,10 @@ export default function CourseLearnRoomScreen() {
 
                     <View style={styles.lessonInfo}>
                       <Text style={styles.lessonTitle}>
-                        {chapterIndex + 1}.{lessonIndex + 1} {lesson.title}
+                        <Text style={styles.lessonNumber}>
+                          {String(chapterIndex + 1).padStart(2, '0')}.{String(lessonIndex + 1).padStart(2, '0')}{' '}
+                        </Text>
+                        {lesson.title}
                       </Text>
 
                       <View style={styles.lessonMetaRow}>
@@ -160,14 +169,15 @@ export default function CourseLearnRoomScreen() {
                               : 'document-text-outline'
                           }
                           size={13}
-                          color="#64748B"
+                          color={semantic.textMuted}
                         />
                         <Text style={styles.lessonMetaText}>
-                          {lesson.contentType === 'video' ? 'Video' : 'Bài viết'}
+                          {lesson.contentType === 'video' ? 'Video' : 'Bài đọc'}
                         </Text>
+
                         {Boolean(lesson.durationSeconds) && (
                           <Text style={styles.lessonMetaText}>
-                            · {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
+                            • {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
                           </Text>
                         )}
                       </View>
@@ -188,100 +198,134 @@ export default function CourseLearnRoomScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   content: {
     padding: 16,
     paddingBottom: 40,
   },
   headerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: '#0F172A',
+    borderRadius: radius.lg,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#1E293B',
+    marginBottom: 18,
+  },
+  headerOverline: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#2DD4BF',
+    letterSpacing: 0.8,
+    marginBottom: 6,
   },
   courseTitle: {
-    color: '#0F172A',
-    marginBottom: 12,
+    fontSize: 19,
+    lineHeight: 25,
+    color: '#F8FAFC',
+    marginBottom: 14,
   },
   instructorModeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6FFFA',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
-    gap: 6,
+    gap: 8,
+    backgroundColor: '#1E293B',
+    padding: 12,
+    borderRadius: radius.sm,
+    marginBottom: 14,
   },
   instructorModeText: {
-    fontSize: 13,
-    color: '#0D9488',
     flex: 1,
+    fontSize: 12,
+    color: '#E2E8F0',
+    lineHeight: 18,
   },
   progressBox: {
+    backgroundColor: '#1E293B',
+    padding: 12,
+    borderRadius: radius.md,
     marginBottom: 14,
   },
   progressRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   progressPercent: {
-    fontSize: 14,
+    fontFamily: monoFontFamily,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#0D9488',
+    color: '#2DD4BF',
     fontVariant: ['tabular-nums'],
   },
   progressCount: {
-    fontSize: 13,
-    color: '#64748B',
+    fontFamily: monoFontFamily,
+    fontSize: 11,
+    color: '#94A3B8',
     fontVariant: ['tabular-nums'],
   },
   progressBarTrack: {
-    height: 8,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: '#0F172A',
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#0D9488',
-    borderRadius: 4,
+    backgroundColor: '#14B8A6',
+    borderRadius: 3,
+  },
+  headerActions: {
+    gap: 8,
   },
   continueButton: {
-    marginTop: 4,
+    minHeight: 44,
   },
   qaButton: {
-    marginTop: 10,
+    minHeight: 42,
+    backgroundColor: '#FFFFFF',
   },
   curriculumSection: {
-    gap: 12,
+    marginTop: 2,
+  },
+  sectionOverline: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.brandPrimary,
+    letterSpacing: 0.8,
+    marginBottom: 2,
   },
   sectionTitle: {
-    color: '#0F172A',
-    marginBottom: 4,
+    marginBottom: 12,
+    color: semantic.textPrimary,
   },
   chapterCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
+    marginBottom: 12,
     overflow: 'hidden',
   },
   chapterHeader: {
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: semantic.surfaceCanvas,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: semantic.borderSubtle,
+  },
+  chapterIndex: {
+    fontFamily: monoFontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.brandPrimary,
+    letterSpacing: 0.7,
+    marginBottom: 2,
   },
   chapterTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#334155',
+    color: semantic.textPrimary,
   },
   lessonsList: {
     paddingHorizontal: 12,
@@ -292,27 +336,37 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+    gap: 10,
   },
   lessonStatusIcon: {
-    marginRight: 10,
+    width: 24,
+    alignItems: 'center',
   },
   lessonInfo: {
     flex: 1,
   },
+  lessonNumber: {
+    fontFamily: monoFontFamily,
+    fontSize: 12,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
+  },
   lessonTitle: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#0F172A',
-    lineHeight: 18,
+    fontWeight: '600',
+    color: semantic.textPrimary,
+    lineHeight: 19,
   },
   lessonMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 3,
-    gap: 4,
+    gap: 5,
+    marginTop: 4,
   },
   lessonMetaText: {
     fontSize: 12,
-    color: '#64748B',
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
 });

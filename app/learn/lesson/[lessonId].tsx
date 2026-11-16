@@ -1,4 +1,4 @@
-// app/learn/lesson/[lessonId].tsx — Trình học bài giảng (Video/Article & Manual completion)
+// app/learn/lesson/[lessonId].tsx — Trình học bài giảng (Modern Dark Cinema & D-33 Manual Completion)
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -19,6 +19,7 @@ import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { AppError } from '../../../src/api/problem';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius, monoFontFamily } from '../../../src/theme/tokens';
 
 export default function LessonLearnScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
@@ -42,13 +43,13 @@ export default function LessonLearnScreen() {
   }, [numericLessonId, recordVisit]);
 
   if (isLoading) {
-    return <Loading message="Đang tải bài học..." />;
+    return <Loading message="Đang khởi tạo phòng học..." />;
   }
 
   if (isError || !lesson) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Bài học', headerBackTitle: 'Quay lại' }} />
+        <Stack.Screen options={{ title: 'Bài giảng', headerBackTitle: 'Quay lại' }} />
         <ErrorState
           message={error?.message || 'Không thể tải nội dung bài học.'}
           onRetry={() => refetch()}
@@ -68,8 +69,8 @@ export default function LessonLearnScreen() {
         onSuccess: (data) => {
           if (data.certificateIssued) {
             Alert.alert(
-              '🎉 Xuất sắc!',
-              'Chúc mừng bạn đã hoàn thành tất cả bài học trong khóa và nhận được chứng chỉ tốt nghiệp!',
+              'Hoàn thành khóa học',
+              'Chúc mừng bạn đã hoàn tất 100% chương trình học và được cấp chứng chỉ tốt nghiệp xác thực từ Edumy.',
               [
                 { text: 'Đóng', style: 'default' },
                 {
@@ -97,7 +98,7 @@ export default function LessonLearnScreen() {
         }}
       />
 
-      {/* Main Media/Article View */}
+      {/* Modern Dark Cinema Media/Article Viewer */}
       <LessonContentViewer
         contentType={lesson.contentType}
         videoUrl={lesson.videoUrl}
@@ -105,13 +106,9 @@ export default function LessonLearnScreen() {
         title={lesson.title}
       />
 
-      {/* Action and Info Section */}
+      {/* Editorial Control & Completion Panel */}
       <ScrollView contentContainerStyle={styles.infoScroll}>
-        <View style={styles.headerInfo}>
-          <Text variant="h2" style={styles.lessonTitle}>
-            {lesson.title}
-          </Text>
-
+        <View style={styles.headerCard}>
           <View style={styles.metaRow}>
             <View style={styles.typeBadge}>
               <Ionicons
@@ -120,48 +117,58 @@ export default function LessonLearnScreen() {
                     ? 'videocam-outline'
                     : 'document-text-outline'
                 }
-                size={14}
-                color="#0D9488"
+                size={13}
+                color={semantic.brandPrimaryStrong}
               />
               <Text style={styles.typeBadgeText}>
-                {lesson.contentType === 'video' ? 'Video bài giảng' : 'Tài liệu bài đọc'}
+                {lesson.contentType === 'video' ? 'VIDEO BÀI GIẢNG' : 'TÀI LIỆU BÀI ĐỌC'}
               </Text>
             </View>
 
             {Boolean(lesson.durationSeconds) && (
               <Text style={styles.durationText}>
-                {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
+                {Math.ceil((lesson.durationSeconds || 0) / 60)} PHÚT
               </Text>
             )}
           </View>
+
+          <Text variant="h2" style={styles.lessonTitle}>
+            {lesson.title}
+          </Text>
         </View>
 
-        {/* Completion Action Box (D-33 Manual Toggle) */}
-        <View style={styles.completionBox}>
+        {/* Completion Action Box (Rule D-33 Manual Toggle) */}
+        <View style={[styles.completionBox, isCompleted && styles.completionBoxActive]}>
           <View style={styles.completionHeader}>
-            <Ionicons
-              name={isCompleted ? 'checkmark-circle' : 'time-outline'}
-              size={24}
-              color={isCompleted ? '#059669' : '#D97706'}
-            />
+            <View style={[styles.statusIconWrap, isCompleted ? styles.statusIconDone : styles.statusIconPending]}>
+              <Ionicons
+                name={isCompleted ? 'checkmark-outline' : 'hourglass-outline'}
+                size={20}
+                color={isCompleted ? semantic.success : semantic.accentAmber}
+              />
+            </View>
             <View style={styles.completionHeaderText}>
+              <Text style={styles.completionOverline}>
+                TRẠNG THÁI GHI NHẬN // QUY TẮC D-33
+              </Text>
               <Text style={styles.completionStatusTitle}>
-                {isCompleted ? 'Bạn đã hoàn thành bài học này' : 'Chưa đánh dấu hoàn thành'}
+                {isCompleted ? 'Đã hoàn thành bài học này' : 'Chưa đánh dấu hoàn thành'}
               </Text>
               <Text style={styles.completionStatusDesc}>
                 {isCompleted
-                  ? 'Tiến độ của bạn đã được ghi nhận vào chứng chỉ.'
-                  : 'Hãy chọn nút bên dưới khi bạn đã xem và hiểu nội dung.'}
+                  ? 'Tiến độ bài giảng đã được đồng bộ lên máy chủ và tính vào điều kiện cấp chứng chỉ.'
+                  : 'Xác nhận hoàn thành thủ công sau khi bạn đã nắm vững nội dung bài giảng.'}
               </Text>
             </View>
           </View>
 
           <Button
-            title={isCompleted ? 'Bỏ đánh dấu hoàn thành' : 'Đánh dấu hoàn thành'}
+            title={isCompleted ? 'Bỏ đánh dấu hoàn thành' : 'Xác nhận hoàn thành bài học'}
             variant={isCompleted ? 'outline' : 'primary'}
             onPress={handleToggleCompletion}
             loading={isUpdatingCompletion}
-            style={styles.completionBtn}
+            disabled={isUpdatingCompletion}
+            style={styles.toggleButton}
           />
         </View>
       </ScrollView>
@@ -172,75 +179,110 @@ export default function LessonLearnScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   infoScroll: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
   },
-  headerInfo: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+  headerCard: {
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  lessonTitle: {
-    color: '#0F172A',
-    marginBottom: 10,
+    borderColor: semantic.borderSubtle,
+    padding: 16,
+    marginBottom: 14,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6FFFA',
+    gap: 5,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   typeBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0D9488',
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.brandPrimaryStrong,
+    letterSpacing: 0.6,
   },
   durationText: {
-    fontSize: 12,
-    color: '#64748B',
+    fontFamily: monoFontFamily,
+    fontSize: 11,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
+  },
+  lessonTitle: {
+    fontSize: 19,
+    lineHeight: 25,
+    color: semantic.textPrimary,
   },
   completionBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.md,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
+  },
+  completionBoxActive: {
+    borderColor: '#A7F3D0',
+    backgroundColor: '#F0FDF4',
   },
   completionHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 14,
-    gap: 10,
+    gap: 12,
+    marginBottom: 16,
+  },
+  statusIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  statusIconDone: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#86EFAC',
+  },
+  statusIconPending: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
   },
   completionHeaderText: {
     flex: 1,
   },
+  completionOverline: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    letterSpacing: 0.7,
+    marginBottom: 2,
+  },
   completionStatusTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 2,
+    color: semantic.textPrimary,
+    marginBottom: 4,
   },
   completionStatusDesc: {
     fontSize: 13,
-    color: '#64748B',
-    lineHeight: 18,
+    color: semantic.textSecondary,
+    lineHeight: 19,
   },
-  completionBtn: {
-    marginTop: 4,
+  toggleButton: {
+    width: '100%',
   },
 });

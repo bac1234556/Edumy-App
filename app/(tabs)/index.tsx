@@ -1,4 +1,4 @@
-// app/(tabs)/index.tsx — Khám phá khóa học (Catalog)
+// app/(tabs)/index.tsx — Khám phá khóa học (Swiss Editorial Catalog)
 import React, { useState } from 'react';
 import {
   View,
@@ -17,6 +17,7 @@ import { CourseCard } from '../../src/features/catalog/components/CourseCard';
 import { useCourses, useCategories } from '../../src/features/catalog/hooks';
 import { CourseFilterParams, CourseCard as CourseCardType } from '../../src/features/catalog/api';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius } from '../../src/theme/tokens';
 
 export default function CatalogScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,115 +38,144 @@ export default function CatalogScreen() {
 
   const courses = data?.content || [];
   const suggestions = data?.suggestions || [];
+  const totalElements = data?.page?.totalElements ?? courses.length;
+
+  const renderEditorialHeader = () => (
+    <View style={styles.heroBento}>
+      <View style={styles.heroTopRow}>
+        <View style={styles.heroTag}>
+          <View style={styles.heroDot} />
+          <Text style={styles.heroTagText}>EDUMY CATALOG // ĐỒNG BỘ TRỰC TIẾP</Text>
+        </View>
+        <Text style={styles.heroCountBadge}>
+          {totalElements} KHÓA HỌC
+        </Text>
+      </View>
+
+      <Text style={styles.heroTitle}>
+        Hệ thống học liệu thực chiến cho kỹ sư &amp; nhà sáng tạo.
+      </Text>
+      <Text style={styles.heroSubtitle}>
+        Lộ trình chuẩn hóa, video bài giảng HD và chứng chỉ số xác thực toàn hệ thống.
+      </Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Search Input Bar */}
-      <View style={styles.searchSection}>
+      {/* Sticky Control Header: Search + Category Pills + Segmented Filter */}
+      <View style={styles.controlPanel}>
+        {/* Search Input with '/' shortcut badge */}
         <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color="#64748B" />
+          <Ionicons name="search-outline" size={18} color={semantic.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm kiếm khóa học, kỹ năng..."
+            placeholder="Tìm khóa học, chủ đề, giảng viên..."
             placeholderTextColor="#94A3B8"
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+          {searchQuery.length > 0 ? (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <Ionicons name="close-circle" size={18} color="#94A3B8" />
             </TouchableOpacity>
+          ) : (
+            <View style={styles.shortcutKey}>
+              <Text style={styles.shortcutKeyText}>/</Text>
+            </View>
           )}
         </View>
-      </View>
 
-      {/* Filter Horizontal Pills */}
-      <View style={styles.filterSection}>
+        {/* Category Horizontal Pills */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterScroll}
         >
-          {/* All categories */}
           <TouchableOpacity
             style={[styles.pill, selectedCategory === undefined && styles.pillActive]}
             onPress={() => setSelectedCategory(undefined)}
           >
             <Text style={[styles.pillText, selectedCategory === undefined && styles.pillTextActive]}>
-              Tất cả
+              Tất cả chuyên mục
             </Text>
           </TouchableOpacity>
 
-          {/* Dynamic Categories */}
-          {categories?.map((cat) => (
+          {categories?.map((cat) => {
+            const active = selectedCategory === cat.id;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.pill, active && styles.pillActive]}
+                onPress={() => setSelectedCategory(active ? undefined : cat.id)}
+              >
+                <Text style={[styles.pillText, active && styles.pillTextActive]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* Price Segmented Control & Sort Button */}
+        <View style={styles.subFilterRow}>
+          <View style={styles.priceToggle}>
             <TouchableOpacity
-              key={cat.id}
-              style={[styles.pill, selectedCategory === cat.id && styles.pillActive]}
-              onPress={() => setSelectedCategory(cat.id === selectedCategory ? undefined : cat.id)}
+              style={[styles.priceBtn, selectedPrice === undefined && styles.priceBtnActive]}
+              onPress={() => setSelectedPrice(undefined)}
             >
-              <Text style={[styles.pillText, selectedCategory === cat.id && styles.pillTextActive]}>
-                {cat.name}
+              <Text style={[styles.priceBtnText, selectedPrice === undefined && styles.priceBtnTextActive]}>
+                Tất cả
               </Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+            <TouchableOpacity
+              style={[styles.priceBtn, selectedPrice === 'free' && styles.priceBtnActive]}
+              onPress={() => setSelectedPrice('free')}
+            >
+              <Text style={[styles.priceBtnText, selectedPrice === 'free' && styles.priceBtnTextActive]}>
+                Miễn phí
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.priceBtn, selectedPrice === 'paid' && styles.priceBtnActive]}
+              onPress={() => setSelectedPrice('paid')}
+            >
+              <Text style={[styles.priceBtnText, selectedPrice === 'paid' && styles.priceBtnTextActive]}>
+                Có phí
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Price & Sort Row */}
-      <View style={styles.subFilterRow}>
-        <View style={styles.priceToggle}>
           <TouchableOpacity
-            style={[styles.priceBtn, selectedPrice === undefined && styles.priceBtnActive]}
-            onPress={() => setSelectedPrice(undefined)}
+            style={styles.sortBtn}
+            onPress={() => {
+              const nextSort: Record<string, 'newest' | 'rating' | 'price_asc' | 'price_desc'> = {
+                newest: 'rating',
+                rating: 'price_asc',
+                price_asc: 'price_desc',
+                price_desc: 'newest',
+              };
+              setSortOption(nextSort[sortOption]);
+            }}
           >
-            <Text style={[styles.priceBtnText, selectedPrice === undefined && styles.priceBtnTextActive]}>
-              Tất cả
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.priceBtn, selectedPrice === 'free' && styles.priceBtnActive]}
-            onPress={() => setSelectedPrice('free')}
-          >
-            <Text style={[styles.priceBtnText, selectedPrice === 'free' && styles.priceBtnTextActive]}>
-              Miễn phí
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.priceBtn, selectedPrice === 'paid' && styles.priceBtnActive]}
-            onPress={() => setSelectedPrice('paid')}
-          >
-            <Text style={[styles.priceBtnText, selectedPrice === 'paid' && styles.priceBtnTextActive]}>
-              Có phí
+            <Ionicons name="options-outline" size={14} color={semantic.brandPrimary} />
+            <Text style={styles.sortBtnText}>
+              {sortOption === 'newest' && 'Mới nhất'}
+              {sortOption === 'rating' && 'Đánh giá cao'}
+              {sortOption === 'price_asc' && 'Giá tăng dần'}
+              {sortOption === 'price_desc' && 'Giá giảm dần'}
             </Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.sortBtn}
-          onPress={() => {
-            const nextSort: Record<string, 'newest' | 'rating' | 'price_asc' | 'price_desc'> = {
-              newest: 'rating',
-              rating: 'price_asc',
-              price_asc: 'price_desc',
-              price_desc: 'newest',
-            };
-            setSortOption(nextSort[sortOption]);
-          }}
-        >
-          <Ionicons name="swap-vertical" size={16} color="#0D9488" />
-          <Text style={styles.sortBtnText}>
-            {sortOption === 'newest' && 'Mới nhất'}
-            {sortOption === 'rating' && 'Đánh giá cao'}
-            {sortOption === 'price_asc' && 'Giá tăng dần'}
-            {sortOption === 'price_desc' && 'Giá giảm dần'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Main Content Area */}
       {isLoading ? (
-        <Loading message="Đang tải danh sách khóa học..." />
+        <Loading message="Đang tải danh mục khóa học..." />
       ) : isError ? (
         <ErrorState
           message={error?.message || 'Không thể tải danh mục khóa học'}
@@ -157,10 +187,10 @@ export default function CatalogScreen() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         >
           <EmptyState
-            icon={<Ionicons name="search-outline" size={48} color="#94A3B8" />}
-            title="Không tìm thấy khóa học"
-            description="Hãy thử từ khóa khác hoặc điều chỉnh bộ lọc để xem các khóa học hiện có."
-            actionTitle="Xóa bộ lọc"
+            icon={<Ionicons name="search-outline" size={26} color={semantic.brandPrimary} />}
+            title="Không tìm thấy khóa học phù hợp"
+            description="Hãy thử điều chỉnh từ khóa hoặc xóa bộ lọc để xem toàn bộ danh mục."
+            actionTitle="Đặt lại bộ lọc"
             onAction={() => {
               setSearchQuery('');
               setSelectedCategory(undefined);
@@ -168,14 +198,13 @@ export default function CatalogScreen() {
             }}
           />
 
-          {/* Suggestions if any */}
           {suggestions.length > 0 && (
-            <View style={styles.suggestionsBox}>
-              <Text variant="h3" style={styles.suggestionsHeader}>
-                Có thể bạn quan tâm
+            <View style={styles.suggestionsSection}>
+              <Text variant="h2" style={styles.suggestionsTitle}>
+                Gợi ý khóa học nổi bật
               </Text>
-              {suggestions.map((item: CourseCardType) => (
-                <CourseCard key={item.id} course={item} />
+              {suggestions.map((course: CourseCardType) => (
+                <CourseCard key={course.id} course={course} />
               ))}
             </View>
           )}
@@ -184,6 +213,7 @@ export default function CatalogScreen() {
         <FlatList
           data={courses}
           keyExtractor={(item) => String(item.id)}
+          ListHeaderComponent={renderEditorialHeader}
           renderItem={({ item }) => <CourseCard course={item} />}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
@@ -196,114 +226,182 @@ export default function CatalogScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
-  searchSection: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-    backgroundColor: '#ffffff',
+  controlPanel: {
+    backgroundColor: semantic.surfaceCard,
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.borderSubtle,
+    paddingTop: 10,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: semantic.surfaceCanvas,
+    borderRadius: radius.md,
     paddingHorizontal: 12,
     height: 44,
+    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: semantic.borderStrong,
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
     fontSize: 14,
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
-  filterSection: {
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    paddingVertical: 8,
+  shortcutKey: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: '#E2E8F0',
+  },
+  shortcutKeyText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: semantic.textSecondary,
+    fontVariant: ['tabular-nums'],
   },
   filterScroll: {
     paddingHorizontal: 16,
+    paddingVertical: 10,
     gap: 8,
   },
   pill: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 13,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    borderRadius: radius.sm,
+    backgroundColor: semantic.surfaceCanvas,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: semantic.borderSubtle,
   },
   pillActive: {
-    backgroundColor: '#CCFBF1',
-    borderColor: '#0D9488',
+    backgroundColor: semantic.textPrimary,
+    borderColor: semantic.textPrimary,
   },
   pillText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#475569',
+    fontSize: 12,
+    fontWeight: '600',
+    color: semantic.textSecondary,
   },
   pillTextActive: {
-    color: '#0D9488',
-    fontWeight: '700',
+    color: '#FFFFFF',
   },
   subFilterRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    paddingBottom: 10,
   },
   priceToggle: {
     flexDirection: 'row',
     backgroundColor: '#F1F5F9',
-    borderRadius: 6,
+    borderRadius: radius.sm,
     padding: 2,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
   },
   priceBtn: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 4,
   },
   priceBtnActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: semantic.surfaceCard,
   },
   priceBtnText: {
     fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
+    color: semantic.textMuted,
+    fontWeight: '600',
   },
   priceBtnTextActive: {
-    color: '#0F172A',
+    color: semantic.textPrimary,
     fontWeight: '700',
   },
   sortBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    backgroundColor: semantic.surfaceCanvas,
   },
   sortBtnText: {
-    fontSize: 13,
-    color: '#0D9488',
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
+    color: semantic.textPrimary,
+  },
+  heroBento: {
+    backgroundColor: '#0F172A',
+    borderRadius: radius.lg,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  heroTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  heroDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2DD4BF',
+  },
+  heroTagText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#2DD4BF',
+    letterSpacing: 0.7,
+  },
+  heroCountBadge: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#94A3B8',
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    fontVariant: ['tabular-nums'],
+  },
+  heroTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#F8FAFC',
+    lineHeight: 24,
+    letterSpacing: -0.3,
+  },
+  heroSubtitle: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 6,
+    lineHeight: 18,
   },
   listContent: {
     padding: 16,
+    paddingBottom: 32,
   },
   emptyContainer: {
-    padding: 16,
+    paddingBottom: 32,
   },
-  suggestionsBox: {
-    marginTop: 20,
+  suggestionsSection: {
+    paddingHorizontal: 16,
+    marginTop: 12,
   },
-  suggestionsHeader: {
+  suggestionsTitle: {
     marginBottom: 12,
   },
 });

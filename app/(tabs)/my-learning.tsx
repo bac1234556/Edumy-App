@@ -1,4 +1,4 @@
-// app/(tabs)/my-learning.tsx — Học tập (Khóa học của tôi)
+// app/(tabs)/my-learning.tsx — Học tập (Phòng học của tôi - Editorial Bento)
 import React, { useState } from 'react';
 import {
   View,
@@ -18,6 +18,7 @@ import { Loading } from '../../src/components/ui/Loading';
 import { ErrorState } from '../../src/components/ui/ErrorState';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius, monoFontFamily, microShadow } from '../../src/theme/tokens';
 
 export default function MyLearningScreen() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function MyLearningScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          icon={<Ionicons name="school-outline" size={56} color="#94A3B8" />}
+          icon={<Ionicons name="school-outline" size={26} color={semantic.brandPrimary} />}
           title="Đăng nhập để vào phòng học"
           description="Đăng nhập để tiếp tục các bài học và theo dõi tiến độ học tập của bạn."
           actionTitle="Đăng nhập"
@@ -43,7 +44,7 @@ export default function MyLearningScreen() {
   }
 
   if (isLoading) {
-    return <Loading message="Đang tải các khóa học của bạn..." />;
+    return <Loading message="Đang đồng bộ tiến độ học tập..." />;
   }
 
   if (isError) {
@@ -59,7 +60,7 @@ export default function MyLearningScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          icon={<Ionicons name="book-outline" size={56} color="#94A3B8" />}
+          icon={<Ionicons name="book-outline" size={26} color={semantic.brandPrimary} />}
           title="Chưa có khóa học nào"
           description="Ghi danh các khóa học trên Edumy để bắt đầu hành trình học tập của bạn."
           actionTitle="Khám phá ngay"
@@ -69,6 +70,9 @@ export default function MyLearningScreen() {
     );
   }
 
+  const completedCount = enrollments.filter((e) => e.progressPercent >= 100).length;
+  const inProgressCount = enrollments.length - completedCount;
+
   const handleResumeCourse = (enrollment: Enrollment) => {
     if (enrollment.lastAccessedLessonId) {
       router.push(`/learn/lesson/${enrollment.lastAccessedLessonId}` as const);
@@ -77,21 +81,44 @@ export default function MyLearningScreen() {
     }
   };
 
+  const renderSummaryHeader = () => (
+    <View style={styles.summaryBento}>
+      <View style={styles.summaryCell}>
+        <Text style={styles.summaryValue}>{enrollments.length}</Text>
+        <Text style={styles.summaryLabel}>ĐÃ GHI DANH</Text>
+      </View>
+      <View style={styles.summaryDivider} />
+      <View style={styles.summaryCell}>
+        <Text style={[styles.summaryValue, { color: semantic.brandPrimary }]}>
+          {inProgressCount}
+        </Text>
+        <Text style={styles.summaryLabel}>ĐANG HỌC</Text>
+      </View>
+      <View style={styles.summaryDivider} />
+      <View style={styles.summaryCell}>
+        <Text style={[styles.summaryValue, { color: semantic.success }]}>
+          {completedCount}
+        </Text>
+        <Text style={styles.summaryLabel}>HOÀN THÀNH</Text>
+      </View>
+    </View>
+  );
+
   const renderEnrollmentCard = ({ item }: { item: Enrollment }) => {
     const isCompleted = item.progressPercent >= 100;
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, microShadow]}
         onPress={() => router.push(`/learn/${item.course.id}` as const)}
-        activeOpacity={0.8}
+        activeOpacity={0.82}
       >
         <View style={styles.cardHeaderRow}>
           {item.course.thumbnailUrl ? (
             <Image source={{ uri: item.course.thumbnailUrl }} style={styles.thumbnail} />
           ) : (
             <View style={styles.placeholderThumbnail}>
-              <Ionicons name="school-outline" size={26} color="#0D9488" />
+              <Ionicons name="layers-outline" size={24} color={semantic.brandPrimary} />
             </View>
           )}
 
@@ -100,40 +127,45 @@ export default function MyLearningScreen() {
               {item.course.title}
             </Text>
 
-            {item.certificateCode && (
+            {item.certificateCode ? (
               <View style={styles.certBadge}>
-                <Ionicons name="ribbon-outline" size={14} color="#0D9488" />
-                <Text style={styles.certBadgeText}>Đã cấp chứng chỉ</Text>
+                <Ionicons name="ribbon-outline" size={13} color={semantic.brandPrimaryStrong} />
+                <Text style={styles.certBadgeText}>CHỨNG CHỈ: {item.certificateCode}</Text>
               </View>
+            ) : (
+              <Text style={styles.statusSubText}>
+                {isCompleted ? 'Đã hoàn tất toàn bộ bài học' : 'Đang trong tiến trình học'}
+              </Text>
             )}
           </View>
         </View>
 
-        {/* Progress Bar & Stats */}
+        {/* Server-Driven Progress Bar & Tabular Metrics */}
         <View style={styles.progressSection}>
+          <View style={styles.statsRow}>
+            <Text style={styles.progressPercentText}>
+              {item.progressPercent}% HOÀN THÀNH
+            </Text>
+            <Text style={styles.lessonsCountText}>
+              {item.completedLessons}/{item.totalLessons} bài giảng
+            </Text>
+          </View>
+
           <View style={styles.progressBarBackground}>
             <View
               style={[
                 styles.progressBarFill,
+                isCompleted && styles.progressBarCompleted,
                 { width: `${Math.min(100, item.progressPercent)}%` },
               ]}
             />
-          </View>
-
-          <View style={styles.statsRow}>
-            <Text style={styles.progressPercentText}>
-              {item.progressPercent}% hoàn thành
-            </Text>
-            <Text style={styles.lessonsCountText}>
-              {item.completedLessons}/{item.totalLessons} bài học
-            </Text>
           </View>
         </View>
 
         {/* Action Button */}
         <View style={styles.actionRow}>
           <Button
-            title={isCompleted ? 'Xem lại bài học' : 'Học tiếp'}
+            title={isCompleted ? 'Ôn tập bài giảng' : 'Học tiếp bài gần nhất'}
             onPress={() => handleResumeCourse(item)}
             variant={isCompleted ? 'outline' : 'primary'}
             style={styles.resumeButton}
@@ -148,6 +180,7 @@ export default function MyLearningScreen() {
       <FlatList
         data={enrollments}
         keyExtractor={(item) => String(item.id)}
+        ListHeaderComponent={renderSummaryHeader}
         renderItem={renderEnrollmentCard}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
@@ -165,100 +198,154 @@ export default function MyLearningScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   listContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 32,
+  },
+  summaryBento: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    paddingVertical: 14,
+    marginBottom: 16,
+  },
+  summaryCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: semantic.borderSubtle,
+  },
+  summaryValue: {
+    fontFamily: monoFontFamily,
+    fontSize: 20,
+    fontWeight: '700',
+    color: semantic.textPrimary,
+    fontVariant: ['tabular-nums'],
+  },
+  summaryLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    letterSpacing: 0.7,
+    marginTop: 3,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.md,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   cardHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
+    gap: 12,
   },
   thumbnail: {
-    width: 90,
-    height: 60,
-    borderRadius: 8,
+    width: 92,
+    height: 62,
+    borderRadius: radius.sm,
     backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
   },
   placeholderThumbnail: {
-    width: 90,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#E6FFFA',
-    justifyContent: 'center',
+    width: 92,
+    height: 62,
+    borderRadius: radius.sm,
+    backgroundColor: semantic.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   cardMeta: {
     flex: 1,
-    marginLeft: 12,
+    justifyContent: 'space-between',
   },
   courseTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
     lineHeight: 20,
+  },
+  statusSubText: {
+    fontSize: 12,
+    color: semantic.textMuted,
+    marginTop: 4,
   },
   certBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6FFFA',
     alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: 6,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
-    marginTop: 6,
-    gap: 4,
+    borderRadius: 4,
   },
   certBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#0D9488',
+    fontFamily: monoFontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.brandPrimaryStrong,
+    fontVariant: ['tabular-nums'],
   },
   progressSection: {
-    marginBottom: 12,
-  },
-  progressBarBackground: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#E2E8F0',
-    overflow: 'hidden',
-    marginBottom: 6,
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#0D9488',
-    borderRadius: 3,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 7,
   },
   progressPercentText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0D9488',
+    fontFamily: monoFontFamily,
+    fontSize: 11,
+    fontWeight: '700',
+    color: semantic.brandPrimary,
     fontVariant: ['tabular-nums'],
+    letterSpacing: 0.4,
   },
   lessonsCountText: {
-    fontSize: 12,
-    color: '#64748B',
+    fontFamily: monoFontFamily,
+    fontSize: 11,
+    color: semantic.textMuted,
     fontVariant: ['tabular-nums'],
   },
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: semantic.brandPrimary,
+    borderRadius: 3,
+  },
+  progressBarCompleted: {
+    backgroundColor: semantic.success,
+  },
   actionRow: {
-    marginTop: 4,
+    marginTop: 14,
   },
   resumeButton: {
-    height: 40,
+    minHeight: 42,
+    paddingVertical: 9,
   },
 });

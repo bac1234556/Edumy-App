@@ -1,4 +1,4 @@
-// app/courses/[slug]/index.tsx — Chi tiết khóa học
+// app/courses/[slug]/index.tsx — Chi tiết khóa học (Swiss Editorial Magazine Layout)
 import React from 'react';
 import {
   View,
@@ -21,6 +21,7 @@ import { MoneyText } from '../../../src/components/ui/MoneyText';
 import { webLinks } from '../../../src/lib/web-links';
 import { AppError } from '../../../src/api/problem';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius, monoFontFamily } from '../../../src/theme/tokens';
 
 export default function CourseDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -33,7 +34,7 @@ export default function CourseDetailScreen() {
   const { mutate: addToCart, isPending: isAddingCart } = useAddToCart(slug);
 
   if (isLoading) {
-    return <Loading message="Đang tải thông tin khóa học..." />;
+    return <Loading message="Đang tải hồ sơ khóa học..." />;
   }
 
   if (isError || !course) {
@@ -90,77 +91,106 @@ export default function CourseDetailScreen() {
     Linking.openURL(webLinks.course(slug));
   };
 
+  const totalMinutes = course.totalDurationSeconds
+    ? Math.max(1, Math.ceil(course.totalDurationSeconds / 60))
+    : 0;
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: course.title, headerBackTitle: 'Quay lại' }} />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Course Thumbnail */}
+        {/* 16:9 Framed Thumbnail */}
         <View style={styles.thumbnailWrapper}>
           {course.thumbnailUrl ? (
             <Image source={{ uri: course.thumbnailUrl }} style={styles.thumbnail} resizeMode="cover" />
           ) : (
             <View style={styles.placeholderThumbnail}>
-              <Ionicons name="school-outline" size={54} color="#0D9488" />
+              <Ionicons name="layers-outline" size={48} color={semantic.brandPrimary} />
             </View>
           )}
         </View>
 
-        {/* Title & Metadata */}
+        {/* Editorial Header Card */}
         <View style={styles.headerSection}>
-          {course.categoryName && (
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{course.categoryName.toUpperCase()}</Text>
-            </View>
-          )}
-
-          <Text variant="h1" style={styles.courseTitle}>
-            {course.title}
-          </Text>
-
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Ionicons name="star" size={16} color="#F59E0B" />
-              <Text style={styles.statScore}>
-                {course.averageRating ? course.averageRating.toFixed(1) : '5.0'}
-              </Text>
-              <TouchableOpacity onPress={() => router.push(`/courses/${slug}/reviews` as const)}>
-                <Text style={styles.reviewsLink}>({course.ratingCount || 0} đánh giá)</Text>
-              </TouchableOpacity>
-            </View>
-
+          <View style={styles.kickerRow}>
+            {course.categoryName && (
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryText}>{course.categoryName.toUpperCase()}</Text>
+              </View>
+            )}
             {isLoggedIn && (
               <TouchableOpacity
                 style={styles.writeReviewBtn}
                 onPress={() => router.push(`/courses/${slug}/write-review` as const)}
               >
-                <Ionicons name="create-outline" size={14} color="#0D9488" />
+                <Ionicons name="create-outline" size={13} color={semantic.brandPrimary} />
                 <Text style={styles.writeReviewText}>Viết đánh giá</Text>
               </TouchableOpacity>
             )}
-
-            {Boolean(course.totalLessons) && (
-              <View style={styles.statItem}>
-                <Ionicons name="play-circle-outline" size={16} color="#64748B" />
-                <Text style={styles.statText}>{course.totalLessons} bài giảng</Text>
-              </View>
-            )}
           </View>
 
-          {/* Instructors */}
-          <View style={styles.instructorSection}>
-            <Ionicons name="person-circle-outline" size={24} color="#0D9488" />
-            <Text style={styles.instructorText}>
-              Giảng viên: <Text style={styles.instructorName}>{course.mainInstructor.fullName}</Text>
-            </Text>
+          <Text variant="h1" style={styles.courseTitle}>
+            {course.title}
+          </Text>
+
+          {/* 3-Column Bento Metrics Strip */}
+          <View style={styles.metricsBento}>
+            <TouchableOpacity
+              style={styles.metricCell}
+              onPress={() => router.push(`/courses/${slug}/reviews` as const)}
+            >
+              <View style={styles.metricValueRow}>
+                <Ionicons name="star" size={14} color="#D97706" />
+                <Text style={styles.metricValue}>
+                  {course.averageRating ? course.averageRating.toFixed(1) : '5.0'}
+                </Text>
+              </View>
+              <Text style={styles.metricLabelLink}>
+                {course.ratingCount || 0} đánh giá →
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.metricDivider} />
+
+            <View style={styles.metricCell}>
+              <Text style={styles.metricValue}>{course.totalLessons || 0}</Text>
+              <Text style={styles.metricLabel}>Bài giảng</Text>
+            </View>
+
+            <View style={styles.metricDivider} />
+
+            <View style={styles.metricCell}>
+              <Text style={styles.metricValue}>
+                {totalMinutes > 0 ? `${totalMinutes}p` : 'Chuẩn HD'}
+              </Text>
+              <Text style={styles.metricLabel}>Thời lượng</Text>
+            </View>
+          </View>
+
+          {/* Instructor Block */}
+          <View style={styles.instructorCard}>
+            <View style={styles.instructorIconBox}>
+              <Ionicons name="person-outline" size={18} color={semantic.brandPrimary} />
+            </View>
+            <View style={styles.instructorInfo}>
+              <Text style={styles.instructorLabel}>GIẢNG VIÊN CHÍNH</Text>
+              <Text style={styles.instructorName}>{course.mainInstructor.fullName}</Text>
+              {course.coInstructors && course.coInstructors.length > 0 && (
+                <Text style={styles.coInstructorsText}>
+                  Đồng giảng viên: {course.coInstructors.map((c) => c.fullName).join(', ')}
+                </Text>
+              )}
+            </View>
           </View>
         </View>
 
         {/* Course Description */}
         {course.description && (
           <View style={styles.section}>
+            <Text style={styles.sectionOverline}>TỔNG QUAN NỘI DUNG</Text>
             <Text variant="h3" style={styles.sectionTitle}>
-              Mô tả khóa học
+              Mô tả chuyên môn
             </Text>
             <Text variant="body" style={styles.descriptionText}>
               {course.description}
@@ -168,30 +198,37 @@ export default function CourseDetailScreen() {
           </View>
         )}
 
-        {/* Curriculum Section */}
+        {/* Technical Boxed Curriculum Section */}
         <View style={styles.section}>
+          <Text style={styles.sectionOverline}>CẤU TRÚC CHƯƠNG TRÌNH</Text>
           <Text variant="h3" style={styles.sectionTitle}>
-            Đề cương khóa học
+            Đề cương bài giảng
           </Text>
 
           {course.chapters && course.chapters.length > 0 ? (
             course.chapters.map((chapter, chapterIdx) => (
               <View key={chapter.id} style={styles.chapterCard}>
-                <Text style={styles.chapterTitle}>
-                  Chương {chapterIdx + 1}: {chapter.title}
-                </Text>
+                <View style={styles.chapterHeader}>
+                  <Text style={styles.chapterIndex}>
+                    CHƯƠNG {String(chapterIdx + 1).padStart(2, '0')}
+                  </Text>
+                  <Text style={styles.chapterTitle}>{chapter.title}</Text>
+                </View>
 
                 <View style={styles.lessonList}>
                   {chapter.lessons.map((lesson, lessonIdx) => (
                     <View key={lesson.id} style={styles.lessonRow}>
                       <View style={styles.lessonLeft}>
+                        <Text style={styles.lessonNumber}>
+                          {String(chapterIdx + 1).padStart(2, '0')}.{String(lessonIdx + 1).padStart(2, '0')}
+                        </Text>
                         <Ionicons
                           name={lesson.contentType === 'video' ? 'videocam-outline' : 'document-text-outline'}
-                          size={18}
-                          color="#64748B"
+                          size={16}
+                          color={semantic.textMuted}
                         />
-                        <Text style={styles.lessonTitle}>
-                          {chapterIdx + 1}.{lessonIdx + 1} {lesson.title}
+                        <Text style={styles.lessonTitle} numberOfLines={2}>
+                          {lesson.title}
                         </Text>
                       </View>
 
@@ -200,11 +237,11 @@ export default function CourseDetailScreen() {
                           style={styles.previewBadge}
                           onPress={() => router.push(`/courses/${slug}/preview/${lesson.id}` as const)}
                         >
-                          <Ionicons name="eye-outline" size={13} color="#0D9488" />
-                          <Text style={styles.previewText}>Xem trước</Text>
+                          <Ionicons name="play-outline" size={12} color={semantic.brandPrimary} />
+                          <Text style={styles.previewText}>Học thử</Text>
                         </TouchableOpacity>
                       ) : (
-                        <Ionicons name="lock-closed-outline" size={16} color="#94A3B8" />
+                        <Ionicons name="lock-closed-outline" size={15} color="#94A3B8" />
                       )}
                     </View>
                   ))}
@@ -217,10 +254,10 @@ export default function CourseDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Sticky Action Bar */}
+      {/* Bottom Sticky Action Bar (Table D-M02) */}
       <View style={styles.bottomBar}>
         <View style={styles.priceContainer}>
-          <Text variant="caption">Học phí</Text>
+          <Text style={styles.priceOverline}>HỌC PHÍ NIÊM YẾT</Text>
           <MoneyText amount={course.isFree ? 0 : course.price} style={styles.priceText} />
         </View>
 
@@ -251,15 +288,17 @@ export default function CourseDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   content: {
-    paddingBottom: 100,
+    paddingBottom: 110,
   },
   thumbnailWrapper: {
     width: '100%',
     aspectRatio: 16 / 9,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B0F17',
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.borderSubtle,
   },
   thumbnail: {
     width: '100%',
@@ -269,127 +308,199 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F0FDFA',
+    backgroundColor: semantic.surfaceSubtle,
   },
   headerSection: {
-    backgroundColor: '#ffffff',
+    backgroundColor: semantic.surfaceCard,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: semantic.borderSubtle,
+  },
+  kickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#CCFBF1',
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 4,
-    marginBottom: 8,
   },
   categoryText: {
-    color: '#0D9488',
-    fontSize: 11,
+    color: semantic.brandPrimaryStrong,
+    fontSize: 10,
     fontWeight: '700',
-  },
-  courseTitle: {
-    fontSize: 22,
-    lineHeight: 28,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 10,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statScore: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-    fontVariant: ['tabular-nums'],
-  },
-  reviewsLink: {
-    color: '#0D9488',
-    fontSize: 13,
-    fontWeight: '600',
+    letterSpacing: 0.7,
   },
   writeReviewBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0FDFA',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    backgroundColor: semantic.surfaceCanvas,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 6,
   },
   writeReviewText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0D9488',
+    fontSize: 11,
+    fontWeight: '700',
+    color: semantic.brandPrimary,
   },
-  statText: {
-    fontSize: 13,
-    color: '#64748B',
+  courseTitle: {
+    fontSize: 21,
+    lineHeight: 27,
+    marginBottom: 14,
   },
-  instructorSection: {
+  metricsBento: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    backgroundColor: semantic.surfaceCanvas,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    paddingVertical: 10,
+    marginBottom: 14,
   },
-  instructorText: {
-    fontSize: 14,
-    color: '#64748B',
+  metricCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  metricDivider: {
+    width: 1,
+    height: 26,
+    backgroundColor: semantic.borderSubtle,
+  },
+  metricValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metricValue: {
+    fontFamily: monoFontFamily,
+    fontSize: 15,
+    fontWeight: '700',
+    color: semantic.textPrimary,
+    fontVariant: ['tabular-nums'],
+  },
+  metricLabel: {
+    fontSize: 11,
+    color: semantic.textMuted,
+    marginTop: 2,
+  },
+  metricLabelLink: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: semantic.brandPrimary,
+    marginTop: 2,
+    fontVariant: ['tabular-nums'],
+  },
+  instructorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    backgroundColor: semantic.surfaceCanvas,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+  },
+  instructorIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  instructorInfo: {
+    flex: 1,
+  },
+  instructorLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    letterSpacing: 0.7,
   },
   instructorName: {
+    fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
+    marginTop: 1,
+  },
+  coInstructorsText: {
+    fontSize: 12,
+    color: semantic.textSecondary,
+    marginTop: 2,
   },
   section: {
-    backgroundColor: '#ffffff',
+    backgroundColor: semantic.surfaceCard,
     marginTop: 12,
     padding: 16,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
+  },
+  sectionOverline: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.brandPrimary,
+    letterSpacing: 0.8,
+    marginBottom: 3,
   },
   sectionTitle: {
     marginBottom: 12,
   },
   descriptionText: {
     color: '#334155',
-    lineHeight: 24,
+    lineHeight: 23,
   },
   chapterCard: {
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
+    borderColor: semantic.borderSubtle,
+    borderRadius: radius.md,
     overflow: 'hidden',
   },
+  chapterHeader: {
+    backgroundColor: semantic.surfaceCanvas,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.borderSubtle,
+  },
+  chapterIndex: {
+    fontFamily: monoFontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.brandPrimary,
+    letterSpacing: 0.7,
+    marginBottom: 2,
+  },
   chapterTitle: {
-    backgroundColor: '#F8FAFC',
-    padding: 12,
     fontWeight: '700',
     fontSize: 14,
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
   lessonList: {
     paddingHorizontal: 12,
+    backgroundColor: semantic.surfaceCard,
   },
   lessonRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+    gap: 8,
   },
   lessonLeft: {
     flexDirection: 'row',
@@ -397,24 +508,34 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
   },
+  lessonNumber: {
+    fontFamily: monoFontFamily,
+    fontSize: 11,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
+    minWidth: 34,
+  },
   lessonTitle: {
-    fontSize: 14,
-    color: '#1E293B',
+    fontSize: 13,
+    fontWeight: '500',
+    color: semantic.textPrimary,
     flex: 1,
+    lineHeight: 18,
   },
   previewBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: '#F0FDFA',
-    borderRadius: 4,
+    paddingVertical: 4,
+    backgroundColor: semantic.brandSoft,
+    borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#CCFBF1',
+    borderColor: semantic.brandBorder,
   },
   previewText: {
-    color: '#0D9488',
+    color: semantic.brandPrimaryStrong,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -423,22 +544,24 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#ffffff',
+    backgroundColor: semantic.surfaceCard,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    borderTopColor: semantic.borderStrong,
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
   },
   priceContainer: {
     flex: 1,
+  },
+  priceOverline: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    letterSpacing: 0.7,
+    marginBottom: 2,
   },
   priceText: {
     fontSize: 18,

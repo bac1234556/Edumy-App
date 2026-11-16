@@ -6,6 +6,7 @@ import { Text } from '../../../components/ui/Text';
 import { MoneyText } from '../../../components/ui/MoneyText';
 import { CourseCard as CourseCardType } from '../api';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius, microShadow } from '../../../theme/tokens';
 
 interface CourseCardProps {
   course: CourseCardType;
@@ -20,11 +21,11 @@ export function CourseCard({ course }: CourseCardProps) {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.85}
-      style={styles.card}
+      activeOpacity={0.82}
+      style={[styles.card, microShadow]}
       onPress={handlePress}
     >
-      {/* Thumbnail */}
+      {/* 16:9 Framed Thumbnail */}
       <View style={styles.thumbnailContainer}>
         {course.thumbnailUrl ? (
           <Image
@@ -34,9 +35,13 @@ export function CourseCard({ course }: CourseCardProps) {
           />
         ) : (
           <View style={styles.placeholderThumbnail}>
-            <Ionicons name="school-outline" size={36} color="#0D9488" />
+            <View style={styles.placeholderIconBox}>
+              <Ionicons name="layers-outline" size={26} color={semantic.brandPrimary} />
+            </View>
           </View>
         )}
+
+        {/* Top-left Category Tag */}
         {course.categoryName && (
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryBadgeText}>
@@ -44,34 +49,46 @@ export function CourseCard({ course }: CourseCardProps) {
             </Text>
           </View>
         )}
+
+        {/* Top-right Free Indicator */}
+        {course.isFree && (
+          <View style={styles.freeCornerBadge}>
+            <Text style={styles.freeCornerText}>MIỄN PHÍ</Text>
+          </View>
+        )}
       </View>
 
-      {/* Content */}
+      {/* Editorial Body */}
       <View style={styles.content}>
         <Text variant="h3" numberOfLines={2} style={styles.title}>
           {course.title}
         </Text>
 
         {course.instructorName && (
-          <Text variant="bodySmall" numberOfLines={1} style={styles.instructor}>
-            Giảng viên: {course.instructorName}
-          </Text>
+          <View style={styles.instructorRow}>
+            <Ionicons name="person-outline" size={13} color={semantic.textMuted} />
+            <Text variant="bodySmall" numberOfLines={1} style={styles.instructor}>
+              {course.instructorName}
+            </Text>
+          </View>
         )}
 
-        {/* Rating and Reviews */}
-        <View style={styles.ratingRow}>
-          <Ionicons name="star" size={14} color="#F59E0B" />
-          <Text style={styles.ratingScore}>
-            {course.averageRating ? course.averageRating.toFixed(1) : '5.0'}
-          </Text>
-          <Text style={styles.ratingCount}>
-            ({course.ratingCount || 0})
-          </Text>
-        </View>
-
-        {/* Price */}
+        {/* Tabular Footer: Rating on left, Price on right */}
         <View style={styles.footer}>
-          <MoneyText amount={course.isFree ? 0 : course.price} />
+          <View style={styles.ratingBadge}>
+            <Ionicons name="star" size={13} color="#D97706" />
+            <Text style={styles.ratingScore}>
+              {course.averageRating ? course.averageRating.toFixed(1) : '5.0'}
+            </Text>
+            <Text style={styles.ratingCount}>
+              ({course.ratingCount || 0})
+            </Text>
+          </View>
+
+          <MoneyText
+            amount={course.isFree ? 0 : course.price}
+            style={styles.priceText}
+          />
         </View>
       </View>
     </TouchableOpacity>
@@ -80,18 +97,20 @@ export function CourseCard({ course }: CourseCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   thumbnailContainer: {
     width: '100%',
     aspectRatio: 16 / 9,
     backgroundColor: '#F1F5F9',
     position: 'relative',
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.borderSubtle,
   },
   thumbnail: {
     width: '100%',
@@ -102,58 +121,103 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F0FDFA',
+    backgroundColor: semantic.surfaceSubtle,
+  },
+  placeholderIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: semantic.surfaceCard,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryBadge: {
     position: 'absolute',
     top: 10,
     left: 10,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: 'rgba(15, 23, 42, 0.88)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   categoryBadgeText: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+  },
+  freeCornerBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: semantic.brandPrimary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  freeCornerText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.6,
   },
   content: {
     padding: 14,
   },
   title: {
-    lineHeight: 22,
-    fontSize: 16,
+    lineHeight: 21,
+    fontSize: 15,
+    fontWeight: '700',
+    color: semantic.textPrimary,
   },
-  instructor: {
-    marginTop: 6,
-    color: '#64748B',
-  },
-  ratingRow: {
+  instructorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    gap: 4,
+    gap: 5,
+    marginTop: 7,
   },
-  ratingScore: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0F172A',
-    fontVariant: ['tabular-nums'],
-  },
-  ratingCount: {
+  instructor: {
+    color: semantic.textMuted,
     fontSize: 12,
-    color: '#94A3B8',
-    fontVariant: ['tabular-nums'],
+    fontWeight: '500',
+    flex: 1,
   },
   footer: {
-    marginTop: 10,
-    paddingTop: 8,
+    marginTop: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F8FAFC',
+    borderTopColor: '#F1F5F9',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 5,
+  },
+  ratingScore: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#92400E',
+    fontVariant: ['tabular-nums'],
+  },
+  ratingCount: {
+    fontSize: 11,
+    color: '#B45309',
+    fontVariant: ['tabular-nums'],
+  },
+  priceText: {
+    fontSize: 15,
   },
 });

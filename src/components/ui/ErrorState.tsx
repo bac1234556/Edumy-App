@@ -1,7 +1,9 @@
 // src/components/ui/ErrorState.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from './Button';
+import { semantic, radius, monoFontFamily } from '../../theme/tokens';
 
 interface ErrorStateProps {
   message?: string;
@@ -11,25 +13,30 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  message = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.',
+  message = 'Đã có lỗi kết nối máy chủ. Vui lòng thử lại.',
   traceId,
   onRetry,
   icon,
 }: ErrorStateProps) {
   return (
     <View style={styles.container}>
-      {icon}
-      <Text style={styles.title}>Không thể tải dữ liệu</Text>
-      <Text style={styles.message}>{message}</Text>
-      {Boolean(traceId) && <Text style={styles.traceId}>Mã lỗi: {traceId}</Text>}
-      {Boolean(onRetry) && (
-        <Button
-          title="Thử lại"
-          onPress={onRetry!}
-          variant="outline"
-          style={styles.retryButton}
-        />
-      )}
+      <View style={styles.box}>
+        <View style={styles.iconFrame}>
+          {icon || <Ionicons name="alert-circle-outline" size={26} color={semantic.danger} />}
+        </View>
+        <Text style={styles.kicker}>GIÁN ĐOẠN DỮ LIỆU</Text>
+        <Text style={styles.title}>Không thể tải nội dung</Text>
+        <Text style={styles.message}>{message}</Text>
+        {Boolean(traceId) && <Text style={styles.traceId}>TRACE: {traceId}</Text>}
+        {Boolean(onRetry) && (
+          <Button
+            title="Thử lại ngay"
+            onPress={onRetry!}
+            variant="outline"
+            style={styles.retryButton}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -39,30 +46,59 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    padding: 20,
+    backgroundColor: semantic.surfaceCanvas,
+  },
+  box: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    padding: 24,
+    alignItems: 'center',
+  },
+  iconFrame: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: semantic.dangerSoft,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  kicker: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.danger,
+    letterSpacing: 0.8,
+    marginBottom: 4,
   },
   title: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 12,
+    color: semantic.textPrimary,
     textAlign: 'center',
   },
   message: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 8,
+    fontSize: 13,
+    color: semantic.textSecondary,
+    marginTop: 6,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 19,
   },
   traceId: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 6,
-    fontFamily: 'monospace',
+    fontSize: 11,
+    color: semantic.textMuted,
+    marginTop: 8,
+    fontFamily: monoFontFamily,
+    fontVariant: ['tabular-nums'],
   },
   retryButton: {
-    marginTop: 20,
-    minWidth: 140,
+    marginTop: 18,
+    minWidth: 148,
   },
 });

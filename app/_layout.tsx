@@ -7,6 +7,7 @@ import { useRestoreSession } from '../src/features/auth/hooks';
 import { useForegroundSync } from '../src/hooks/useForegroundSync';
 import { Loading } from '../src/components/ui/Loading';
 import { Screen } from '../src/components/ui/Screen';
+import { semantic } from '../src/theme/tokens';
 
 function RootNavigator() {
   const { isRestored } = useRestoreSession();
@@ -15,7 +16,7 @@ function RootNavigator() {
   if (!isRestored) {
     return (
       <Screen>
-        <Loading message="Đang khởi động Edumy..." />
+        <Loading message="Đang khởi tạo không gian học tập Edumy..." />
       </Screen>
     );
   }
@@ -23,10 +24,14 @@ function RootNavigator() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: '#ffffff' },
-        headerTintColor: '#0F172A',
-        headerTitleStyle: { fontWeight: '700' },
-        contentStyle: { backgroundColor: '#FAF9F6' },
+        headerStyle: { backgroundColor: semantic.surfaceCanvas },
+        headerShadowVisible: false,
+        headerTintColor: semantic.textPrimary,
+        headerTitleStyle: {
+          fontWeight: '700',
+          fontSize: 17,
+        },
+        contentStyle: { backgroundColor: semantic.surfaceCanvas },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -52,7 +57,7 @@ export default function RootLayout() {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 2, // 2 minutes
+            staleTime: 1000 * 60 * 2,
             retry: 2,
           },
         },

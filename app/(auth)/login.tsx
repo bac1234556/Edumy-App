@@ -1,4 +1,4 @@
-// app/(auth)/login.tsx
+// app/(auth)/login.tsx — Đăng nhập tài khoản Edumy (Swiss Editorial Auth)
 import React, { useState } from 'react';
 import {
   View,
@@ -19,6 +19,7 @@ import { Button } from '../../src/components/ui/Button';
 import { Screen } from '../../src/components/ui/Screen';
 import { AppError } from '../../src/api/problem';
 import { Ionicons } from '@expo/vector-icons';
+import { semantic, radius } from '../../src/theme/tokens';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -76,58 +77,47 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.header}>
-            <Text variant="h1">Đăng nhập</Text>
-            <Text variant="body" style={styles.subtitle}>
-              Chào mừng bạn trở lại với Edumy
+          <TouchableOpacity
+            style={styles.backToCatalog}
+            onPress={() => router.replace('/(tabs)')}
+          >
+            <Ionicons name="arrow-back" size={18} color={semantic.textSecondary} />
+            <Text style={styles.backToCatalogText}>Khám phá khóa học</Text>
+          </TouchableOpacity>
+
+          <View style={styles.authCard}>
+            <View style={styles.brandBadge}>
+              <View style={styles.brandDot} />
+              <Text style={styles.brandBadgeText}>EDUMY IDENTITY // MOBILE AUTH</Text>
+            </View>
+
+            <Text variant="h1" style={styles.title}>
+              Đăng nhập hệ thống
             </Text>
-          </View>
+            <Text variant="bodySmall" style={styles.subtitle}>
+              Sử dụng tài khoản Edumy chung trên cả ứng dụng di động và website.
+            </Text>
 
-          {serverError && (
-            <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle-outline" size={20} color="#DC2626" />
-              <Text style={styles.errorBannerText}>{serverError}</Text>
-            </View>
-          )}
+            {serverError && (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle-outline" size={18} color={semantic.danger} />
+                <Text style={styles.errorBannerText}>{serverError}</Text>
+              </View>
+            )}
 
-          <View style={styles.form}>
-            {/* Email field */}
-            <View style={styles.fieldGroup}>
-              <Text variant="label">Email</Text>
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, Boolean(errors.email) && styles.inputError]}
-                    placeholder="example@edumy.com"
-                    placeholderTextColor="#94A3B8"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-              />
-              {errors.email && (
-                <Text style={styles.fieldError}>{errors.email.message}</Text>
-              )}
-            </View>
-
-            {/* Password field */}
-            <View style={styles.fieldGroup}>
-              <Text variant="label">Mật khẩu</Text>
-              <View style={styles.passwordWrapper}>
+            <View style={styles.form}>
+              {/* Email field */}
+              <View style={styles.fieldGroup}>
+                <Text variant="label">Địa chỉ Email</Text>
                 <Controller
                   control={control}
-                  name="password"
+                  name="email"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      style={[styles.input, styles.passwordInput, Boolean(errors.password) && styles.inputError]}
-                      placeholder="Nhập mật khẩu"
+                      style={[styles.input, Boolean(errors.email) && styles.inputError]}
+                      placeholder="name@edumy.com"
                       placeholderTextColor="#94A3B8"
-                      secureTextEntry={!showPassword}
+                      keyboardType="email-address"
                       autoCapitalize="none"
                       onBlur={onBlur}
                       onChangeText={onChange}
@@ -135,41 +125,66 @@ export default function LoginScreen() {
                     />
                   )}
                 />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color="#64748B"
+                {errors.email && (
+                  <Text style={styles.fieldError}>{errors.email.message}</Text>
+                )}
+              </View>
+
+              {/* Password field */}
+              <View style={styles.fieldGroup}>
+                <View style={styles.labelRow}>
+                  <Text variant="label">Mật khẩu</Text>
+                  <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
+                    <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.passwordWrapper}>
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={[styles.input, styles.passwordInput, Boolean(errors.password) && styles.inputError]}
+                        placeholder="Nhập mật khẩu của bạn"
+                        placeholderTextColor="#94A3B8"
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                    )}
                   />
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={semantic.textMuted}
+                    />
+                  </TouchableOpacity>
+                </View>
+                {errors.password && (
+                  <Text style={styles.fieldError}>{errors.password.message}</Text>
+                )}
+              </View>
+
+              <Button
+                title="Đăng nhập"
+                onPress={handleSubmit(onSubmit)}
+                loading={isPending}
+                style={styles.submitButton}
+              />
+
+              <View style={styles.switchRow}>
+                <Text variant="bodySmall">Chưa có tài khoản Edumy?</Text>
+                <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+                  <Text style={styles.switchLink}>Tạo tài khoản</Text>
                 </TouchableOpacity>
               </View>
-              {errors.password && (
-                <Text style={styles.fieldError}>{errors.password.message}</Text>
-              )}
-            </View>
-
-            <TouchableOpacity
-              style={styles.forgotPasswordButton}
-              onPress={() => router.push('/(auth)/forgot-password')}
-            >
-              <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
-            </TouchableOpacity>
-
-            <Button
-              title="Đăng nhập"
-              onPress={handleSubmit(onSubmit)}
-              loading={isPending}
-              style={styles.submitButton}
-            />
-
-            <View style={styles.switchRow}>
-              <Text variant="bodySmall">Chưa có tài khoản?</Text>
-              <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                <Text style={styles.switchLink}>Đăng ký ngay</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
@@ -184,31 +199,79 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    padding: 20,
     justifyContent: 'center',
   },
-  header: {
-    marginBottom: 28,
+  backToCatalog: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+    paddingVertical: 6,
+  },
+  backToCatalogText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: semantic.textSecondary,
+  },
+  authCard: {
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    padding: 22,
+  },
+  brandBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginBottom: 14,
+  },
+  brandDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: semantic.brandPrimary,
+  },
+  brandBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.brandPrimaryStrong,
+    letterSpacing: 0.7,
+  },
+  title: {
+    fontSize: 23,
+    lineHeight: 29,
   },
   subtitle: {
     marginTop: 6,
-    color: '#64748B',
+    color: semantic.textSecondary,
+    marginBottom: 18,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: semantic.dangerSoft,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: '#FECACA',
+    borderRadius: radius.sm,
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 16,
+    gap: 8,
   },
   errorBannerText: {
-    color: '#991B1B',
-    fontSize: 14,
-    marginLeft: 8,
+    color: semantic.danger,
+    fontSize: 13,
     flex: 1,
+    lineHeight: 18,
   },
   form: {
     gap: 16,
@@ -216,18 +279,23 @@ const styles = StyleSheet.create({
   fieldGroup: {
     gap: 6,
   },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   input: {
-    height: 48,
+    height: 46,
+    backgroundColor: semantic.surfaceCanvas,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
+    borderColor: semantic.borderStrong,
+    borderRadius: radius.md,
     paddingHorizontal: 14,
-    fontSize: 15,
-    backgroundColor: '#ffffff',
-    color: '#0F172A',
+    fontSize: 14,
+    color: semantic.textPrimary,
   },
   inputError: {
-    borderColor: '#EF4444',
+    borderColor: semantic.danger,
   },
   passwordWrapper: {
     position: 'relative',
@@ -239,35 +307,34 @@ const styles = StyleSheet.create({
   eyeButton: {
     position: 'absolute',
     right: 12,
-    height: 48,
-    justifyContent: 'center',
+    padding: 4,
   },
   fieldError: {
-    color: '#EF4444',
+    color: semantic.danger,
     fontSize: 12,
-  },
-  forgotPasswordButton: {
-    alignSelf: 'flex-end',
-    marginTop: -4,
+    marginTop: 2,
   },
   forgotPasswordText: {
-    color: '#0D9488',
-    fontSize: 14,
-    fontWeight: '600',
+    color: semantic.brandPrimary,
+    fontSize: 12,
+    fontWeight: '700',
   },
   submitButton: {
-    marginTop: 8,
+    marginTop: 4,
   },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
     gap: 6,
+    marginTop: 10,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
   },
   switchLink: {
-    color: '#0D9488',
-    fontSize: 13,
+    color: semantic.brandPrimary,
     fontWeight: '700',
+    fontSize: 13,
   },
 });
