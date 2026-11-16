@@ -4,11 +4,13 @@ import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRestoreSession } from '../src/features/auth/hooks';
+import { useForegroundSync } from '../src/hooks/useForegroundSync';
 import { Loading } from '../src/components/ui/Loading';
 import { Screen } from '../src/components/ui/Screen';
 
 function RootNavigator() {
   const { isRestored } = useRestoreSession();
+  useForegroundSync();
 
   if (!isRestored) {
     return (

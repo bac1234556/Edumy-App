@@ -283,6 +283,42 @@ export interface components {
       instructorName?: string;
       issuedAt: string;
     };
+    OrderItem: {
+      courseId: number;
+      title: string;
+      slug: string;
+      thumbnailUrl?: string;
+      unitPrice: number;
+    };
+    OrderPayment: {
+      transactionRef?: string;
+      amount: number;
+      status: string;
+      qrExpiresAt?: string;
+      confirmedAt?: string;
+      createdAt: string;
+    };
+    OrderSummary: {
+      orderCode: string;
+      totalAmount: number;
+      status: 'pending' | 'paid' | 'cancelled';
+      cancelReason?: 'user' | 'replaced' | 'expired';
+      itemCount: number;
+      createdAt: string;
+      paidAt?: string;
+      cancelledAt?: string;
+    };
+    OrderDetail: {
+      orderCode: string;
+      totalAmount: number;
+      status: 'pending' | 'paid' | 'cancelled';
+      cancelReason?: 'user' | 'replaced' | 'expired';
+      createdAt: string;
+      paidAt?: string;
+      cancelledAt?: string;
+      items: components['schemas']['OrderItem'][];
+      payments?: components['schemas']['OrderPayment'][];
+    };
     PageMetadata: {
       size: number;
       number: number;

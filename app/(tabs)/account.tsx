@@ -155,6 +155,17 @@ export default function AccountScreen() {
 
           <TouchableOpacity
             style={styles.menuItem}
+            onPress={() => router.push('/orders' as const)}
+          >
+            <View style={styles.menuItemLeft}>
+              <Ionicons name="receipt-outline" size={22} color="#475569" />
+              <Text style={styles.menuItemText}>Lịch sử đơn hàng</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
             onPress={() => refetch()}
           >
             <View style={styles.menuItemLeft}>
