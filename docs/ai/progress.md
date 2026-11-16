@@ -12,7 +12,7 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 | M03 shell, account, profile | done | pending | tsc: pass · lint: pass · test: 46/46 pass | D-M01 instructor tab, account menu, email unverified banner + 429 countdown, profile & password |
 | M04 catalog & course page | done | 992d01f | tsc: pass · lint: pass · test: 55/55 pass | Table D-M02 resolveCourseAction, catalog filters, reviews, preview player |
 | M05 cart & orders (no payment) | done | ca5b5d1 | tsc: pass · lint: pass · test: 70/70 pass | BR-M01 web checkout redirect, cart reasons, order history & detail, foreground sync. Q-M02 cart URL: ${WEB_BASE_URL}/cart |
-| M06 learning | todo | | | |
+| M06 learning | done | 617cc5c | tsc: pass · lint: pass · test: 75/75 pass | my enrollments, outline, expo-video/webview stream, visit tracking, manual completion & cert toast |
 | M07 Q&A, reviews, certificates | todo | | | G-01 |
 | B02 co-instructor shares (backend repo) | todo | | | |
 | B03 payout ledger (backend repo) | todo | | | |

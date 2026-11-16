@@ -205,6 +205,38 @@ export interface components {
       articleContent?: string;
       completed?: boolean;
     };
+    CourseLearnRoom: {
+      courseId: number;
+      title: string;
+      enrolled: boolean;
+      progress: {
+        completedLessons: number;
+        totalLessons: number;
+        percent: number;
+      } | null;
+      chapters: {
+        id: number;
+        title: string;
+        lessons: {
+          id: number;
+          title: string;
+          contentType: 'video' | 'article';
+          durationSeconds?: number;
+          preview: boolean;
+          completed?: boolean;
+        }[];
+      }[];
+    };
+    LessonCompletionResponse: {
+      lessonId: number;
+      completed: boolean;
+      completedAt?: string;
+      completedLessons: number;
+      totalLessons: number;
+      progressPercent: number;
+      certificateCode?: string;
+      certificateIssued: boolean;
+    };
     Cart: {
       items: components['schemas']['CartItem'][];
       itemCount: number;
