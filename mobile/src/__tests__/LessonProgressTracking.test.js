@@ -157,6 +157,23 @@ describe('completion ticks and progress', () => {
   });
 });
 
+describe('course completed', () => {
+  test('shows a certificate shortcut once the course is 100% done', async () => {
+    fetchResume.mockResolvedValue({ ...RESUME, progressPercent: 100, completedLessons: 2, completedLessonIds: [11, 12] });
+    const onCertificate = jest.fn();
+    const view = renderPlayer({ onCertificate });
+    expect(await view.findByTestId('player-course-done')).toBeTruthy();
+    fireEvent.press(view.getByTestId('player-certificate'));
+    expect(onCertificate).toHaveBeenCalledWith(7);
+  });
+
+  test('no certificate shortcut while the course is not finished', async () => {
+    const view = renderPlayer({ onCertificate: jest.fn() });
+    await view.findByTestId('player-progress');
+    expect(view.queryByTestId('player-certificate')).toBeNull();
+  });
+});
+
 describe('saving the watch position', () => {
   test('saves every 10 seconds while playing', async () => {
     await openAndReady();

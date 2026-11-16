@@ -80,6 +80,13 @@
 			<version>${springdoc.version}</version>
 		</dependency>
 
+		<!-- PDF chứng chỉ (W9-D3) -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>3.0.5</version>
+		</dependency>
+
 		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>

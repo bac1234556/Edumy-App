@@ -3,6 +3,7 @@ package com.edumy.service;
 import com.edumy.dto.learning.ProgressResponse;
 import com.edumy.dto.learning.ResumeResponse;
 import com.edumy.dto.learning.SaveProgressRequest;
+import com.edumy.entity.Certificate;
 import com.edumy.entity.Enrollment;
 import com.edumy.entity.Lesson;
 import com.edumy.entity.LessonProgress;
@@ -38,6 +39,7 @@ public class LearningProgressService {
     private final LessonRepository lessonRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
+    private final CertificateService certificateService;
 
     @Transactional
     public ProgressResponse saveProgress(Long userId, Long lessonId, SaveProgressRequest request) {
@@ -67,6 +69,7 @@ public class LearningProgressService {
         lessonProgressRepository.saveAndFlush(progress);
 
         Totals totals = recalculate(enrollment, courseId);
+        Certificate certificate = certificateService.issueIfEligible(enrollment);
         return ProgressResponse.builder()
                 .lessonId(lessonId)
                 .courseId(courseId)
@@ -76,6 +79,7 @@ public class LearningProgressService {
                 .completedLessons(totals.completed())
                 .totalLessons(totals.total())
                 .courseCompleted(enrollment.getProgressPercent() >= 100)
+                .certificateCode(certificate != null ? certificate.getCode() : null)
                 .build();
     }
 

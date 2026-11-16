@@ -9,6 +9,7 @@ export default function Learn() {
       courseId={Number(courseId)}
       initialLessonId={lessonId ? Number(lessonId) : null}
       onBack={() => router.back()}
+      onCertificate={(id) => router.push({ pathname: '/(student)/certificate/[courseId]', params: { courseId: id } })}
       onBuy={(id) => router.replace({ pathname: '/(student)/courses/[id]', params: { id } })}
     />
   );

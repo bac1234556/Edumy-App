@@ -26,4 +26,7 @@ public class ProgressResponse {
 
     @Schema(description = "true khi đã hoàn thành 100% khóa học")
     private Boolean courseCompleted;
+
+    @Schema(description = "Mã chứng chỉ, có khi khóa học đã hoàn thành 100%", example = "EDUMY-2026-K7M2QX4P")
+    private String certificateCode;
 }

@@ -140,7 +140,7 @@ function LessonVideo({ url, lessonId, startPositionSec = 0, trackProgress = fals
   );
 }
 
-export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy }) {
+export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy, onCertificate }) {
   const course = useQuery({ queryKey: ['player-course', courseId], queryFn: () => fetchCourseCurriculum(courseId) });
   const lessons = useMemo(() => flattenLessons(course.data?.curriculum), [course.data]);
   const [selectedId, setSelectedId] = useState(initialLessonId ? Number(initialLessonId) : null);
@@ -273,6 +273,14 @@ export function CoursePlayerScreen({ courseId, initialLessonId, onBack, onBuy })
           <Text variant="bodySmall" style={{ paddingHorizontal: 16 }} testID="player-progress">
             Tiến độ: {resume.data.progressPercent || 0}% · {resume.data.completedLessons || 0}/{resume.data.totalLessons || lessons.length} bài
           </Text>
+        )}
+        {resume.isSuccess && resume.data.progressPercent >= 100 && onCertificate && (
+          <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text testID="player-course-done" style={{ color: '#16A34A' }}>Bạn đã hoàn thành khóa học!</Text>
+            <Button compact mode="contained-tonal" testID="player-certificate" onPress={() => onCertificate(courseId)}>
+              Xem chứng chỉ
+            </Button>
+          </View>
         )}
         <Divider style={{ marginTop: 8 }} />
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
