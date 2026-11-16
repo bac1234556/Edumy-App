@@ -1,118 +1,98 @@
-# Edumy — Nền Tảng Học Trực Tuyến Trên Android 📱
+# Edumy Mobile App 📱
+
+Ứng dụng di động học trực tuyến **Edumy Mobile** xây dựng trên nền tảng **React Native (Expo SDK 51+)** và **Expo Router**, kết nối đồng bộ 100% thời gian thực với hệ thống máy chủ trung tâm **Spring Boot Modulith** và cơ sở dữ liệu **SQL Server**.
 
 [![React Native](https://img.shields.io/badge/Mobile-React%20Native%20%7C%20Expo-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
-[![Spring Boot](https://img.shields.io/badge/Backend-Spring%20Boot%203-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/Database-MySQL%208-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Docker](https://img.shields.io/badge/Container-Docker%20Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Cloudinary](https://img.shields.io/badge/Media-Cloudinary-3448C5?logo=cloudinary&logoColor=white)](https://cloudinary.com/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript%205-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TanStack Query](https://img.shields.io/badge/State-TanStack%20Query-FF4154?logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![Tests](https://img.shields.io/badge/Jest-106%20passed-brightgreen?logo=jest)](https://jestjs.io/)
 
 ---
 
-## 📌 Giới thiệu dự án
+## 📌 Tổng quan kiến trúc & Tính năng
 
-**Edumy** là ứng dụng di động học trực tuyến lấy cảm hứng từ mô hình Udemy, hỗ trợ 3 nhóm đối tượng người dùng chính:
-- 👨‍🎓 **Student (Học viên):** Khám phá, tìm kiếm và lọc khóa học theo danh mục; lưu wishlist; thanh toán khóa học (mock / VNPay sandbox); theo dõi tiến độ bài học qua video player; đặt câu hỏi thảo luận (Q&A); viết đánh giá và nhận chứng chỉ hoàn thành (PDF).
-- 👨‍🏫 **Instructor (Giảng viên):** Tạo và quản lý khóa học (Khóa học → Chương học → Bài giảng video); tải video trực tiếp lên Cloudinary; gửi khóa học phê duyệt; theo dõi doanh thu và thống kê học viên.
-- 👨‍💼 **Admin (Quản trị viên):** Kiểm duyệt khóa học trước khi xuất bản; quản lý tài khoản người dùng (khóa/mở khóa); quản lý danh mục; theo dõi tổng quan các chỉ số toàn hệ thống.
+- **Một nguồn dữ liệu chân thực (Single Source of Truth):** 1 Database SQL Server, 1 Backend Spring Boot (`port 5000`), chia sẻ dữ liệu liên thông giữa Web SPA (`port 3000`) và Mobile App.
+- **Xác thực bảo mật cao (NFR-M01, NFR-M02):** Access token chỉ lưu trên RAM (Zustand store), Refresh token lưu an toàn trong Keychain / Keystore (`expo-secure-store`) với cơ chế quay vòng (token rotation) và phát hiện tấn công tái sử dụng (reuse detection). Không dùng AsyncStorage cho thông tin nhạy cảm.
+- **Tuân thủ chính sách chợ ứng dụng (BR-M01):** Mobile **không thực hiện thanh toán in-app**. Giỏ hàng đồng bộ hai chiều, thanh toán chuyển hướng an toàn về Web `${EXPO_PUBLIC_WEB_BASE_URL}/cart`.
+- **Phòng học & Tiến độ (Learning & Progress):** Phát video chuẩn qua `expo-video` (fallback WebView), ghi nhận lượt xem (`visit`), đánh dấu hoàn thành thủ công (D-33), chúc mừng và tải chứng chỉ PDF có chữ ký số.
+- **Hỏi & Đáp (Q&A) & Đánh giá (Review):** Diễn đàn trao đổi theo từng bài học/khóa học, đánh dấu câu hỏi đã giải quyết, đánh giá 1–5 sao kèm nhận xét.
+- **Chế độ Doanh thu Giảng viên (Instructor Money Mode - Phân hệ 06):**
+  - Tab Giảng viên tự động bật dựa trên vai trò hoặc khi phát sinh doanh thu (BR-53).
+  - Bảng tổng kết số dư: Khả dụng, Chờ đáo hạn, Đang rút, Đã rút và Tổng thu nhập.
+  - Phân tích chi tiết theo khóa học (Giảng viên chính / Đồng giảng viên) và theo tháng.
+  - Quản lý tài khoản nhận tiền (che chỉ hiện 4 số cuối, bảo mật bằng mật khẩu tài khoản).
+  - Tạo yêu cầu rút tiền (tối thiểu 100.000 đ) với các chip nhanh, xử lý đầy đủ các mã lỗi máy chủ và hỗ trợ hủy yêu cầu đang chờ xử lý.
 
 ---
 
-## 🏗️ Cấu trúc Monorepo
+## 🛠️ Yêu cầu môi trường & Cài đặt
 
-Dự án áp dụng mô hình kiến trúc **Monorepo** chia theo các tầng độc lập:
+### 1. Yêu cầu hệ thống
+- **Node.js:** v18 trở lên (khuyến nghị v20+ LTS).
+- **Trình quản lý gói:** `npm` (đi kèm Node).
+- **Backend Edumy:** Spring Boot chạy trên `http://localhost:5000/api/v1` (profile `dev`).
 
-```text
-Edumy-App/
-├── backend/                  # Spring Boot RESTful API (Java 21, Spring Security, JPA, Flyway)
-├── mobile/                   # React Native (Expo Router, React Native Paper, TanStack Query)
-├── docs/                     # Toàn bộ tài liệu kỹ thuật, kế hoạch và tài nguyên dự án
-│   ├── PROJECT_PLAN.md       # Kế hoạch chi tiết 4 tuần (D1 - D28)
-│   ├── FEATURES_AND_VISION.md# Tổng quan chức năng & Tính ứng dụng thực tế
-│   ├── scope-and-backlog.md  # Khóa phạm vi MVP & Quản lý Backlog (W7-T1)
-│   ├── ERD.md & erd.png      # Sơ đồ CSDL tổng thể (MySQL 8, DBML) (W7-T1)
-│   ├── wireframes.md & .png  # Thiết kế Wireframe giao diện 5 modules (W7-T1)
-│   ├── api-conventions.md    # Quy ước chuẩn API RESTful & Response Wrapper (W7-T1)
-│   └── *.docx                # File Word kế hoạch gốc
-└── .github/                  # GitHub Actions CI, Pull Request Template & Issue Templates
+### 2. Cài đặt các gói phụ thuộc
+```bash
+cd c:\Users\bacle\Downloads\Edumy-App
+npm install
+```
+
+### 3. Cấu hình biến môi trường (`.env`)
+Tạo hoặc cập nhật tệp `.env` tại thư mục gốc:
+```env
+# URL kết nối tới Backend Spring Boot
+# Đối với Android Emulator: dùng 10.0.2.2 thay vì localhost
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:5000/api/v1
+
+# Đối với thiết bị vật lý qua mạng LAN:
+# EXPO_PUBLIC_API_BASE_URL=http://192.168.1.xxx:5000/api/v1
+
+# URL của website Edumy (dùng cho thanh toán giỏ hàng, xác thực chứng chỉ)
+EXPO_PUBLIC_WEB_BASE_URL=http://localhost:3000
 ```
 
 ---
 
-## 🛠️ Công nghệ sử dụng (Tech Stack)
+## 🚀 Khởi chạy ứng dụng
 
-### 📱 Mobile App (Android)
-- **Framework:** React Native + Expo SDK 51+ (Expo Router file-based routing)
-- **UI System:** React Native Paper (Material Design)
-- **Data & State:** Axios, TanStack Query (React Query) cho server state, Zustand cho authentication state
-- **Media Player:** `expo-video` cho luồng phát video streaming
-- **Build tool:** EAS Build / Expo Prebuild
+### 1. Khởi chạy Expo Dev Server
+```bash
+npx expo start
+```
 
-### 💻 Backend API
-- **Nền tảng:** Java 21 + Spring Boot 3.3.x / 3.4.x
-- **Bảo mật:** Spring Security 6 + JWT (jjwt) không trạng thái (Stateless Authentication)
-- **Truy xuất dữ liệu:** Spring Data JPA + JPA Specification (hỗ trợ dynamic search/filter đa tiêu chí)
-- **Cơ sở dữ liệu:** MySQL 8 chạy qua Docker Compose, quản lý migration phiên bản bằng **Flyway**
-- **Tài liệu API:** Springdoc-OpenAPI (Swagger UI) tự động sinh tài liệu
-- **Sinh file:** OpenPDF tạo chứng chỉ tốt nghiệp tự động
-
-### ☁️ Dịch vụ đám mây & Tiện ích
-- **Lưu trữ đa phương tiện:** Cloudinary (Signed Direct Upload từ Mobile)
-- **Cổng thanh toán:** VNPay Sandbox (kèm chế độ Mock Checkout dự phòng)
-- **CI/CD:** GitHub Actions (Build Maven + Lint JavaScript)
+### 2. Chạy trên thiết bị
+- **Android Emulator:** Nhấn phím `a` trong terminal sau khi đã mở sẵn AVD trong Android Studio.
+- **iOS Simulator (macOS):** Nhấn phím `i`.
+- **Thiết bị thật:** Cài đặt ứng dụng **Expo Go** trên điện thoại, quét mã QR hiển thị trong terminal (đảm bảo điện thoại và máy tính cùng mạng Wi-Fi và cấu hình IP LAN).
 
 ---
 
-## 👥 Phân công nhiệm vụ (Mô hình Vertical Slice)
+## 🧪 Kiểm thử & Đảm bảo chất lượng
 
-Mỗi thành viên phụ trách trọn vẹn một module end-to-end (Database → API → Giao diện):
+Dự án áp dụng bộ kiểm thử toàn diện với **0 lỗi biên dịch, 0 cảnh báo lint và 100% test pass**:
 
-| Thành viên | Phân hệ Module | Trách nhiệm chính |
-| :--- | :--- | :--- |
-| **Member A** | **Platform & Auth (Tech Lead)** | Hệ thống xác thực JWT, hạ tầng Monorepo, Docker Compose, CI/CD, đóng gói APK, cấu hình chung |
-| **Member B** | **Catalog & Review** | Trang chủ, danh mục, tìm kiếm & bộ lọc khóa học, Wishlist, Đánh giá & Xếp hạng (Review/Rating) |
-| **Member C** | **Instructor Studio** | Quản lý khóa học/chương/bài học, tải video lên Cloudinary, trình duyệt khóa, thống kê giảng viên |
-| **Member D** | **Enrollment, Learning & Certificate** | Giỏ hàng/đơn hàng, Mock Checkout & VNPay, Trình phát video bài học, cấp chứng chỉ PDF |
-| **Member E** | **Admin & Community** | Hàng chờ duyệt khóa học, quản lý người dùng, quản lý danh mục, Q&A bài học, thông báo in-app |
+```bash
+# 1. Kiểm tra an toàn kiểu dữ liệu TypeScript (Strict mode)
+npm run typecheck
 
----
+# 2. Kiểm tra quy chuẩn mã nguồn ESLint
+npm run lint
 
-## 📅 Lộ trình thực hiện 4 tuần (D1 — D28)
+# 3. Chạy toàn bộ 106 bài kiểm thử đơn vị với Jest
+npm test
+```
 
-- **Tuần 7 (D1 – D7) · Foundation:** Khởi tạo kiến trúc, thiết lập DB schema, đăng nhập/đăng ký thật, khung UI mock.
-- **Tuần 8 (D8 – D14) · Core Flow:** Thông luồng Happy Path (Tạo khóa → Duyệt khóa → Mua khóa → Học video).
-- **Tuần 9 (D15 – D21) · Extended Features:** Review & Rating, Q&A, Chứng chỉ PDF, Dashboard thống kê. *(D21: Feature Freeze)*.
-- **Tuần 10 (D22 – D28) · Stabilize & Release:** Bug bash, tích hợp VNPay Sandbox, hoàn thiện báo cáo và đóng gói APK Release v1.0. *(D25: Code Freeze)*.
-
-Chi tiết phân công từng ngày và từng thành viên xem tại:
-👉 **[Kế Hoạch Dự Án Chi Tiết (docs/PROJECT_PLAN.md)](docs/PROJECT_PLAN.md)**  
-👉 **[Hệ Thống Chức Năng & Tính Ứng Dụng Thực Tế (docs/FEATURES_AND_VISION.md)](docs/FEATURES_AND_VISION.md)**
+### Kết quả kiểm thử hiện tại:
+- **Test Suites:** 16 passed, 16 total
+- **Tests:** 106 passed, 106 total
+- **Snapshots:** 0
+- **Thời gian chạy:** ~4.5s
 
 ---
 
-## 💡 Giá trị & Tính ứng dụng thực tế
-
-- 🎓 **Học viên:** Tự học linh hoạt mọi lúc mọi nơi, ghi nhớ tiến độ bài học, nhận chứng chỉ hoàn thành xác thực.
-- 👨‍🏫 **Giảng viên:** Phân phối nội dung số hóa rộng rãi, tạo nguồn thu nhập thụ động bền vững từ tri thức.
-- 🏛️ **Cơ sở đào tạo:** Chuyển đổi số mô hình học kết hợp (Blended Learning), quản lý nội dung và học viên tập trung.
-- 🏢 **Doanh nghiệp:** Chuẩn hóa quy trình Onboarding nhân sự và bồi dưỡng chuyên môn liên tục (Upskilling) tiết kiệm chi phí.
-- 💼 **Đơn vị vận hành:** Mô hình kinh doanh thương mại điện tử khóa học số, phân tích dữ liệu học tập (Learning Analytics).
-
----
-
-## 📜 Quy ước làm việc trên GitHub
-
-1. **Quy tắc nhánh (Git Flow):**
-   - `main`: Chỉ chứa mã nguồn các bản release đã kiểm thử đạt chuẩn.
-   - `develop`: Nhánh tích hợp chính.
-   - Nhánh tính năng / sửa lỗi: `feature/<issue-number>-<slug>` hoặc `fix/<issue-number>-<slug>`.
-2. **Quy chuẩn commit:** Tuân thủ [Conventional Commits](https://www.conventionalcommits.org/):
-   - `feat(catalog): add course search by keyword and category API`
-   - `fix(auth): handle expired refresh token gracefully in axios interceptor`
-3. **Quy trình Pull Request (PR):**
-   - Mọi commit phải thông qua PR có gắn `Closes #<issue_number>`.
-   - Mỗi PR phải có tối thiểu **1 Approve** từ vòng review chéo trước khi merge vào `develop`.
-4. **Tiêu chuẩn hoàn thành (Definition of Done - DoD):**
-   - Code đã merge vào develop qua PR được approve.
-   - API có tài liệu trên Swagger, validate dữ liệu đầy đủ.
-   - Màn hình Mobile có đủ 3 trạng thái: *Loading*, *Empty Data*, *Error*.
-   - Đã kiểm thử trực tiếp trên thiết bị Android hoặc Emulator.
+## 📚 Tài liệu chi tiết
+- **Kịch bản Demo liên thông 3 phân hệ:** [`docs/demo-script.md`](docs/demo-script.md)
+- **Bảng đối chiếu kiểm toán tiêu chí chấp nhận (AC-M01 … AC-M18):** [`docs/ai/ac-checklist.md`](docs/ai/ac-checklist.md)
+- **Hợp đồng API chi tiết (API Contract):** [`docs/ai/api-contract.md`](docs/ai/api-contract.md)
+- **Tiến độ triển khai (Progress Tracker):** [`docs/ai/progress.md`](docs/ai/progress.md)

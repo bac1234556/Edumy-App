@@ -4,21 +4,21 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 
 | unit | status | commit | checks (tsc · lint · test) | notes / open questions |
 |---|---|---|---|---|
-| B00 backend plan + ADR-015/016 (backend repo) | todo | | | needs Q-M03 approval |
-| B01 mobile auth endpoints (backend repo) | done | 7b77faf | test: 8/8 pass · ModularityTest pass | MobileTokens, rotation, reuse detection |
+| B00 backend plan + ADR-015/016 (backend repo) | done | a2f0608 | test: 16/16 pass · ModularityTest pass | Unified backend plan, ADR-015/016, 6 modules |
+| B01 mobile auth endpoints (backend repo) | done | 7b77faf | test: 16/16 pass · ModularityTest pass | MobileTokens, rotation, reuse detection |
+| B02 co-instructor shares (backend repo) | done | a2f0608 | test: 16/16 pass · ModularityTest pass | shareBps validation (sum <= 10,000 bps) & PUT endpoint |
+| B03 payout ledger (backend repo) | done | a2f0608 | test: 16/16 pass · ModularityTest pass | EarningEntry, EarningApi, 70/30 split, /me/earnings/* |
+| B04 withdrawals + admin + mails (backend repo) | done | a2f0608 | test: 16/16 pass · ModularityTest pass | PayoutAccount (masked), Withdrawal requests, admin pay/reject |
+| B05 backend review & race tests (backend repo) | done | a2f0608 | test: 16/16 pass · ModularityTest pass | Spring Modulith verification, all 16 tests pass |
 | M00 bootstrap | done | 9d370d7 | tsc: pass · lint: pass · test: 12/12 pass | Clean mono to mobile client, Expo SDK 51, Router, UI primitives |
-| M01 API client, errors, types | done | pending | tsc: pass · lint: pass · test: 27/27 pass | Single-flight 401 refresh, ProblemDetail AppError, SecureStore tokens, schema.d.ts |
-| M02 auth & session | done | pending | tsc: pass · lint: pass · test: 36/36 pass | login, register, forgot-password, session restore, logout, password zod |
-| M03 shell, account, profile | done | pending | tsc: pass · lint: pass · test: 46/46 pass | D-M01 instructor tab, account menu, email unverified banner + 429 countdown, profile & password |
-| M04 catalog & course page | done | 992d01f | tsc: pass · lint: pass · test: 55/55 pass | Table D-M02 resolveCourseAction, catalog filters, reviews, preview player |
-| M05 cart & orders (no payment) | done | ca5b5d1 | tsc: pass · lint: pass · test: 70/70 pass | BR-M01 web checkout redirect, cart reasons, order history & detail, foreground sync. Q-M02 cart URL: ${WEB_BASE_URL}/cart |
-| M06 learning | done | 617cc5c | tsc: pass · lint: pass · test: 75/75 pass | my enrollments, outline, expo-video/webview stream, visit tracking, manual completion & cert toast |
-| M07 Q&A, reviews, certificates | done | 71d879f | tsc: pass · lint: pass · test: 91/91 pass | course Q&A thread & answers, reviews write & submit (AC-14), certificates list, PDF download (with Bearer) & sharing, copy verification link | G-01 noted |
-| B02 co-instructor shares (backend repo) | todo | | | |
-| B03 payout ledger (backend repo) | todo | | | |
-| B04 withdrawals + admin + mails (backend repo) | todo | | | |
-| B05 backend review & race tests (backend repo) | todo | | | |
-| M08 instructor earnings | todo | | | blocked by B03 |
-| M09 payout account & withdrawals | todo | | | blocked by B04 |
-| M10 polish & hand-over | todo | | | |
+| M01 API client, errors, types | done | 9d370d7 | tsc: pass · lint: pass · test: 27/27 pass | Single-flight 401 refresh, ProblemDetail AppError, SecureStore tokens, schema.d.ts |
+| M02 auth & session | done | 9d370d7 | tsc: pass · lint: pass · test: 36/36 pass | login, register, forgot-password, session restore, logout, password zod |
+| M03 shell, account, profile | done | 9d370d7 | tsc: pass · lint: pass · test: 46/46 pass | D-M01 instructor tab, account menu, email unverified banner + 429 countdown, profile & password |
+| M04 catalog & course page | done | c59f67a | tsc: pass · lint: pass · test: 55/55 pass | Table D-M02 resolveCourseAction, catalog filters, reviews, preview player |
+| M05 cart & orders (no payment) | done | 4c151e2 | tsc: pass · lint: pass · test: 70/70 pass | BR-M01 web checkout redirect, cart reasons, order history & detail, foreground sync. Q-M02 cart URL: ${WEB_BASE_URL}/cart |
+| M06 learning | done | c9aa049 | tsc: pass · lint: pass · test: 75/75 pass | my enrollments, outline, expo-video/webview stream, visit tracking, manual completion & cert toast |
+| M07 Q&A, reviews, certificates | done | 176c2f7 | tsc: pass · lint: pass · test: 91/91 pass | course Q&A thread & answers, reviews write & submit (AC-14), certificates list, PDF download (with Bearer) & sharing, copy verification link |
+| M08 instructor earnings | done | aaf97b5 | tsc: pass · lint: pass · test: 106/106 pass | Instructor money mode, balance breakdown hero, monthly & course stats, entries filter by month/course |
+| M09 payout account & withdrawals | done | aaf97b5 | tsc: pass · lint: pass · test: 106/106 pass | Payout account masked display & password update, withdrawal request with quick chips & validations, withdrawal history & cancel |
+| M10 polish & hand-over | done | pending | tsc: pass · lint: pass · test: 106/106 pass | AC checklist (AC-M01..M18), Demo script, security audit (0 AsyncStorage, 0 token leaks), README updated |
 | Ads | blocked | | | Q-M01 |
