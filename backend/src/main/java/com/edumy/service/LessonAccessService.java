@@ -1,6 +1,8 @@
 package com.edumy.service;
 
 import com.edumy.dto.learning.LessonPlaybackResponse;
+import com.edumy.entity.Course;
+import com.edumy.entity.CourseStatus;
 import com.edumy.entity.Lesson;
 import com.edumy.entity.Section;
 import com.edumy.exception.ForbiddenException;
@@ -28,17 +30,21 @@ public class LessonAccessService {
     private final EnrollmentRepository enrollmentRepository;
 
     public LessonPlaybackResponse getLesson(Long userId, Long courseId, Long lessonId) {
-        if (!courseRepository.existsById(courseId)) {
-            throw new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId);
-        }
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài học với ID: " + lessonId));
         Section section = sectionRepository.findById(lesson.getSectionId())
                 .filter(s -> courseId.equals(s.getCourseId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Bài học không thuộc khóa học này"));
 
+        boolean enrolled = enrollmentRepository.existsByUserIdAndCourseId(userId, courseId);
+        // Khóa chưa xuất bản chỉ dành cho người đã ghi danh: không để lộ cả bài xem thử (API công khai cũng chỉ trả khóa PUBLISHED).
+        if (!enrolled && course.getStatus() != CourseStatus.PUBLISHED) {
+            throw new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId);
+        }
         boolean preview = Boolean.TRUE.equals(lesson.getIsPreview());
-        if (!preview && !enrollmentRepository.existsByUserIdAndCourseId(userId, courseId)) {
+        if (!preview && !enrolled) {
             throw new ForbiddenException("Bạn cần mua khóa học để xem bài học này");
         }
 

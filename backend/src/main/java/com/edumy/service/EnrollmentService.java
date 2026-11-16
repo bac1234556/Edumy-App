@@ -1,13 +1,16 @@
 package com.edumy.service;
 
+import com.edumy.config.PaymentProperties;
 import com.edumy.dto.learning.CreateOrderRequest;
 import com.edumy.dto.learning.EnrollmentResponse;
 import com.edumy.dto.learning.OrderResponse;
 import com.edumy.entity.*;
 import com.edumy.exception.ConflictException;
+import com.edumy.exception.ForbiddenException;
 import com.edumy.exception.ResourceNotFoundException;
 import com.edumy.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,20 +40,27 @@ public class EnrollmentService {
     private final OrderRepository orderRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
+    private final PaymentProperties paymentProperties;
+    private final VnpayGateway vnpayGateway;
 
     @Transactional
-    public OrderResponse checkout(Long userId, CreateOrderRequest request) {
+    public OrderResponse checkout(Long userId, CreateOrderRequest request, String clientIp) {
+        requireConfiguredMethod(request.getPaymentMethod());
+        String appRedirect = resolveAppRedirect(request.getReturnUri());
         Course course = courseRepository.findByIdAndStatus(request.getCourseId(), CourseStatus.PUBLISHED)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy khóa học đang mở bán với ID: " + request.getCourseId()));
 
+        if (userId.equals(course.getInstructorId())) {
+            throw new ForbiddenException("Bạn không thể mua khóa học do chính mình giảng dạy");
+        }
         if (enrollmentRepository.existsByUserIdAndCourseId(userId, course.getId())) {
             throw new ConflictException("Bạn đã sở hữu khóa học này");
         }
 
         BigDecimal price = course.getPrice() == null ? BigDecimal.ZERO : course.getPrice();
         if (price.signum() == 0) {
-            Enrollment enrollment = enrollmentRepository.saveAndFlush(Enrollment.builder()
+            Enrollment enrollment = enroll(Enrollment.builder()
                     .userId(userId).courseId(course.getId()).build());
             return OrderResponse.builder()
                     .courseId(course.getId())
@@ -59,6 +69,28 @@ public class EnrollmentService {
                     .status("FREE")
                     .enrollmentId(enrollment.getId())
                     .enrolledAt(enrollment.getCreatedAt())
+                    .build();
+        }
+
+        if (paymentProperties.isVnpay()) {
+            // Chưa ghi danh: chỉ tạo đơn PENDING, ghi danh khi VNPay báo thành công (Return URL / IPN đã xác minh checksum).
+            Order pending = orderRepository.saveAndFlush(Order.builder()
+                    .userId(userId)
+                    .courseId(course.getId())
+                    .amount(price)
+                    .status(OrderStatus.PENDING)
+                    .paymentMethod(PaymentMethod.VNPAY)
+                    .txnRef(newTxnRef())
+                    .build());
+            return OrderResponse.builder()
+                    .orderId(pending.getId())
+                    .txnRef(pending.getTxnRef())
+                    .courseId(course.getId())
+                    .courseTitle(course.getTitle())
+                    .amount(pending.getAmount())
+                    .status(OrderStatus.PENDING.name())
+                    .paymentMethod(PaymentMethod.VNPAY.name())
+                    .paymentUrl(vnpayGateway.buildPaymentUrl(pending, clientIp, appRedirect))
                     .build();
         }
 
@@ -76,7 +108,7 @@ public class EnrollmentService {
         order.setPaidAt(LocalDateTime.now());
         orderRepository.save(order);
 
-        Enrollment enrollment = enrollmentRepository.saveAndFlush(Enrollment.builder()
+        Enrollment enrollment = enroll(Enrollment.builder()
                 .userId(userId).courseId(course.getId()).orderId(order.getId()).build());
 
         return OrderResponse.builder()
@@ -91,6 +123,35 @@ public class EnrollmentService {
                 .enrollmentId(enrollment.getId())
                 .enrolledAt(enrollment.getCreatedAt())
                 .build();
+    }
+
+    /**
+     * Hai lần bấm thanh toán gần như đồng thời cùng qua bước kiểm tra "đã sở hữu"; lần chậm hơn vi phạm
+     * ràng buộc UNIQUE (user, course). Báo đúng lỗi "đã sở hữu" thay vì lỗi hệ thống chung; giao dịch bị hoàn tác nên không mất đơn thừa.
+     */
+    private Enrollment enroll(Enrollment enrollment) {
+        try {
+            return enrollmentRepository.saveAndFlush(enrollment);
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("Bạn đã sở hữu khóa học này");
+        }
+    }
+
+    /** Phương thức gửi lên (nếu có) phải trùng cổng đang bật, để không dùng MOCK qua mặt thanh toán thật. */
+    private void requireConfiguredMethod(String requested) {
+        if (requested != null && !requested.equalsIgnoreCase(paymentProperties.providerName())) {
+            throw new IllegalArgumentException("Phương thức thanh toán " + requested + " hiện không khả dụng");
+        }
+    }
+
+    private String resolveAppRedirect(String returnUri) {
+        if (returnUri == null || returnUri.isBlank()) {
+            return paymentProperties.getAppRedirect();
+        }
+        if (!paymentProperties.isAllowedRedirect(returnUri)) {
+            throw new IllegalArgumentException("Địa chỉ quay về app không hợp lệ");
+        }
+        return returnUri;
     }
 
     public List<EnrollmentResponse> getMyCourses(Long userId) {

@@ -56,6 +56,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/health", "/swagger-ui", "/swagger-ui/**", "/swagger-ui.html",
                                 "/v3/api-docs/**", "/v3/api-docs.yaml", "/error").permitAll()
+                        // VNPay gọi Return URL (trình duyệt) và IPN (server) không có JWT; bảo vệ bằng checksum HMAC-SHA512.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/payments/vnpay/return", "/api/v1/payments/vnpay/ipn",
+                                "/api/payments/vnpay/return", "/api/payments/vnpay/ipn").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/refresh",
                                 "/api/auth/logout", "/api/v1/auth/register", "/api/v1/auth/login",
                                 "/api/v1/auth/refresh-token", "/api/auth/refresh-token", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()

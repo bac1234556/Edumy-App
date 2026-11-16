@@ -121,6 +121,33 @@ public class LessonAccessControllerTest {
     }
 
     @Test
+    @DisplayName("Khóa chưa xuất bản: bài xem thử không được lộ cho người chưa ghi danh (404)")
+    void unpublishedCoursePreviewIsNotExposed() throws Exception {
+        Long draftCourse = courseRepository.save(Course.builder().instructorId(1L).categoryId(1L).title("Khóa nháp")
+                .price(new BigDecimal("50000.00")).status(CourseStatus.DRAFT).build()).getId();
+        Long draftSection = sectionRepository.save(Section.builder().courseId(draftCourse).title("C1").build()).getId();
+        Long draftPreview = lessonRepository.save(Lesson.builder().sectionId(draftSection).title("Xem thử")
+                .videoUrl(VIDEO).isPreview(true).build()).getId();
+
+        mockMvc.perform(get(url(draftCourse, draftPreview)).with(student()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("Đã ghi danh vẫn xem được bài của khóa sau khi khóa không còn ở trạng thái xuất bản")
+    void enrolledStudentKeepsAccessIfCourseIsUnpublishedLater() throws Exception {
+        enrollmentRepository.save(Enrollment.builder().userId(userId).courseId(courseId).build());
+        Course course = courseRepository.findById(courseId).orElseThrow();
+        course.setStatus(CourseStatus.PENDING);
+        courseRepository.save(course);
+
+        mockMvc.perform(get(url(courseId, lockedLessonId)).with(student()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.videoUrl").value(VIDEO));
+    }
+
+    @Test
     @DisplayName("Endpoint có trên Swagger")
     void documentedOnSwagger() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))

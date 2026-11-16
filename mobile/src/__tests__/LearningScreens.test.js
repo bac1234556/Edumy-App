@@ -3,7 +3,10 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
-import { checkoutCourse, fetchCheckoutCourse, fetchMyCourses } from '../api/learning';
+import * as WebBrowser from 'expo-web-browser';
+import {
+  checkoutCourse, fetchCheckoutCourse, fetchMyCourses, fetchOrder, fetchPaymentProvider,
+} from '../api/learning';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';
 import { PaymentResultScreen } from '../screens/PaymentResultScreen';
@@ -12,8 +15,12 @@ import { ENROLLMENTS_MOCK } from '../mock/enrollmentsMock';
 
 jest.mock('../api/learning', () => ({
   MY_COURSES_KEY: ['learning', 'my-courses'],
+  PROVIDER_KEY: ['payments', 'provider'],
+  paymentReturnUri: () => 'edumy://payment-result',
   fetchCheckoutCourse: jest.fn(), checkoutCourse: jest.fn(), fetchMyCourses: jest.fn(),
+  fetchOrder: jest.fn(), fetchPaymentProvider: jest.fn(),
 }));
+jest.mock('expo-web-browser', () => ({ openAuthSessionAsync: jest.fn() }));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(), setItemAsync: jest.fn(), deleteItemAsync: jest.fn(),
 }));
@@ -32,6 +39,8 @@ const PAID_RESULT = {
 
 beforeEach(() => {
   jest.useFakeTimers();
+  fetchPaymentProvider.mockResolvedValue({ provider: 'mock' });
+  WebBrowser.openAuthSessionAsync.mockResolvedValue({ type: 'success' });
 });
 afterEach(() => {
   cleanup();
@@ -57,7 +66,7 @@ describe('CheckoutScreen', () => {
     const view = renderWithProviders(<CheckoutScreen courseId={1} onSuccess={onSuccess} />);
     fireEvent.press(await view.findByTestId('checkout-pay'));
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(PAID_RESULT));
-    expect(checkoutCourse).toHaveBeenCalledWith({ courseId: 1, paymentMethod: 'MOCK' });
+    expect(checkoutCourse).toHaveBeenCalledWith({ courseId: 1 });
   });
 
   test('free course offers free enrollment without payment methods', async () => {
@@ -92,7 +101,98 @@ describe('CheckoutScreen', () => {
   });
 });
 
+describe('CheckoutScreen with VNPay', () => {
+  const VNPAY_PENDING = { orderId: 7, txnRef: 'EDU777', courseId: 1, status: 'PENDING', paymentMethod: 'VNPAY',
+    paymentUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_TxnRef=EDU777&vnp_SecureHash=abc' };
+  const VNPAY_PAID = { ...PAID_RESULT, txnRef: 'EDU777', paymentMethod: 'VNPAY', status: 'PAID' };
+
+  beforeEach(() => {
+    fetchPaymentProvider.mockResolvedValue({ provider: 'vnpay' });
+    fetchCheckoutCourse.mockResolvedValue(COURSES_MOCK[0]);
+    checkoutCourse.mockResolvedValue(VNPAY_PENDING);
+  });
+
+  test('labels the payment as VNPay when the server enables it', async () => {
+    const view = renderWithProviders(<CheckoutScreen courseId={1} />);
+    expect(await view.findByText('VNPay (sandbox)')).toBeTruthy();
+    expect(view.getByText('Thanh toán qua VNPay')).toBeTruthy();
+  });
+
+  test('opens the VNPay page, then asks the server for the order status and continues when PAID', async () => {
+    fetchOrder.mockResolvedValue(VNPAY_PAID);
+    const onSuccess = jest.fn();
+    const view = renderWithProviders(<CheckoutScreen courseId={1} onSuccess={onSuccess} />);
+    fireEvent.press(await view.findByText('Thanh toán qua VNPay'));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(VNPAY_PAID));
+    expect(WebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(VNPAY_PENDING.paymentUrl, 'edumy://payment-result');
+    expect(fetchOrder).toHaveBeenCalledWith('EDU777');
+  });
+
+  test('closing the VNPay page without paying keeps the user on Checkout with a message', async () => {
+    WebBrowser.openAuthSessionAsync.mockResolvedValue({ type: 'cancel' });
+    fetchOrder.mockResolvedValue({ ...VNPAY_PAID, status: 'PENDING' });
+    const onSuccess = jest.fn();
+    const view = renderWithProviders(<CheckoutScreen courseId={1} onSuccess={onSuccess} />);
+    fireEvent.press(await view.findByText('Thanh toán qua VNPay'));
+    expect(await view.findByTestId('checkout-notice')).toBeTruthy();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(view.getByText('Thanh toán qua VNPay')).toBeTruthy();
+  });
+
+  test('a failed VNPay payment is handed to the result screen', async () => {
+    fetchOrder.mockResolvedValue({ ...VNPAY_PAID, status: 'FAILED' });
+    const onSuccess = jest.fn();
+    const view = renderWithProviders(<CheckoutScreen courseId={1} onSuccess={onSuccess} />);
+    fireEvent.press(await view.findByText('Thanh toán qua VNPay'));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(expect.objectContaining({ status: 'FAILED' })));
+  });
+
+  test('the mock provider never opens a browser', async () => {
+    fetchPaymentProvider.mockResolvedValue({ provider: 'mock' });
+    checkoutCourse.mockResolvedValue(PAID_RESULT);
+    const onSuccess = jest.fn();
+    const view = renderWithProviders(<CheckoutScreen courseId={1} onSuccess={onSuccess} />);
+    fireEvent.press(await view.findByTestId('checkout-pay'));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(WebBrowser.openAuthSessionAsync).not.toHaveBeenCalled();
+  });
+});
+
 describe('PaymentResultScreen', () => {
+  test('deep link with only a txnRef loads the order from the server', async () => {
+    fetchOrder.mockResolvedValue({ ...PAID_RESULT, paymentMethod: 'VNPAY' });
+    const view = renderWithProviders(<PaymentResultScreen txnRef="EDU123" />);
+    expect(view.getByLabelText('Đang kiểm tra thanh toán')).toBeTruthy();
+    expect((await view.findByTestId('result-title')).props.children).toBe('Đặt hàng thành công');
+    expect(fetchOrder).toHaveBeenCalledWith('EDU123');
+    expect(view.getByText('Trạng thái: Đã thanh toán (VNPay)')).toBeTruthy();
+  });
+
+  test('failed payment offers a retry', async () => {
+    fetchOrder.mockResolvedValue({ ...PAID_RESULT, status: 'FAILED' });
+    const onRetry = jest.fn();
+    const view = renderWithProviders(<PaymentResultScreen txnRef="EDU123" onRetry={onRetry} />);
+    expect((await view.findByTestId('result-title')).props.children).toBe('Thanh toán không thành công');
+    fireEvent.press(view.getByTestId('result-retry'));
+    expect(onRetry).toHaveBeenCalledWith(1);
+  });
+
+  test('pending payment can be re-checked until it is confirmed', async () => {
+    fetchOrder.mockResolvedValueOnce({ ...PAID_RESULT, status: 'PENDING' }).mockResolvedValue(PAID_RESULT);
+    const view = renderWithProviders(<PaymentResultScreen txnRef="EDU123" />);
+    expect((await view.findByTestId('result-title')).props.children).toBe('Đang chờ xác nhận thanh toán');
+    fireEvent.press(view.getByTestId('result-refresh'));
+    await waitFor(() => expect(view.getByTestId('result-title').props.children).toBe('Đặt hàng thành công'));
+  });
+
+  test('server error while loading the order shows a retry', async () => {
+    fetchOrder.mockRejectedValueOnce(networkError).mockResolvedValue(PAID_RESULT);
+    const view = renderWithProviders(<PaymentResultScreen txnRef="EDU123" />);
+    expect(await view.findByTestId('result-error')).toBeTruthy();
+    fireEvent.press(view.getByText('Thử lại'));
+    expect((await view.findByTestId('result-title')).props.children).toBe('Đặt hàng thành công');
+  });
+
   test('paid order shows success, transaction and "Vào học ngay"', () => {
     const onLearn = jest.fn();
     const onMyLearning = jest.fn();
