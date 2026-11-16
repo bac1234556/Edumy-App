@@ -25,6 +25,12 @@ function EnrollmentCard({ item, onPress }) {
             {done ? 'Đã hoàn thành' : `${percent}% hoàn thành`}
             {item.totalLessons ? ` · ${item.completedLessons || 0}/${item.totalLessons} bài` : ''}
           </Text>
+          {/* Player tự lấy điểm học tiếp (bài + giây xem dở) từ API resume khi mở. */}
+          <View style={{ alignItems: 'flex-start' }}>
+            <Button compact mode="contained-tonal" testID={`continue-${item.id}`} onPress={() => onPress?.(item)}>
+              {done ? 'Học lại' : 'Tiếp tục học'}
+            </Button>
+          </View>
         </View>
       </View>
     </Card>
