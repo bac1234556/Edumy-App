@@ -1,13 +1,11 @@
 import { api } from './client';
 
 export const instructorApi = {
-  // Dashboard and students
-  getStats: () => api.get('/instructor/stats'),
-  getCourseStudents: (courseId, page = 0, size = 10) => api.get(`/instructor/courses/${courseId}/students`, { params: { page, size } }),
-
   // Courses
   getMyCourses: () => api.get('/instructor/courses'),
   getCourseDetail: (id) => api.get(`/instructor/courses/${id}`),
+  updateCourse: (id, payload) => api.put(`/instructor/courses/${id}`, payload),
+  deleteCourse: (id) => api.delete(`/instructor/courses/${id}`),
   submitForReview: (id) => api.post(`/instructor/courses/${id}/submit-review`),
 
   // Sections

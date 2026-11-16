@@ -10,12 +10,13 @@ import com.edumy.entity.CourseStatus;
 import com.edumy.entity.Lesson;
 import com.edumy.entity.Section;
 import com.edumy.exception.BadRequestException;
+import com.edumy.exception.ConflictException;
 import com.edumy.exception.ForbiddenException;
 import com.edumy.exception.ResourceNotFoundException;
 import com.edumy.repository.CategoryRepository;
 import com.edumy.repository.CourseRepository;
+import com.edumy.repository.EnrollmentRepository;
 import com.edumy.repository.LessonRepository;
-import com.edumy.repository.OrderRepository;
 import com.edumy.repository.SectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -39,7 +39,7 @@ public class InstructorCourseService {
     private final CategoryRepository categoryRepository;
     private final SectionRepository sectionRepository;
     private final LessonRepository lessonRepository;
-    private final OrderRepository orderRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Value("${cloudinary.api-key:dummy_key}")
     private String cloudinaryApiKey;
@@ -53,12 +53,7 @@ public class InstructorCourseService {
     @Transactional(readOnly = true)
     public List<InstructorCourseResponse> getCoursesByInstructor(Long instructorId) {
         return courseRepository.findByInstructorId(instructorId).stream()
-                .map(course -> {
-                    InstructorCourseResponse response = InstructorCourseResponse.fromEntity(course);
-                    BigDecimal revenue = orderRepository.sumPaidAmountByCourseId(course.getId());
-                    response.setRevenue(revenue != null ? revenue : BigDecimal.ZERO);
-                    return response;
-                })
+                .map(InstructorCourseResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 
@@ -102,6 +97,8 @@ public class InstructorCourseService {
 
         validateOwnership(course, instructorId);
 
+        // Chỉ cập nhật nội dung; trạng thái (status) do luồng gửi duyệt/phê duyệt quyết định,
+        // nên sửa khóa PUBLISHED hoặc REJECTED không làm đổi status.
         if (request.getTitle() != null && !request.getTitle().isBlank()) {
             course.setTitle(request.getTitle());
         }
@@ -126,9 +123,6 @@ public class InstructorCourseService {
             }
             course.setCategoryId(request.getCategoryId());
         }
-        if (request.getStatus() != null) {
-            course.setStatus(request.getStatus());
-        }
 
         Course updated = courseRepository.save(course);
         log.info("Instructor {} updated course {}", instructorId, updated.getId());
@@ -141,6 +135,12 @@ public class InstructorCourseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
         validateOwnership(course, instructorId);
+
+        if (enrollmentRepository.existsByCourseId(id)) {
+            throw new ConflictException(
+                    "Khóa học đã có học viên đăng ký nên không thể xóa. Bạn vẫn có thể chỉnh sửa nội dung khóa học.");
+        }
+
         courseRepository.delete(course);
         log.info("Instructor {} deleted course {}", instructorId, id);
     }
@@ -152,8 +152,9 @@ public class InstructorCourseService {
 
         validateOwnership(course, instructorId);
 
-        if (course.getStatus() != CourseStatus.DRAFT) {
-            throw new BadRequestException("Chỉ khóa học ở trạng thái bản nháp (DRAFT) mới có thể gửi phê duyệt");
+        if (course.getStatus() != CourseStatus.DRAFT && course.getStatus() != CourseStatus.REJECTED) {
+            throw new BadRequestException(
+                    "Chỉ khóa học ở trạng thái bản nháp (DRAFT) hoặc bị từ chối (REJECTED) mới có thể gửi phê duyệt");
         }
 
         List<Section> sections = sectionRepository.findByCourseIdOrderByOrderIndexAsc(courseId);
@@ -171,6 +172,7 @@ public class InstructorCourseService {
         }
 
         course.setStatus(CourseStatus.PENDING);
+        course.setRejectionReason(null);
         Course saved = courseRepository.save(course);
         log.info("Instructor {} submitted course {} for review", instructorId, courseId);
         return InstructorCourseResponse.fromEntity(saved);
