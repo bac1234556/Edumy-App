@@ -1,14 +1,29 @@
 // app/(tabs)/account.tsx — Tài khoản cá nhân
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
 import { useSessionStore } from '../../src/store/session';
+import { useLogout } from '../../src/features/auth/hooks';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function AccountScreen() {
+  const router = useRouter();
   const { me, status } = useSessionStore();
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const isLoggedIn = status === 'authenticated' && me !== null;
+
+  const handleLogout = () => {
+    Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Đăng xuất',
+        style: 'destructive',
+        onPress: () => logout(),
+      },
+    ]);
+  };
 
   return (
     <View style={styles.container}>
@@ -26,13 +41,27 @@ export default function AccountScreen() {
         </View>
       </View>
 
-      {!isLoggedIn && (
+      {!isLoggedIn ? (
         <View style={styles.authActionBox}>
           <Button
             title="Đăng nhập"
-            onPress={() => {
-              // Navigate to auth
-            }}
+            onPress={() => router.push('/(auth)/login')}
+          />
+          <Button
+            title="Đăng ký tài khoản"
+            variant="outline"
+            onPress={() => router.push('/(auth)/register')}
+            style={styles.registerButton}
+          />
+        </View>
+      ) : (
+        <View style={styles.authActionBox}>
+          <Button
+            title="Đăng xuất"
+            variant="outline"
+            loading={isLoggingOut}
+            onPress={handleLogout}
+            style={styles.logoutButton}
           />
         </View>
       )}
@@ -68,6 +97,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   authActionBox: {
-    marginTop: 20,
+    marginTop: 24,
+    gap: 12,
+  },
+  registerButton: {
+    marginTop: 0,
+  },
+  logoutButton: {
+    borderColor: '#EF4444',
   },
 });
