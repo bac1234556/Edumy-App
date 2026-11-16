@@ -5,9 +5,13 @@ import { MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { useVideoPlayer } from 'expo-video';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { fetchCourseCurriculum, fetchLesson } from '../api/player';
+import { fetchResume } from '../api/progress';
 import { CoursePlayerScreen, flattenLessons } from '../screens/CoursePlayerScreen';
 
 jest.mock('../api/player', () => ({ fetchCourseCurriculum: jest.fn(), fetchLesson: jest.fn() }));
+jest.mock('../api/progress', () => ({
+  resumeKey: (id) => ['learning', 'resume', id], fetchResume: jest.fn(), saveLessonProgress: jest.fn(),
+}));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(), setItemAsync: jest.fn(), deleteItemAsync: jest.fn(),
 }));
@@ -45,6 +49,7 @@ function renderPlayer(props = {}) {
 
 beforeEach(() => {
   jest.useFakeTimers();
+  fetchResume.mockRejectedValue({ response: { status: 403 } });
   player = {
     playing: false, play: jest.fn(), pause: jest.fn(), seekBy: jest.fn(), replace: jest.fn(),
     addListener: jest.fn(() => ({ remove: jest.fn() })),
