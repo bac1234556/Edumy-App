@@ -3,6 +3,7 @@
 
 import { z } from 'zod';
 import { formatDateTimeDmY } from '../../lib/date';
+import { AppError } from '../../api/problem';
 
 export interface WithdrawalStatusInfo {
   label: string;
@@ -139,3 +140,48 @@ export const payoutAccountSchema = z.object({
 });
 
 export type PayoutAccountFormData = z.infer<typeof payoutAccountSchema>;
+
+export type WithdrawalErrorResolution =
+  | { action: 'confirm_payout_account'; message: string }
+  | { action: 'go_withdrawals_list'; message: string }
+  | { action: 'amount_field_error'; message: string }
+  | { action: 'banner_error'; message: string };
+
+export function resolveWithdrawalErrorAction(
+  appError: Pick<AppError, 'code' | 'message'>,
+  minWithdrawal: number = 100000
+): WithdrawalErrorResolution {
+  switch (appError.code) {
+    case 'PAYOUT_ACCOUNT_REQUIRED':
+      return {
+        action: 'confirm_payout_account',
+        message:
+          appError.message ||
+          'Bạn cần thiết lập tài khoản ngân hàng nhận tiền trước khi tạo yêu cầu rút.',
+      };
+    case 'WITHDRAWAL_ALREADY_OPEN':
+      return {
+        action: 'go_withdrawals_list',
+        message:
+          appError.message ||
+          'Bạn đang có một yêu cầu rút tiền đang chờ duyệt. Vui lòng kiểm tra danh sách yêu cầu.',
+      };
+    case 'WITHDRAWAL_EXCEEDS_BALANCE':
+      return {
+        action: 'amount_field_error',
+        message: appError.message || 'Số tiền yêu cầu vượt quá số dư khả dụng hiện có.',
+      };
+    case 'WITHDRAWAL_BELOW_MINIMUM':
+      return {
+        action: 'amount_field_error',
+        message:
+          appError.message ||
+          `Số tiền rút tối thiểu là ${minWithdrawal.toLocaleString('vi-VN')} đ.`,
+      };
+    default:
+      return {
+        action: 'banner_error',
+        message: appError.message || 'Không thể tạo yêu cầu rút tiền.',
+      };
+  }
+}

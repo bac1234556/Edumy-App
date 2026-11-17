@@ -1,19 +1,21 @@
 // app/instructor/withdrawals/index.tsx — Lịch sử rút tiền (M09, BR-51, AC-M17)
 import React from 'react';
 import {
-  View,
-  StyleSheet,
+  ActivityIndicator,
   FlatList,
-  TouchableOpacity,
   RefreshControl,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { confirm, notify } from '../../../src/lib/dialog';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  useWithdrawals,
   useCancelWithdrawal,
+  useInfiniteWithdrawals,
 } from '../../../src/features/instructor/hooks';
+import { useRefetchOnScreenFocus } from '../../../src/hooks/useRefetchOnScreenFocus';
 import {
   getWithdrawalStatusInfo,
   maskAccountNumber,
@@ -29,10 +31,21 @@ import { formatDateTime } from '../../../src/lib/date';
 
 export default function WithdrawalsHistoryScreen() {
   const router = useRouter();
-  const { data: withdrawalsData, isLoading, isError, error, refetch, isRefetching } = useWithdrawals();
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteWithdrawals();
+  useRefetchOnScreenFocus(refetch);
   const { mutate: cancelWithdrawal, isPending: isCancelling } = useCancelWithdrawal();
 
-  const withdrawals = withdrawalsData?.content || [];
+  const withdrawals = data?.pages.flatMap((p) => p.content ?? []) ?? [];
 
   const handleCancel = async (item: WithdrawalRecord) => {
     const itemId = item.id;
@@ -57,10 +70,11 @@ export default function WithdrawalsHistoryScreen() {
   };
 
   const renderWithdrawalItem = ({ item }: { item: WithdrawalRecord }) => {
+    const normalizedStatus = (item.status ?? '').toLowerCase();
     const statusInfo = getWithdrawalStatusInfo(item.status ?? '');
-    const isRequested = item.status === 'requested';
-    const isPaid = item.status === 'paid';
-    const isRejected = item.status === 'rejected';
+    const isRequested = normalizedStatus === 'requested';
+    const isPaid = normalizedStatus === 'paid';
+    const isRejected = normalizedStatus === 'rejected';
 
     return (
       <View style={styles.card}>
@@ -166,10 +180,21 @@ export default function WithdrawalsHistoryScreen() {
       ) : (
         <FlatList
           data={withdrawals}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item, idx) => String(item.id ?? idx)}
           renderItem={renderWithdrawalItem}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator style={{ paddingVertical: 16 }} color="#0D9488" />
+            ) : null
+          }
           ListEmptyComponent={
             <EmptyState
               title="Chưa có yêu cầu rút tiền"

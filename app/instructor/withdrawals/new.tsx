@@ -18,8 +18,11 @@ import {
   useRequestWithdrawal,
 } from '../../../src/features/instructor/hooks';
 import {
-  validateWithdrawalAmount,
+  formatHoldDaysExplanation,
+  formatNextMaturityLine,
   maskAccountNumber,
+  resolveWithdrawalErrorAction,
+  validateWithdrawalAmount,
 } from '../../../src/features/instructor/logic';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
@@ -77,12 +80,13 @@ export default function NewWithdrawalScreen() {
     );
   }
 
-  const availableBalance = summary?.availableBalance || 0;
-  const minWithdrawal = summary?.minWithdrawal || 100000;
+  const availableBalance = summary?.availableBalance ?? 0;
+  const minWithdrawal = summary?.minWithdrawal ?? 100000;
+  const holdExplanation = formatHoldDaysExplanation(summary?.holdDays);
+  const nextMaturityLine = formatNextMaturityLine(summary?.nextMaturityAt);
   const hasPayoutAccount = Boolean(payoutAccount && payoutAccount.accountNumberLast4);
 
   const handleAmountChange = (text: string) => {
-    // Only accept numeric characters
     const cleaned = text.replace(/[^0-9]/g, '');
     setRawAmount(cleaned);
     setClientError(null);
@@ -96,6 +100,7 @@ export default function NewWithdrawalScreen() {
   };
 
   const handleSubmit = async () => {
+    if (isPending) return;
     setClientError(null);
     setServerError(null);
 
@@ -123,24 +128,32 @@ export default function NewWithdrawalScreen() {
       onSuccess: async () => {
         await notify(
           'Yêu cầu thành công',
-          `Yêu cầu rút ${numericAmount.toLocaleString('vi-VN')} đ đã được tạo và đang chờ xử lý.`
+          `Yêu cầu rút ${numericAmount.toLocaleString('vi-VN')} đ đã được tạo và đang chờ duyệt.`
         );
         router.replace('/instructor/withdrawals' as const);
       },
-      onError: (err) => {
-        const appError = err as unknown as AppError;
-        if (appError.code === 'WITHDRAWAL_BELOW_MINIMUM') {
-          setServerError(`Số tiền rút tối thiểu là ${minWithdrawal.toLocaleString('vi-VN')} đ.`);
-        } else if (appError.code === 'WITHDRAWAL_EXCEEDS_BALANCE') {
-          setServerError('Số tiền yêu cầu vượt quá số dư khả dụng hiện có.');
-        } else if (appError.code === 'WITHDRAWAL_ALREADY_OPEN') {
-          setServerError(
-            'Bạn đang có một yêu cầu rút tiền đang chờ xử lý. Vui lòng đợi quản trị viên duyệt hoặc hủy yêu cầu cũ trước khi tạo yêu cầu mới.'
-          );
-        } else if (appError.code === 'PAYOUT_ACCOUNT_REQUIRED') {
-          setServerError('Vui lòng thiết lập tài khoản nhận tiền trước khi rút.');
+      onError: async (err) => {
+        const resolution = resolveWithdrawalErrorAction(
+          err as unknown as AppError,
+          minWithdrawal
+        );
+        if (resolution.action === 'confirm_payout_account') {
+          const goSetup = await confirm({
+            title: 'Yêu cầu tài khoản nhận tiền',
+            message: resolution.message,
+            confirmText: 'Thiết lập ngay',
+            cancelText: 'Hủy',
+          });
+          if (goSetup) {
+            router.push('/instructor/payout-account' as const);
+          }
+        } else if (resolution.action === 'go_withdrawals_list') {
+          await notify('Đang có yêu cầu chờ duyệt', resolution.message);
+          router.replace('/instructor/withdrawals' as const);
+        } else if (resolution.action === 'amount_field_error') {
+          setClientError(resolution.message);
         } else {
-          setServerError(appError.message || 'Không thể tạo yêu cầu rút tiền.');
+          setServerError(resolution.message);
         }
       },
     });
@@ -181,6 +194,12 @@ export default function NewWithdrawalScreen() {
           <Text style={styles.balanceHint}>
             Hạn mức rút tối thiểu: {minWithdrawal.toLocaleString('vi-VN')} đ
           </Text>
+          <Text style={[styles.balanceHint, { marginTop: 4 }]}>{holdExplanation}</Text>
+          {nextMaturityLine && (
+            <Text style={[styles.balanceHint, { marginTop: 2, fontWeight: '700' }]}>
+              {nextMaturityLine}
+            </Text>
+          )}
         </View>
 
         {/* Destination Account Card */}
@@ -279,12 +298,7 @@ export default function NewWithdrawalScreen() {
             title={isPending ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu rút tiền'}
             onPress={handleSubmit}
             loading={isPending}
-            disabled={
-              isPending ||
-              !hasPayoutAccount ||
-              availableBalance < minWithdrawal ||
-              !rawAmount
-            }
+            disabled={isPending || !rawAmount}
             style={styles.submitBtn}
           />
         </View>
@@ -293,8 +307,8 @@ export default function NewWithdrawalScreen() {
         <View style={styles.policyNotice}>
           <Ionicons name="time-outline" size={18} color="#64748B" />
           <Text style={styles.policyText}>
-            Yêu cầu rút tiền sau khi gửi sẽ ở trạng thái "Đang chờ xử lý" và được quản trị viên duyệt
-            chuyển khoản trong vòng 1-3 ngày làm việc. Bạn có thể hủy yêu cầu khi chưa được duyệt.
+            Yêu cầu rút tiền sau khi gửi sẽ ở trạng thái &quot;Đang chờ duyệt&quot; và được quản trị viên duyệt
+            chuyển khoản. Bạn có thể hủy yêu cầu khi chưa được duyệt.
           </Text>
         </View>
       </ScrollView>

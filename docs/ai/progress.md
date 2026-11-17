@@ -26,5 +26,6 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 | P2-2 auth, session, logout & dialog | done | f717b8b | tsc: pass · lint: pass · test: 122/122 pass | Added cross-platform dialog.ts + ESLint ban on Alert.alert; sessionEpoch guard + offline restore + web in-memory tokens; fixed logout, change-password & auth endpoints |
 | P2-3 remove cart & orders | done | 4272b70 | tsc: pass · lint: pass · test: 104/104 pass | Removed cart tab, orders screens, cart/orders features; rewrote Course CTA (expo-web-browser); updated webLinks, env warning & docs |
 | P2-4 learning, certificates & Q&A v2 | done | 58579d3 | tsc: pass · lint: pass · test: 104/104 pass | Infinite enrollments & certificates; quizzes web handoff; lesson prev/next, article fallback, 403 NOT_ENROLLED & cert modal; Q&A v2 fields & resolve |
-| P2-5 instructor channel | done | pending | tsc: pass · lint: pass · test: 106/106 pass | 5-section instructor channel (Overview + 30d bar chart, Courses + student roster + invitations, Q&A, Earnings BR-PAY-HOLD, Withdrawals) |
+| P2-5 instructor channel | done | 69e3287 | tsc: pass · lint: pass · test: 106/106 pass | 5-section instructor channel (Overview + 30d bar chart, Courses + student roster + invitations, Q&A, Earnings BR-PAY-HOLD, Withdrawals) |
+| P2-6 withdrawals & payout | done | pending | tsc: pass · lint: pass · test: 110/110 pass | Infinite withdrawals list, BR-PAY-HOLD & double-submit guard on new withdrawal, error code routing tests, payout-account password clear |
 | Ads | blocked | | | Q-M01 |

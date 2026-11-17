@@ -9,6 +9,7 @@ import {
   formatNextMaturityLine,
   maskAccountNumber,
   payoutAccountSchema,
+  resolveWithdrawalErrorAction,
 } from '../logic';
 
 describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
@@ -162,6 +163,50 @@ describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
       if (!res.success) {
         expect(res.error.issues[0].message).toContain('mật khẩu');
       }
+    });
+  });
+
+  describe('resolveWithdrawalErrorAction', () => {
+    it('routes PAYOUT_ACCOUNT_REQUIRED to confirm_payout_account', () => {
+      const res = resolveWithdrawalErrorAction({
+        code: 'PAYOUT_ACCOUNT_REQUIRED',
+        message: 'Chưa thiết lập tài khoản nhận tiền.',
+      });
+      expect(res.action).toBe('confirm_payout_account');
+    });
+
+    it('routes WITHDRAWAL_ALREADY_OPEN to go_withdrawals_list', () => {
+      const res = resolveWithdrawalErrorAction({
+        code: 'WITHDRAWAL_ALREADY_OPEN',
+        message: 'Bạn đang có yêu cầu rút tiền chưa xử lý.',
+      });
+      expect(res.action).toBe('go_withdrawals_list');
+    });
+
+    it('routes WITHDRAWAL_EXCEEDS_BALANCE and WITHDRAWAL_BELOW_MINIMUM to amount_field_error', () => {
+      const exceeds = resolveWithdrawalErrorAction({
+        code: 'WITHDRAWAL_EXCEEDS_BALANCE',
+        message: 'Số dư khả dụng không đủ.',
+      });
+      expect(exceeds).toEqual({
+        action: 'amount_field_error',
+        message: 'Số dư khả dụng không đủ.',
+      });
+
+      const below = resolveWithdrawalErrorAction(
+        { code: 'WITHDRAWAL_BELOW_MINIMUM', message: '' },
+        100000
+      );
+      expect(below.action).toBe('amount_field_error');
+      expect(below.message).toContain('100.000');
+    });
+
+    it('falls back to banner_error for unknown codes', () => {
+      const res = resolveWithdrawalErrorAction({
+        code: 'INTERNAL_ERROR',
+        message: 'Lỗi hệ thống',
+      });
+      expect(res).toEqual({ action: 'banner_error', message: 'Lỗi hệ thống' });
     });
   });
 });

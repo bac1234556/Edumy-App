@@ -5,7 +5,7 @@
 [![React Native](https://img.shields.io/badge/Mobile-React%20Native%20%7C%20Expo-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript%205-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![TanStack Query](https://img.shields.io/badge/State-TanStack%20Query-FF4154?logo=reactquery&logoColor=white)](https://tanstack.com/query)
-[![Tests](https://img.shields.io/badge/Jest-106%20passed-brightgreen?logo=jest)](https://jestjs.io/)
+[![Tests](https://img.shields.io/badge/Jest-110%20passed-brightgreen?logo=jest)](https://jestjs.io/)
 
 ---
 
@@ -81,15 +81,15 @@ npm run typecheck
 # 2. Kiểm tra quy chuẩn mã nguồn ESLint
 npm run lint
 
-# 3. Chạy toàn bộ 106 bài kiểm thử đơn vị với Jest
+# 3. Chạy toàn bộ 110 bài kiểm thử đơn vị với Jest
 npm test
 ```
 
 ### Kết quả kiểm thử hiện tại:
-- **Test Suites:** 16 passed, 16 total
-- **Tests:** 106 passed, 106 total
+- **Test Suites:** 17 passed, 17 total
+- **Tests:** 110 passed, 110 total
 - **Snapshots:** 0
-- **Thời gian chạy:** ~4.5s
+- **Thời gian chạy:** ~7.4s
 
 ---
 

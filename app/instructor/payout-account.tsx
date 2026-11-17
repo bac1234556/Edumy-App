@@ -28,7 +28,7 @@ import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
 import { Loading } from '../../src/components/ui/Loading';
 import { ErrorState } from '../../src/components/ui/ErrorState';
-import { AppError } from '../../src/api/problem';
+import { AppError, applyFieldErrors } from '../../src/api/problem';
 import { formatDateTime } from '../../src/lib/date';
 
 export default function PayoutAccountScreen() {
@@ -44,6 +44,7 @@ export default function PayoutAccountScreen() {
     control,
     handleSubmit,
     reset,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<PayoutAccountFormData>({
@@ -89,12 +90,18 @@ export default function PayoutAccountScreen() {
           void notify('Thành công', 'Thông tin tài khoản nhận tiền đã được lưu an toàn.');
         },
         onError: (err) => {
+          setValue('currentPassword', '');
           const appErr = err as unknown as AppError;
-          if (appErr.code === 'PASSWORD_INCORRECT' || appErr.status === 422) {
+          if (
+            appErr.code === 'CURRENT_PASSWORD_INCORRECT' ||
+            appErr.code === 'PASSWORD_INCORRECT' ||
+            appErr.status === 422
+          ) {
             setError('currentPassword', {
-              message: 'Mật khẩu hiện tại không chính xác. Vui lòng thử lại.',
+              message: appErr.message || 'Mật khẩu hiện tại không chính xác. Vui lòng thử lại.',
             });
           } else {
+            applyFieldErrors(setError, appErr.fieldErrors);
             setServerError(appErr.message || 'Không thể cập nhật tài khoản nhận tiền.');
           }
         },
