@@ -61,8 +61,9 @@ describe('validateAnswerInput', () => {
 });
 
 describe('isQuestionReadOnly', () => {
-  it('returns true when status is hidden', () => {
+  it('returns true when status is hidden or HIDDEN', () => {
     expect(isQuestionReadOnly('hidden')).toBe(true);
+    expect(isQuestionReadOnly('HIDDEN')).toBe(true);
   });
 
   it('returns false for other statuses', () => {

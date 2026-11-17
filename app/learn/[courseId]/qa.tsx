@@ -42,8 +42,8 @@ export default function CourseQaScreen() {
 
   const allQuestions = data?.content || [];
   const questions = allQuestions.filter((q) => {
-    if (filter === 'resolved') return q.resolved;
-    if (filter === 'unresolved') return !q.resolved;
+    if (filter === 'resolved') return Boolean(q.isResolved);
+    if (filter === 'unresolved') return !q.isResolved;
     return true;
   });
 
@@ -86,7 +86,10 @@ export default function CourseQaScreen() {
         onSuccess: (created) => {
           setIsModalVisible(false);
           refetch();
-          router.push(`/learn/qa/${created.id}` as const);
+          const createdId = created.id ?? created.questionId;
+          if (createdId) {
+            router.push(`/learn/qa/${createdId}` as const);
+          }
         },
         onError: (err) => {
           const appErr = err as unknown as AppError;
@@ -110,15 +113,15 @@ export default function CourseQaScreen() {
         <View style={styles.askerRow}>
           <View style={styles.avatarMini}>
             <Text style={styles.avatarText}>
-              {(item.asker?.fullName || 'U').charAt(0).toUpperCase()}
+              {(item.askerName || 'U').charAt(0).toUpperCase()}
             </Text>
           </View>
-          <Text style={styles.askerName}>{item.asker?.fullName || 'Học viên'}</Text>
+          <Text style={styles.askerName}>{item.askerName || 'Học viên'}</Text>
           <Text style={styles.dot}>·</Text>
-          <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
+          <Text style={styles.dateText}>{formatDate(item.createdAt ?? '')}</Text>
         </View>
 
-        {item.resolved ? (
+        {item.isResolved ? (
           <View style={styles.resolvedBadge}>
             <Ionicons name="checkmark-circle" size={14} color="#059669" />
             <Text style={styles.resolvedText}>Đã giải quyết</Text>
@@ -138,10 +141,10 @@ export default function CourseQaScreen() {
       <View style={styles.cardFooter}>
         <View style={styles.answersCount}>
           <Ionicons name="chatbubble-ellipses-outline" size={14} color="#64748B" />
-          <Text style={styles.footerText}>{item.answerCount} câu trả lời</Text>
+          <Text style={styles.footerText}>{item.answerCount ?? 0} câu trả lời</Text>
         </View>
 
-        {item.instructorReplied && (
+        {item.hasInstructorAnswer && (
           <View style={styles.instructorBadge}>
             <Ionicons name="shield-checkmark" size={13} color="#0D9488" />
             <Text style={styles.instructorBadgeText}>Giảng viên đã trả lời</Text>

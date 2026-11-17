@@ -1,12 +1,14 @@
-// app/learn/lesson/[lessonId].tsx — Trình học bài giảng (Modern Dark Cinema & D-33 Manual Completion)
-import React, { useEffect, useRef } from 'react';
+// app/learn/lesson/[lessonId].tsx — Trình học bài giảng (Prev/Next, Visit, Completion & Certificate)
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  StyleSheet,
+  Modal,
   ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
-import { confirm, notify } from '../../../src/lib/dialog';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import {
   useLessonDetail,
   useRecordLessonVisit,
@@ -18,8 +20,9 @@ import { Button } from '../../../src/components/ui/Button';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { AppError } from '../../../src/api/problem';
-import { Ionicons } from '@expo/vector-icons';
-import { semantic, radius, monoFontFamily } from '../../../src/theme/tokens';
+import { notify } from '../../../src/lib/dialog';
+import { webLinks } from '../../../src/lib/web-links';
+import { monoFontFamily, radius, semantic } from '../../../src/theme/tokens';
 
 export default function LessonLearnScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
@@ -32,15 +35,35 @@ export default function LessonLearnScreen() {
     lesson?.courseId
   );
 
-  const hasRecordedVisit = useRef(false);
+  const lastVisitedLessonId = useRef<number | null>(null);
+  const handledNotEnrolledRef = useRef<number | null>(null);
+  const [issuedCertCode, setIssuedCertCode] = useState<string | null>(null);
 
-  // D-34: Record visit once per open
+  // D-34: Record visit once per opened lessonId
   useEffect(() => {
-    if (numericLessonId && !hasRecordedVisit.current) {
-      hasRecordedVisit.current = true;
+    if (numericLessonId && lastVisitedLessonId.current !== numericLessonId) {
+      lastVisitedLessonId.current = numericLessonId;
       recordVisit(numericLessonId);
     }
   }, [numericLessonId, recordVisit]);
+
+  // Handle 403 NOT_ENROLLED -> return to course/previous page with notice
+  useEffect(() => {
+    if (!isError || !error) return;
+    const appErr = error as unknown as AppError;
+    if (
+      (appErr.status === 403 || appErr.code === 'NOT_ENROLLED') &&
+      handledNotEnrolledRef.current !== numericLessonId
+    ) {
+      handledNotEnrolledRef.current = numericLessonId;
+      void notify(
+        'Chưa ghi danh khóa học',
+        appErr.message || 'Bạn cần ghi danh khóa học để truy cập bài học này.'
+      ).then(() => {
+        router.back();
+      });
+    }
+  }, [isError, error, numericLessonId, router]);
 
   if (isLoading) {
     return <Loading message="Đang khởi tạo phòng học..." />;
@@ -66,22 +89,20 @@ export default function LessonLearnScreen() {
     setCompletion(
       { lessonId: numericLessonId, completed: nextCompleted },
       {
-        onSuccess: async (data) => {
+        onSuccess: (data) => {
           if (data.certificateJustIssued) {
-            const viewCert = await confirm({
-              title: 'Hoàn thành khóa học',
-              message:
-                'Chúc mừng bạn đã hoàn tất 100% chương trình học và được cấp chứng chỉ tốt nghiệp xác thực từ Edumy.',
-              confirmText: 'Xem chứng chỉ',
-              cancelText: 'Đóng',
-            });
-            if (viewCert) {
-              router.push('/account/certificates' as const);
-            }
+            setIssuedCertCode(data.certificateCode ?? '');
           }
         },
         onError: (err) => {
           const appErr = err as unknown as AppError;
+          if (appErr.status === 403 || appErr.code === 'NOT_ENROLLED') {
+            void notify(
+              'Chưa ghi danh khóa học',
+              appErr.message || 'Bạn chưa ghi danh khóa học này.'
+            ).then(() => router.back());
+            return;
+          }
           void notify('Lỗi cập nhật', appErr.message || 'Không thể cập nhật tiến độ bài học.');
         },
       }
@@ -103,9 +124,16 @@ export default function LessonLearnScreen() {
         videoUrl={lesson.videoUrl}
         articleContent={lesson.articleContent}
         title={lesson.title ?? ''}
+        onOpenWebsite={
+          lesson.courseId
+            ? () => {
+                void WebBrowser.openBrowserAsync(webLinks.course(lesson.courseId!));
+              }
+            : undefined
+        }
       />
 
-      {/* Editorial Control & Completion Panel */}
+      {/* Editorial Control, Prev/Next & Completion Panel */}
       <ScrollView contentContainerStyle={styles.infoScroll}>
         <View style={styles.headerCard}>
           <View style={styles.metaRow}>
@@ -136,10 +164,43 @@ export default function LessonLearnScreen() {
           </Text>
         </View>
 
+        {/* Prev / Next Navigation */}
+        {(lesson.prevLessonId || lesson.nextLessonId) && (
+          <View style={styles.navRow}>
+            <Button
+              title="← Bài trước"
+              variant="outline"
+              disabled={!lesson.prevLessonId}
+              onPress={() => {
+                if (lesson.prevLessonId) {
+                  router.replace(`/learn/lesson/${lesson.prevLessonId}` as const);
+                }
+              }}
+              style={styles.navButton}
+            />
+            <Button
+              title="Bài sau →"
+              variant="outline"
+              disabled={!lesson.nextLessonId}
+              onPress={() => {
+                if (lesson.nextLessonId) {
+                  router.replace(`/learn/lesson/${lesson.nextLessonId}` as const);
+                }
+              }}
+              style={styles.navButton}
+            />
+          </View>
+        )}
+
         {/* Completion Action Box (Rule D-33 Manual Toggle) */}
         <View style={[styles.completionBox, isCompleted && styles.completionBoxActive]}>
           <View style={styles.completionHeader}>
-            <View style={[styles.statusIconWrap, isCompleted ? styles.statusIconDone : styles.statusIconPending]}>
+            <View
+              style={[
+                styles.statusIconWrap,
+                isCompleted ? styles.statusIconDone : styles.statusIconPending,
+              ]}
+            >
               <Ionicons
                 name={isCompleted ? 'checkmark-outline' : 'hourglass-outline'}
                 size={20}
@@ -171,6 +232,50 @@ export default function LessonLearnScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Certificate Congratulation Modal */}
+      <Modal
+        visible={issuedCertCode !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIssuedCertCode(null)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.certIconWrap}>
+              <Ionicons name="ribbon" size={36} color={semantic.brandPrimaryStrong} />
+            </View>
+            <Text variant="h2" style={styles.modalTitle}>
+              Hoàn thành khóa học!
+            </Text>
+            <Text style={styles.modalDesc}>
+              Chúc mừng bạn đã hoàn tất 100% chương trình học và nhận được chứng chỉ tốt nghiệp từ Edumy.
+            </Text>
+            {Boolean(issuedCertCode) && (
+              <View style={styles.certCodeBox}>
+                <Text style={styles.certCodeLabel}>MÃ CHỨNG CHỈ</Text>
+                <Text style={styles.certCodeValue}>{issuedCertCode}</Text>
+              </View>
+            )}
+            <View style={styles.modalActions}>
+              <Button
+                title="Xem chứng chỉ"
+                onPress={() => {
+                  setIssuedCertCode(null);
+                  router.push('/account/certificates' as const);
+                }}
+                style={styles.modalActionBtn}
+              />
+              <Button
+                title="Đóng"
+                variant="outline"
+                onPress={() => setIssuedCertCode(null)}
+                style={styles.modalActionBtn}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -226,6 +331,14 @@ const styles = StyleSheet.create({
     fontSize: 19,
     lineHeight: 25,
     color: semantic.textPrimary,
+  },
+  navRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+  },
+  navButton: {
+    flex: 1,
   },
   completionBox: {
     backgroundColor: semantic.surfaceCard,
@@ -283,5 +396,73 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     width: '100%',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.lg,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+  },
+  certIconWrap: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: semantic.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  modalTitle: {
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalDesc: {
+    fontSize: 14,
+    color: semantic.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  certCodeBox: {
+    width: '100%',
+    backgroundColor: semantic.surfaceSubtle,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  certCodeLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: semantic.textMuted,
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  certCodeValue: {
+    fontFamily: monoFontFamily,
+    fontSize: 16,
+    fontWeight: '700',
+    color: semantic.brandPrimaryStrong,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  modalActionBtn: {
+    flex: 1,
   },
 });

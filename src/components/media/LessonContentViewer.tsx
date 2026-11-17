@@ -7,6 +7,7 @@ import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { WebView } from 'react-native-webview';
 import { Text } from '../ui/Text';
+import { Button } from '../ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { semantic } from '../../theme/tokens';
 
@@ -15,6 +16,7 @@ interface LessonContentViewerProps {
   videoUrl?: string | null;
   articleContent?: string | null;
   title?: string;
+  onOpenWebsite?: () => void;
 }
 
 export function isNativeVideoUrl(url?: string | null): boolean {
@@ -28,6 +30,7 @@ export function LessonContentViewer({
   videoUrl,
   articleContent,
   title,
+  onOpenWebsite,
 }: LessonContentViewerProps) {
   const isNative = isNativeVideoUrl(videoUrl);
 
@@ -105,10 +108,18 @@ export function LessonContentViewer({
           </Text>
         ) : (
           <View style={styles.emptyArticleBox}>
-            <Ionicons name="reader-outline" size={32} color="#94A3B8" />
+            <Ionicons name="globe-outline" size={32} color={semantic.brandPrimary} />
             <Text variant="bodySmall" style={styles.emptyArticleText}>
-              Nội dung bài đọc đang được giảng viên biên tập.
+              Nội dung bài đọc có trên website
             </Text>
+            {onOpenWebsite && (
+              <Button
+                title="Mở trên website"
+                variant="outline"
+                onPress={onOpenWebsite}
+                style={{ marginTop: 8 }}
+              />
+            )}
           </View>
         )}
       </View>

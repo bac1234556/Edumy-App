@@ -45,6 +45,9 @@ export function useCreateQuestion(courseId: number) {
       queryClient.invalidateQueries({
         queryKey: ['qa', 'course', courseId],
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.instructor.all,
+      });
     },
   });
 }
@@ -59,7 +62,10 @@ export function useResolveQuestion(questionId: number) {
         queryKey: queryKeys.qa.questionDetail(questionId),
       });
       queryClient.invalidateQueries({
-        queryKey: ['qa', 'course'],
+        queryKey: queryKeys.qa.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.instructor.all,
       });
     },
   });
@@ -73,6 +79,12 @@ export function useAnswerQuestion(questionId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.qa.questionDetail(questionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.qa.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.instructor.all,
       });
     },
   });
@@ -89,6 +101,9 @@ export function useDeleteQuestion(courseId?: number) {
           queryKey: ['qa', 'course', courseId],
         });
       }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.instructor.all,
+      });
     },
   });
 }

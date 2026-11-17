@@ -1,8 +1,8 @@
 // src/features/certificates/hooks.ts
-// React Query hooks for Certificates.
+// React Query hooks for Certificates (paginated + infinite).
 
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { getCertificatesApi } from './api';
 import {
   downloadAndShareCertificate,
@@ -22,18 +22,41 @@ export function useCertificates(page: number = 0) {
   });
 }
 
+export function useInfiniteCertificates() {
+  const { status } = useSessionStore();
+  const isLoggedIn = status === 'authenticated';
+
+  return useInfiniteQuery({
+    queryKey: ['certificates', 'infinite'] as const,
+    queryFn: ({ pageParam }) => getCertificatesApi(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const current = lastPage.page?.number ?? 0;
+      const total = lastPage.page?.totalPages ?? 0;
+      return current + 1 < total ? current + 1 : undefined;
+    },
+    enabled: isLoggedIn,
+  });
+}
+
 export function useCertificateActions() {
   const { accessToken } = useSessionStore();
   const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadMutation = useMutation({
-    mutationFn: async (code: string) => {
+    mutationFn: async ({
+      code,
+      verifyUrl,
+    }: {
+      code: string;
+      verifyUrl?: string | null;
+    }) => {
       if (!accessToken) {
         throw new Error('Phiên đăng nhập không hợp lệ');
       }
       setIsDownloading(true);
       try {
-        return await downloadAndShareCertificate(code, accessToken);
+        return await downloadAndShareCertificate(code, accessToken, verifyUrl);
       } finally {
         setIsDownloading(false);
       }
@@ -41,7 +64,8 @@ export function useCertificateActions() {
   });
 
   const copyMutation = useMutation({
-    mutationFn: (code: string) => copyCertificateVerificationLink(code),
+    mutationFn: ({ code, verifyUrl }: { code: string; verifyUrl?: string | null }) =>
+      copyCertificateVerificationLink(code, verifyUrl),
   });
 
   return {

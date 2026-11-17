@@ -1,5 +1,5 @@
 // app/learn/[courseId]/index.tsx — Phòng học & Đề cương kỹ thuật (Technical Curriculum)
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useCourseLearnRoom } from '../../../src/features/learning/hooks';
 import { useRefetchOnScreenFocus } from '../../../src/hooks/useRefetchOnScreenFocus';
@@ -16,18 +17,31 @@ import { Button } from '../../../src/components/ui/Button';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { AppError } from '../../../src/api/problem';
+import { webLinks } from '../../../src/lib/web-links';
 import { Ionicons } from '@expo/vector-icons';
 import { semantic, radius, monoFontFamily } from '../../../src/theme/tokens';
 
 export default function CourseLearnRoomScreen() {
-  const { courseId } = useLocalSearchParams<{ courseId: string }>();
+  const { courseId, resume } = useLocalSearchParams<{ courseId: string; resume?: string }>();
   const numericCourseId = Number(courseId);
   const router = useRouter();
+  const hasAutoResumedRef = useRef(false);
 
   const { data: room, isLoading, isError, error, refetch, isRefetching } = useCourseLearnRoom(
     numericCourseId
   );
   useRefetchOnScreenFocus(refetch);
+
+  const autoLessonId = room
+    ? (room.lastAccessedLessonId ?? resolveFirstOrUncompletedLesson(room))
+    : null;
+
+  useEffect(() => {
+    if (resume === '1' && room && autoLessonId && !hasAutoResumedRef.current) {
+      hasAutoResumedRef.current = true;
+      router.push(`/learn/lesson/${autoLessonId}` as const);
+    }
+  }, [resume, room, autoLessonId, router]);
 
   if (isLoading) {
     return <Loading message="Đang tải đề cương phòng học..." />;
@@ -186,6 +200,40 @@ export default function CourseLearnRoomScreen() {
                     </View>
 
                     <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+                  </TouchableOpacity>
+                ))}
+
+                {chapter.quizzes?.map((quiz) => (
+                  <TouchableOpacity
+                    key={`quiz-${quiz.id}`}
+                    style={styles.lessonItem}
+                    onPress={() => WebBrowser.openBrowserAsync(webLinks.course(numericCourseId))}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.lessonStatusIcon}>
+                      {quiz.passed ? (
+                        <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
+                      ) : (
+                        <Ionicons name="help-circle-outline" size={20} color={semantic.brandPrimary} />
+                      )}
+                    </View>
+
+                    <View style={styles.lessonInfo}>
+                      <Text style={styles.lessonTitle}>{quiz.title}</Text>
+                      <View style={styles.lessonMetaRow}>
+                        <Ionicons name="globe-outline" size={13} color={semantic.brandPrimary} />
+                        <Text style={[styles.lessonMetaText, { color: semantic.brandPrimary }]}>
+                          Bài kiểm tra — làm trên website
+                        </Text>
+                        {quiz.passed && (
+                          <Text style={[styles.lessonMetaText, { color: semantic.success }]}>
+                            • Đã đạt
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+
+                    <Ionicons name="open-outline" size={16} color={semantic.brandPrimary} />
                   </TouchableOpacity>
                 ))}
               </View>

@@ -1,5 +1,5 @@
-// app/(tabs)/my-learning.tsx — Học tập (Phòng học của tôi - Editorial Bento)
-import React, { useState } from 'react';
+// app/(tabs)/my-learning.tsx — Học tập (Phòng học của tôi - Infinite Pagination)
+import React from 'react';
 import {
   View,
   StyleSheet,
@@ -7,9 +7,10 @@ import {
   Image,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useMyEnrollments } from '../../src/features/learning/hooks';
+import { useInfiniteMyEnrollments } from '../../src/features/learning/hooks';
 import { useRefetchOnScreenFocus } from '../../src/hooks/useRefetchOnScreenFocus';
 import { Enrollment } from '../../src/features/learning/logic';
 import { useSessionStore } from '../../src/store/session';
@@ -25,11 +26,21 @@ export default function MyLearningScreen() {
   const router = useRouter();
   const { status } = useSessionStore();
   const isLoggedIn = status === 'authenticated';
-  const [page, setPage] = useState(0);
 
-  const { data, isLoading, isError, error, refetch, isRefetching } = useMyEnrollments(page);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteMyEnrollments();
   useRefetchOnScreenFocus(refetch);
-  const enrollments = data?.content || [];
+  const enrollments = data?.pages.flatMap((p) => p.content ?? []) ?? [];
+  const totalCount = data?.pages[0]?.page?.totalElements ?? enrollments.length;
 
   if (!isLoggedIn) {
     return (
@@ -79,14 +90,14 @@ export default function MyLearningScreen() {
     if (enrollment.lastAccessedLessonId) {
       router.push(`/learn/lesson/${enrollment.lastAccessedLessonId}` as const);
     } else if (enrollment.course?.id) {
-      router.push(`/learn/${enrollment.course.id}` as const);
+      router.push(`/learn/${enrollment.course.id}?resume=1` as const);
     }
   };
 
   const renderSummaryHeader = () => (
     <View style={styles.summaryBento}>
       <View style={styles.summaryCell}>
-        <Text style={styles.summaryValue}>{enrollments.length}</Text>
+        <Text style={styles.summaryValue}>{totalCount}</Text>
         <Text style={styles.summaryLabel}>ĐÃ GHI DANH</Text>
       </View>
       <View style={styles.summaryDivider} />
@@ -168,7 +179,7 @@ export default function MyLearningScreen() {
         {/* Action Button */}
         <View style={styles.actionRow}>
           <Button
-            title={isCompleted ? 'Ôn tập bài giảng' : 'Học tiếp bài gần nhất'}
+            title={isCompleted ? 'Ôn tập bài giảng' : 'Học tiếp'}
             onPress={() => handleResumeCourse(item)}
             variant={isCompleted ? 'outline' : 'primary'}
             style={styles.resumeButton}
@@ -182,17 +193,22 @@ export default function MyLearningScreen() {
     <View style={styles.container}>
       <FlatList
         data={enrollments}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item, idx) => String(item.id ?? idx)}
         ListHeaderComponent={renderSummaryHeader}
         renderItem={renderEnrollmentCard}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         onEndReached={() => {
-          if (data?.page && page + 1 < (data.page.totalPages ?? 0)) {
-            setPage((prev) => prev + 1);
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
           }
         }}
         onEndReachedThreshold={0.4}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator style={{ paddingVertical: 16 }} color={semantic.brandPrimary} />
+          ) : null
+        }
       />
     </View>
   );

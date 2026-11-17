@@ -52,5 +52,5 @@ export function validateAnswerInput(content: string): QuestionValidationResult {
 }
 
 export function isQuestionReadOnly(status?: string): boolean {
-  return status === 'hidden';
+  return status?.toLowerCase() === 'hidden';
 }

@@ -1,14 +1,19 @@
-// app/account/certificates.tsx — Danh sách chứng chỉ số (Technical Credential Cards)
-import React, { useState } from 'react';
+// app/account/certificates.tsx — Danh sách chứng chỉ số (Paginated + PDF/Verify)
+import React from 'react';
 import {
-  View,
-  StyleSheet,
+  ActivityIndicator,
   FlatList,
+  Platform,
   RefreshControl,
+  StyleSheet,
+  View,
 } from 'react-native';
-import { notify } from '../../src/lib/dialog';
-import { useRouter, Stack } from 'expo-router';
-import { useCertificates, useCertificateActions } from '../../src/features/certificates/hooks';
+import { Stack, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  useCertificateActions,
+  useInfiniteCertificates,
+} from '../../src/features/certificates/hooks';
 import { useRefetchOnScreenFocus } from '../../src/hooks/useRefetchOnScreenFocus';
 import { CertificateItem } from '../../src/features/certificates/logic';
 import { Text } from '../../src/components/ui/Text';
@@ -17,18 +22,27 @@ import { Loading } from '../../src/components/ui/Loading';
 import { ErrorState } from '../../src/components/ui/ErrorState';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { formatDate } from '../../src/lib/date';
-import { Ionicons } from '@expo/vector-icons';
-import { semantic, radius, monoFontFamily, microShadow } from '../../src/theme/tokens';
+import { notify } from '../../src/lib/dialog';
+import { monoFontFamily, microShadow, radius, semantic } from '../../src/theme/tokens';
 
 export default function CertificatesScreen() {
   const router = useRouter();
-  const [page, setPage] = useState(0);
 
-  const { data, isLoading, isError, error, refetch, isRefetching } = useCertificates(page);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteCertificates();
   useRefetchOnScreenFocus(refetch);
   const { downloadAndShare, isDownloading, copyVerificationLink } = useCertificateActions();
 
-  const certificates = data?.content || [];
+  const certificates = data?.pages.flatMap((p) => p.content ?? []) ?? [];
 
   if (isLoading) {
     return <Loading message="Đang tải hồ sơ chứng chỉ số..." />;
@@ -43,23 +57,32 @@ export default function CertificatesScreen() {
     );
   }
 
-  const handleCopy = (code: string) => {
-    copyVerificationLink(code, {
-      onSuccess: () => {
-        void notify('Đã sao chép', 'Liên kết xác thực chứng chỉ công khai đã được lưu vào bộ nhớ tạm.');
-      },
-      onError: () => {
-        void notify('Lỗi', 'Không thể sao chép liên kết.');
-      },
-    });
+  const handleCopy = (code: string, verifyUrl?: string | null) => {
+    copyVerificationLink(
+      { code, verifyUrl },
+      {
+        onSuccess: () => {
+          void notify(
+            'Đã sao chép',
+            'Liên kết xác thực chứng chỉ công khai đã được lưu vào bộ nhớ tạm.'
+          );
+        },
+        onError: () => {
+          void notify('Lỗi', 'Không thể sao chép liên kết.');
+        },
+      }
+    );
   };
 
-  const handleDownload = (code: string) => {
-    downloadAndShare(code, {
-      onError: (err) => {
-        void notify('Tải chứng chỉ', err.message || 'Không thể tải tệp PDF chứng chỉ.');
-      },
-    });
+  const handleDownload = (code: string, verifyUrl?: string | null) => {
+    downloadAndShare(
+      { code, verifyUrl },
+      {
+        onError: (err) => {
+          void notify('Tải chứng chỉ', err.message || 'Không thể tải tệp PDF chứng chỉ.');
+        },
+      }
+    );
   };
 
   const renderCertCard = ({ item }: { item: CertificateItem }) => (
@@ -88,17 +111,23 @@ export default function CertificatesScreen() {
 
       <View style={styles.actionButtons}>
         <Button
-          title="Tải PDF & Chia sẻ"
-          onPress={() => item.code && handleDownload(item.code)}
+          title={Platform.OS === 'web' ? 'Mở xác thực' : 'Tải PDF'}
+          onPress={() => item.code && handleDownload(item.code, item.verifyUrl)}
           loading={isDownloading}
-          icon={<Ionicons name="share-outline" size={16} color="#FFFFFF" />}
+          icon={
+            <Ionicons
+              name={Platform.OS === 'web' ? 'open-outline' : 'share-outline'}
+              size={16}
+              color="#FFFFFF"
+            />
+          }
           style={styles.downloadBtn}
         />
 
         <Button
-          title="Sao chép link"
+          title="Sao chép link xác thực"
           variant="outline"
-          onPress={() => item.code && handleCopy(item.code)}
+          onPress={() => item.code && handleCopy(item.code, item.verifyUrl)}
           style={styles.copyBtn}
         />
       </View>
@@ -125,11 +154,16 @@ export default function CertificatesScreen() {
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           onEndReached={() => {
-            if (data?.page && page + 1 < (data.page.totalPages ?? 0)) {
-              setPage((prev) => prev + 1);
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
             }
           }}
           onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator style={{ paddingVertical: 16 }} color={semantic.brandPrimary} />
+            ) : null
+          }
         />
       )}
     </View>
@@ -147,7 +181,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
@@ -158,6 +192,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    gap: 8,
   },
   badge: {
     flexDirection: 'row',
@@ -168,42 +203,43 @@ const styles = StyleSheet.create({
     borderColor: semantic.brandBorder,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   badgeText: {
     fontSize: 10,
     fontWeight: '700',
     color: semantic.brandPrimaryStrong,
-    letterSpacing: 0.7,
+    letterSpacing: 0.6,
   },
   codePill: {
-    backgroundColor: semantic.surfaceCanvas,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
+    backgroundColor: semantic.surfaceSubtle,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 5,
   },
   certCode: {
     fontFamily: monoFontFamily,
     fontSize: 11,
     fontWeight: '700',
-    color: semantic.textPrimary,
+    color: semantic.textSecondary,
     fontVariant: ['tabular-nums'],
   },
   courseTitle: {
-    fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 12,
+    fontSize: 17,
+    lineHeight: 23,
     color: semantic.textPrimary,
+    marginBottom: 12,
   },
   metaGrid: {
     backgroundColor: semantic.surfaceCanvas,
     borderRadius: radius.sm,
-    padding: 12,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
-    gap: 6,
+    padding: 10,
+    gap: 7,
+    marginBottom: 14,
   },
   infoRow: {
     flexDirection: 'row',
@@ -213,34 +249,22 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 12,
     color: semantic.textMuted,
-    width: 72,
-  },
-  infoValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: semantic.textPrimary,
-    flex: 1,
   },
   infoValueTabular: {
     fontFamily: monoFontFamily,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: semantic.textPrimary,
     fontVariant: ['tabular-nums'],
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 14,
+    gap: 10,
   },
   downloadBtn: {
-    flex: 1.4,
-    minHeight: 42,
-    paddingHorizontal: 12,
+    flex: 1,
   },
   copyBtn: {
     flex: 1,
-    minHeight: 42,
-    paddingHorizontal: 10,
   },
 });

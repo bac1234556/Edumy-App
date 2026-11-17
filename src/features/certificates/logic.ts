@@ -1,9 +1,11 @@
 // src/features/certificates/logic.ts
-// Pure business logic and file/link utilities for Certificates (Rules 20, 40).
+// Pure business logic and file/link utilities for Certificates.
 
+import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
+import * as WebBrowser from 'expo-web-browser';
 import { ENV } from '../../config/env';
 import { webLinks } from '../../lib/web-links';
 import { CertificateItem } from './api';
@@ -11,12 +13,21 @@ import { CertificateItem } from './api';
 export type { CertificateItem };
 
 /**
- * Downloads the certificate PDF with Bearer auth and triggers system share dialog (Rules 20).
+ * Downloads the certificate PDF with Bearer auth and triggers system share dialog on native.
+ * On web, opens the public verification URL in browser.
  */
 export async function downloadAndShareCertificate(
   code: string,
-  accessToken: string
+  accessToken: string,
+  verifyUrl?: string | null
 ): Promise<string> {
+  const verificationLink = verifyUrl || webLinks.certificateVerify(code);
+
+  if (Platform.OS === 'web') {
+    await WebBrowser.openBrowserAsync(verificationLink);
+    return verificationLink;
+  }
+
   const downloadUrl = `${ENV.API_BASE_URL}/me/certificates/${encodeURIComponent(code)}/pdf`;
   const targetUri = `${FileSystem.documentDirectory}certificate-${code}.pdf`;
 

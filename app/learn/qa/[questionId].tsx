@@ -60,11 +60,15 @@ export default function QuestionDetailScreen() {
     );
   }
 
-  const isAsker = me?.id !== undefined && thread.asker?.id === me.id;
-  const isReadOnly = isQuestionReadOnly(thread.status);
+  const isAsker = me?.id !== undefined && thread.askerId === me.id;
+  const isInstructorRole = Boolean(
+    me?.roles?.some((r) => typeof r === 'string' && r.toLowerCase() === 'instructor')
+  );
+  const canResolve = isAsker || isInstructorRole;
+  const isReadOnly = isQuestionReadOnly(thread.visibilityStatus);
 
   const handleToggleResolve = () => {
-    resolveQuestion(!thread.resolved, {
+    resolveQuestion(!thread.isResolved, {
       onError: (err) => {
         const appErr = err as unknown as AppError;
         void notify('Lỗi', appErr.message || 'Không thể cập nhật trạng thái.');
@@ -142,16 +146,16 @@ export default function QuestionDetailScreen() {
             <View style={styles.authorGroup}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {(thread.asker?.fullName || 'U').charAt(0).toUpperCase()}
+                  {(thread.askerName || 'U').charAt(0).toUpperCase()}
                 </Text>
               </View>
               <View>
-                <Text style={styles.authorName}>{thread.asker?.fullName || 'Học viên'}</Text>
+                <Text style={styles.authorName}>{thread.askerName || 'Học viên'}</Text>
                 <Text style={styles.dateText}>{formatDateTime(thread.createdAt)}</Text>
               </View>
             </View>
 
-            {thread.resolved ? (
+            {thread.isResolved ? (
               <View style={styles.resolvedBadge}>
                 <Ionicons name="checkmark-circle" size={14} color="#059669" />
                 <Text style={styles.resolvedBadgeText}>Đã giải quyết</Text>
@@ -170,24 +174,26 @@ export default function QuestionDetailScreen() {
 
           <Text style={styles.questionContent}>{thread.content}</Text>
 
-          {/* Asker Controls */}
-          {isAsker && !isReadOnly && (
+          {/* Asker / Instructor Controls */}
+          {canResolve && !isReadOnly && (
             <View style={styles.askerActions}>
               <Button
-                title={thread.resolved ? 'Mở lại câu hỏi' : 'Đánh dấu đã giải quyết'}
-                variant={thread.resolved ? 'outline' : 'primary'}
+                title={thread.isResolved ? 'Mở lại câu hỏi' : 'Đánh dấu đã giải quyết'}
+                variant={thread.isResolved ? 'outline' : 'primary'}
                 onPress={handleToggleResolve}
                 loading={isResolving}
                 style={styles.resolveBtn}
               />
-              <Button
-                title="Xóa"
-                variant="outline"
-                onPress={handleDelete}
-                loading={isDeleting}
-                style={styles.deleteBtn}
-                textStyle={{ color: '#EF4444' }}
-              />
+              {isAsker && (
+                <Button
+                  title="Xóa"
+                  variant="outline"
+                  onPress={handleDelete}
+                  loading={isDeleting}
+                  style={styles.deleteBtn}
+                  textStyle={{ color: '#EF4444' }}
+                />
+              )}
             </View>
           )}
         </View>
@@ -200,7 +206,7 @@ export default function QuestionDetailScreen() {
 
           {thread.answers && thread.answers.length > 0 ? (
             thread.answers.map((ans) => {
-              const isInstructor = ans.authorType === 'instructor';
+              const isInstructor = ans.authorType?.toLowerCase() === 'instructor';
 
               return (
                 <View
@@ -219,12 +225,12 @@ export default function QuestionDetailScreen() {
                         ]}
                       >
                         <Text style={styles.avatarText}>
-                          {(ans.author?.fullName || 'U').charAt(0).toUpperCase()}
+                          {(ans.authorName || 'U').charAt(0).toUpperCase()}
                         </Text>
                       </View>
                       <View>
                         <View style={styles.nameWithBadge}>
-                          <Text style={styles.authorName}>{ans.author?.fullName}</Text>
+                          <Text style={styles.authorName}>{ans.authorName || 'Người dùng'}</Text>
                           {isInstructor && (
                             <View style={styles.instructorTag}>
                               <Text style={styles.instructorTagText}>Giảng viên</Text>
