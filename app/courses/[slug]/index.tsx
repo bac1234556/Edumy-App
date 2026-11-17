@@ -6,12 +6,13 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  Linking,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { notify } from '../../../src/lib/dialog';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useCourseDetail, useFreeEnroll, useAddToCart } from '../../../src/features/catalog/hooks';
+import { useCourseDetail, useFreeEnroll } from '../../../src/features/catalog/hooks';
 import { resolveCourseAction } from '../../../src/features/catalog/logic';
+import { useMyEnrollments } from '../../../src/features/learning/hooks';
 import { useSessionStore } from '../../../src/store/session';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
@@ -31,7 +32,7 @@ export default function CourseDetailScreen() {
 
   const { data: course, isLoading, isError, error, refetch } = useCourseDetail(slug);
   const { mutate: freeEnroll, isPending: isEnrolling } = useFreeEnroll(slug);
-  const { mutate: addToCart, isPending: isAddingCart } = useAddToCart(slug);
+  const { data: enrollmentsPage } = useMyEnrollments(0);
 
   if (isLoading) {
     return <Loading message="Đang tải hồ sơ khóa học..." />;
@@ -46,25 +47,34 @@ export default function CourseDetailScreen() {
     );
   }
 
+  const matchedEnrollment = (enrollmentsPage?.content ?? []).find(
+    (e) => e.course?.id === course.id
+  );
+  const lastAccessedLessonId = matchedEnrollment?.lastAccessedLessonId;
+
   const actionState = resolveCourseAction({
     isLoggedIn,
     isFree: Boolean(course.isFree),
     viewer: course.viewer
       ? {
           owned: Boolean(course.viewer.owned),
-          inCart: false,
           isInstructor: Boolean(course.viewer.isInstructor),
         }
       : null,
+    lastAccessedLessonId,
   });
 
-  const handlePrimaryAction = () => {
+  const handlePrimaryAction = async () => {
     switch (actionState.primaryAction) {
-      case 'LOGIN_TO_LEARN':
+      case 'LOGIN_TO_ENROLL':
         router.push('/(auth)/login');
         break;
       case 'OPEN_LEARNING':
-        router.push(`/learn/${course.id}` as const);
+        if (lastAccessedLessonId) {
+          router.push(`/learn/lesson/${lastAccessedLessonId}` as const);
+        } else if (course.id) {
+          router.push(`/learn/${course.id}` as const);
+        }
         break;
       case 'FREE_ENROLL':
         if (!course.id) break;
@@ -78,25 +88,13 @@ export default function CourseDetailScreen() {
           },
         });
         break;
-      case 'ALREADY_IN_CART':
-        router.push('/(tabs)/cart');
-        break;
-      case 'ADD_TO_CART':
+      case 'BUY_ON_WEB':
         if (!course.id) break;
-        addToCart(course.id, {
-          onError: (err) => {
-            const appErr = err as unknown as AppError;
-            void notify('Giỏ hàng', appErr.message || 'Không thể thêm vào giỏ.');
-          },
-        });
+        await WebBrowser.openBrowserAsync(webLinks.course(course.id));
         break;
       default:
         break;
     }
-  };
-
-  const handleOpenWebsite = () => {
-    Linking.openURL(webLinks.course(slug));
   };
 
   const totalMinutes = course.totalDurationSeconds
@@ -264,31 +262,24 @@ export default function CourseDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Sticky Action Bar (Table D-M02) */}
+      {/* Bottom Sticky Action Bar (BR-MOBILE-SCOPE) */}
       <View style={styles.bottomBar}>
         <View style={styles.priceContainer}>
           <Text style={styles.priceOverline}>HỌC PHÍ NIÊM YẾT</Text>
-          <MoneyText amount={course.isFree ? 0 : course.price} style={styles.priceText} />
+          <MoneyText amount={course.isFree ? 0 : (course.price ?? 0)} style={styles.priceText} />
         </View>
 
         <View style={styles.actionButtonsContainer}>
-          {actionState.primaryLabel && (
+          {actionState.primaryLabel ? (
             <Button
               title={actionState.primaryLabel}
               onPress={handlePrimaryAction}
-              loading={isEnrolling || isAddingCart}
+              loading={isEnrolling}
               style={styles.primaryActionButton}
             />
-          )}
-
-          {actionState.secondaryLabel && (
-            <Button
-              title={actionState.secondaryLabel}
-              variant="outline"
-              onPress={handleOpenWebsite}
-              style={styles.secondaryActionButton}
-            />
-          )}
+          ) : actionState.notice ? (
+            <Text style={styles.instructorBadgeNotice}>{actionState.notice}</Text>
+          ) : null}
         </View>
       </View>
     </View>
@@ -585,8 +576,13 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 18,
   },
-  secondaryActionButton: {
-    minHeight: 44,
-    paddingHorizontal: 14,
+  instructorBadgeNotice: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: semantic.brandPrimaryStrong,
+    backgroundColor: semantic.brandSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
 });

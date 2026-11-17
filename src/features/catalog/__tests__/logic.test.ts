@@ -1,63 +1,32 @@
 // src/features/catalog/__tests__/logic.test.ts
-// Unit tests for resolveCourseAction (Table D-M02) and video helper.
+// Unit tests for resolveCourseAction (BR-MOBILE-SCOPE) and video helper.
 
 import { resolveCourseAction } from '../logic';
 import { isNativeVideoUrl } from '../../../components/media/LessonContentViewer';
 
-describe('resolveCourseAction (Table D-M02)', () => {
-  // Row 1: Not logged in
-  it('Row 1: Not logged in (paid course) returns LOGIN_TO_LEARN with web purchase notice', () => {
-    const result = resolveCourseAction({
-      isLoggedIn: false,
-      isFree: false,
-      viewer: null,
-    });
-
-    expect(result.primaryAction).toBe('LOGIN_TO_LEARN');
-    expect(result.primaryLabel).toBe('Đăng nhập để học');
-    expect(result.secondaryLabel).toBe('Mua trên website');
-    expect(result.notice).toBe('Khóa học trả phí được mua trên website');
-  });
-
-  it('Row 1: Not logged in (free course) returns LOGIN_TO_LEARN without paid notice', () => {
-    const result = resolveCourseAction({
-      isLoggedIn: false,
-      isFree: true,
-      viewer: null,
-    });
-
-    expect(result.primaryAction).toBe('LOGIN_TO_LEARN');
-    expect(result.primaryLabel).toBe('Đăng nhập để học');
-    expect(result.secondaryLabel).toBeUndefined();
-    expect(result.notice).toBeUndefined();
-  });
-
-  // Row 2: Instructor of the course
-  it('Row 2: Instructor returns null primary action and instructor notice', () => {
+describe('resolveCourseAction (BR-MOBILE-SCOPE)', () => {
+  it('returns null action and instructor notice when viewer is instructor', () => {
     const result = resolveCourseAction({
       isLoggedIn: true,
       isFree: false,
       viewer: {
         isInstructor: true,
         owned: false,
-        inCart: false,
       },
     });
 
     expect(result.primaryAction).toBeNull();
     expect(result.primaryLabel).toBeNull();
-    expect(result.notice).toBe('Bạn là giảng viên của khóa này');
+    expect(result.notice).toBe('Bạn là giảng viên khóa này');
   });
 
-  // Row 3: Already enrolled/owned
-  it('Row 3: Enrolled/owned returns OPEN_LEARNING ("Vào học")', () => {
+  it('returns OPEN_LEARNING ("Vào học") when owned without lastAccessedLessonId', () => {
     const result = resolveCourseAction({
       isLoggedIn: true,
       isFree: false,
       viewer: {
         isInstructor: false,
         owned: true,
-        inCart: false,
       },
     });
 
@@ -65,15 +34,28 @@ describe('resolveCourseAction (Table D-M02)', () => {
     expect(result.primaryLabel).toBe('Vào học');
   });
 
-  // Row 4: Free course
-  it('Row 4: Free course for logged in student returns FREE_ENROLL ("Ghi danh miễn phí")', () => {
+  it('returns OPEN_LEARNING ("Học tiếp") when owned with lastAccessedLessonId', () => {
+    const result = resolveCourseAction({
+      isLoggedIn: true,
+      isFree: false,
+      viewer: {
+        isInstructor: false,
+        owned: true,
+      },
+      lastAccessedLessonId: 42,
+    });
+
+    expect(result.primaryAction).toBe('OPEN_LEARNING');
+    expect(result.primaryLabel).toBe('Học tiếp');
+  });
+
+  it('returns FREE_ENROLL for logged-in user on free course', () => {
     const result = resolveCourseAction({
       isLoggedIn: true,
       isFree: true,
       viewer: {
         isInstructor: false,
         owned: false,
-        inCart: false,
       },
     });
 
@@ -81,39 +63,33 @@ describe('resolveCourseAction (Table D-M02)', () => {
     expect(result.primaryLabel).toBe('Ghi danh miễn phí');
   });
 
-  // Row 5: Paid course already in cart
-  it('Row 5: Paid course already in cart returns ALREADY_IN_CART ("Đã có trong giỏ")', () => {
+  it('returns LOGIN_TO_ENROLL for anonymous user on free course', () => {
     const result = resolveCourseAction({
-      isLoggedIn: true,
-      isFree: false,
-      viewer: {
-        isInstructor: false,
-        owned: false,
-        inCart: true,
-      },
+      isLoggedIn: false,
+      isFree: true,
+      viewer: null,
     });
 
-    expect(result.primaryAction).toBe('ALREADY_IN_CART');
-    expect(result.primaryLabel).toBe('Đã có trong giỏ');
-    expect(result.secondaryLabel).toBe('Mua trên website');
+    expect(result.primaryAction).toBe('LOGIN_TO_ENROLL');
+    expect(result.primaryLabel).toBe('Đăng nhập để ghi danh');
   });
 
-  // Row 6: Paid course not in cart
-  it('Row 6: Paid course not in cart returns ADD_TO_CART ("Thêm vào giỏ")', () => {
-    const result = resolveCourseAction({
+  it('returns BUY_ON_WEB for paid course when anonymous or not owned', () => {
+    const anonResult = resolveCourseAction({
+      isLoggedIn: false,
+      isFree: false,
+      viewer: null,
+    });
+    expect(anonResult.primaryAction).toBe('BUY_ON_WEB');
+    expect(anonResult.primaryLabel).toBe('Mua trên website');
+
+    const loggedInResult = resolveCourseAction({
       isLoggedIn: true,
       isFree: false,
-      viewer: {
-        isInstructor: false,
-        owned: false,
-        inCart: false,
-      },
+      viewer: { owned: false, isInstructor: false },
     });
-
-    expect(result.primaryAction).toBe('ADD_TO_CART');
-    expect(result.primaryLabel).toBe('Thêm vào giỏ');
-    expect(result.secondaryLabel).toBe('Mua trên website');
-    expect(result.notice).toBe('Khóa học này được thanh toán trên website');
+    expect(loggedInResult.primaryAction).toBe('BUY_ON_WEB');
+    expect(loggedInResult.primaryLabel).toBe('Mua trên website');
   });
 });
 

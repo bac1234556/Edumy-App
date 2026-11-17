@@ -1,94 +1,73 @@
 // src/features/catalog/logic.ts
-// Pure business logic for course action resolution (D-M02, rules 40).
+// Pure business logic for course action resolution (BR-MOBILE-SCOPE).
 
 export interface CourseViewerState {
-  owned: boolean;
-  inCart: boolean;
-  isInstructor: boolean;
+  owned?: boolean;
+  isInstructor?: boolean;
 }
 
 export interface ResolveCourseActionInput {
   isLoggedIn: boolean;
   isFree: boolean;
   viewer?: CourseViewerState | null;
+  lastAccessedLessonId?: number | null;
 }
 
 export type CoursePrimaryAction =
-  | 'LOGIN_TO_LEARN'
+  | 'LOGIN_TO_ENROLL'
   | 'OPEN_LEARNING'
   | 'FREE_ENROLL'
-  | 'ALREADY_IN_CART'
-  | 'ADD_TO_CART'
+  | 'BUY_ON_WEB'
   | null;
 
 export interface CourseActionResult {
   primaryAction: CoursePrimaryAction;
   primaryLabel: string | null;
-  secondaryLabel?: string | null;
   notice?: string | null;
 }
 
 /**
- * Pure function implementing Table D-M02 (Evaluate top-down, first match wins):
- * 1. not logged in -> "Đăng nhập để học" | paid: "Khóa học trả phí được mua trên website"
- * 2. isInstructor  -> none | "Bạn là giảng viên của khóa này"
- * 3. owned         -> "Vào học"
- * 4. isFree        -> "Ghi danh miễn phí"
- * 5. paid & inCart -> "Đã có trong giỏ" | "Mua trên website"
- * 6. paid & !inCart-> "Thêm vào giỏ" | "Mua trên website" + notice
+ * Pure function resolving primary CTA on Course Detail screen (BR-MOBILE-SCOPE):
+ * 1. isInstructor -> notice "Bạn là giảng viên khóa này" (no purchase/enroll CTA)
+ * 2. owned        -> "Học tiếp" (if lastAccessedLessonId) or "Vào học"
+ * 3. isFree & logged in  -> "Ghi danh miễn phí"
+ * 4. isFree & anonymous  -> "Đăng nhập để ghi danh"
+ * 5. paid & not owned    -> "Mua trên website"
  */
 export function resolveCourseAction(input: ResolveCourseActionInput): CourseActionResult {
-  const { isLoggedIn, isFree, viewer } = input;
+  const { isLoggedIn, isFree, viewer, lastAccessedLessonId } = input;
 
-  // 1. Not logged in
-  if (!isLoggedIn) {
-    return {
-      primaryAction: 'LOGIN_TO_LEARN',
-      primaryLabel: 'Đăng nhập để học',
-      secondaryLabel: isFree ? undefined : 'Mua trên website',
-      notice: isFree ? undefined : 'Khóa học trả phí được mua trên website',
-    };
-  }
-
-  // 2. Instructor of this course
   if (viewer?.isInstructor) {
     return {
       primaryAction: null,
       primaryLabel: null,
-      notice: 'Bạn là giảng viên của khóa này',
+      notice: 'Bạn là giảng viên khóa này',
     };
   }
 
-  // 3. Already enrolled/owned
   if (viewer?.owned) {
     return {
       primaryAction: 'OPEN_LEARNING',
-      primaryLabel: 'Vào học',
+      primaryLabel: lastAccessedLessonId ? 'Học tiếp' : 'Vào học',
     };
   }
 
-  // 4. Free course
   if (isFree) {
+    if (!isLoggedIn) {
+      return {
+        primaryAction: 'LOGIN_TO_ENROLL',
+        primaryLabel: 'Đăng nhập để ghi danh',
+      };
+    }
     return {
       primaryAction: 'FREE_ENROLL',
       primaryLabel: 'Ghi danh miễn phí',
     };
   }
 
-  // 5. Paid & in cart
-  if (viewer?.inCart) {
-    return {
-      primaryAction: 'ALREADY_IN_CART',
-      primaryLabel: 'Đã có trong giỏ',
-      secondaryLabel: 'Mua trên website',
-    };
-  }
-
-  // 6. Paid & not in cart
   return {
-    primaryAction: 'ADD_TO_CART',
-    primaryLabel: 'Thêm vào giỏ',
-    secondaryLabel: 'Mua trên website',
-    notice: 'Khóa học này được thanh toán trên website',
+    primaryAction: 'BUY_ON_WEB',
+    primaryLabel: 'Mua trên website',
+    notice: 'Khóa học trả phí được mua trên website',
   };
 }

@@ -65,8 +65,3 @@ export async function freeEnrollApi(courseId: number): Promise<EnrollmentCreated
   const response = await client.post(`/courses/${courseId}/enrollments`);
   return unwrap<EnrollmentCreated>(response.data);
 }
-
-export async function addToCartApi(courseId: number): Promise<unknown> {
-  const response = await client.post('/cart/items', { courseId });
-  return unwrap<unknown>(response.data);
-}

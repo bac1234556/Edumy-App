@@ -1,11 +1,10 @@
 // src/lib/web-links.ts
-// Direct website links for actions requiring web browser interaction (UC-M01).
+// Direct website links for actions handled in the web browser.
 
 import { ENV } from '../config/env';
 
 export const webLinks = {
-  course: (slug: string) => `${ENV.WEB_BASE_URL}/courses/${encodeURIComponent(slug)}`,
-  order: (orderCode: string) => `${ENV.WEB_BASE_URL}/orders/${encodeURIComponent(orderCode)}`,
-  certificate: (code: string) => `${ENV.WEB_BASE_URL}/certificates/${encodeURIComponent(code)}`,
-  cart: () => `${ENV.WEB_BASE_URL}/cart`,
+  course: (id: number) => `${ENV.WEB_BASE_URL}/courses/${id}`,
+  certificateVerify: (code: string) =>
+    `${ENV.WEB_BASE_URL}/certificates/verify/${encodeURIComponent(code)}`,
 } as const;

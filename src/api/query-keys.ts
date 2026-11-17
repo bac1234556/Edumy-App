@@ -16,13 +16,6 @@ export const queryKeys = {
     lessonPreview: (slug: string, lessonId: number) =>
       ['catalog', 'course', slug, 'preview', lessonId] as const,
   },
-  cart: {
-    current: ['cart'] as const,
-  },
-  orders: {
-    all: (page: number = 0) => ['orders', page] as const,
-    detail: (orderCode: string) => ['orders', 'detail', orderCode] as const,
-  },
   learning: {
     all: ['learning'] as const,
     myEnrollments: (page: number = 0) => ['learning', 'enrollments', page] as const,

@@ -36,7 +36,7 @@ describe('copyCertificateVerificationLink', () => {
   it('copies certificate verification URL to clipboard', async () => {
     const link = await copyCertificateVerificationLink('CERT-EDUMY-999');
 
-    expect(link).toContain('/certificates/CERT-EDUMY-999');
+    expect(link).toContain('/certificates/verify/CERT-EDUMY-999');
     expect(Clipboard.setStringAsync).toHaveBeenCalledWith(link);
   });
 });

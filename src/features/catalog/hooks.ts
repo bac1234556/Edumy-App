@@ -1,5 +1,5 @@
 // src/features/catalog/hooks.ts
-// React Query hooks for courses, categories, reviews and actions.
+// React Query hooks for courses, categories, reviews and free enrollments.
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -9,7 +9,6 @@ import {
   getCourseReviewsApi,
   getLessonPreviewApi,
   freeEnrollApi,
-  addToCartApi,
   CourseFilterParams,
 } from './api';
 import { queryKeys } from '../../api/query-keys';
@@ -25,7 +24,7 @@ export function useCategories() {
   return useQuery({
     queryKey: queryKeys.catalog.categories(),
     queryFn: () => getCategoriesApi(),
-    staleTime: 1000 * 60 * 30, // 30 minutes cache for categories
+    staleTime: 1000 * 60 * 30,
   });
 }
 
@@ -62,21 +61,7 @@ export function useFreeEnroll(courseSlug?: string) {
       if (courseSlug) {
         queryClient.invalidateQueries({ queryKey: queryKeys.catalog.courseDetail(courseSlug) });
       }
-      queryClient.invalidateQueries({ queryKey: queryKeys.learning.myEnrollments() });
-    },
-  });
-}
-
-export function useAddToCart(courseSlug?: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (courseId: number) => addToCartApi(courseId),
-    onSuccess: () => {
-      if (courseSlug) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.catalog.courseDetail(courseSlug) });
-      }
-      queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.learning.all });
     },
   });
 }

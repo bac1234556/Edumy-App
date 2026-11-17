@@ -79,7 +79,7 @@ export default function AccountScreen() {
             {isLoggedIn ? me?.fullName : 'Khách vãng lai'}
           </Text>
           <Text variant="bodySmall" style={styles.emailText}>
-            {isLoggedIn ? me?.email : 'Đăng nhập để đồng bộ tiến độ học, chứng chỉ và giỏ hàng'}
+            {isLoggedIn ? me?.email : 'Đăng nhập để đồng bộ tiến độ học và chứng chỉ'}
           </Text>
           {isLoggedIn && me?.roles && (
             <View style={styles.rolesContainer}>
@@ -143,10 +143,10 @@ export default function AccountScreen() {
         </View>
       ) : (
         <>
-          <Text style={styles.groupLabel}>QUẢN LÝ HỌC VỤ &amp; ĐƠN HÀNG</Text>
+          <Text style={styles.groupLabel}>QUẢN LÝ HỌC VỤ</Text>
           <View style={styles.menuSection}>
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.menuItem, styles.menuItemLast]}
               onPress={() => router.push('/account/certificates' as const)}
             >
               <View style={styles.menuItemLeft}>
@@ -156,22 +156,6 @@ export default function AccountScreen() {
                 <View>
                   <Text style={styles.menuItemText}>Chứng chỉ tốt nghiệp</Text>
                   <Text style={styles.menuItemSub}>Tải tệp PDF &amp; sao chép liên kết xác thực</Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.menuItem, styles.menuItemLast]}
-              onPress={() => router.push('/orders' as const)}
-            >
-              <View style={styles.menuItemLeft}>
-                <View style={styles.menuIconWrap}>
-                  <Ionicons name="receipt-outline" size={18} color={semantic.brandPrimary} />
-                </View>
-                <View>
-                  <Text style={styles.menuItemText}>Lịch sử đơn hàng</Text>
-                  <Text style={styles.menuItemSub}>Tra cứu trạng thái đơn hàng đã mua</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#94A3B8" />

@@ -13,7 +13,7 @@
 
 - **Một nguồn dữ liệu chân thực (Single Source of Truth):** 1 Database SQL Server, 1 Backend Spring Boot (`port 5000`), chia sẻ dữ liệu liên thông giữa Web SPA (`port 3000`) và Mobile App.
 - **Xác thực bảo mật cao (NFR-M01, NFR-M02):** Access token chỉ lưu trên RAM (Zustand store). Refresh token lưu trong Keychain / Keystore (`expo-secure-store`) trên Android/iOS, và **chỉ lưu trong bộ nhớ RAM** trên trình duyệt web (`expo start --web`, không dùng `localStorage`, nên khi reload trang trên web người dùng cần đăng nhập lại). Áp dụng quay vòng token (token rotation) và phát hiện tái sử dụng (reuse detection). Không dùng AsyncStorage cho thông tin nhạy cảm.
-- **Tuân thủ chính sách chợ ứng dụng (BR-M01):** Mobile **không thực hiện thanh toán in-app**. Giỏ hàng đồng bộ hai chiều, thanh toán chuyển hướng an toàn về Web `${EXPO_PUBLIC_WEB_BASE_URL}/cart`.
+- **Phạm vi ứng dụng (`BR-MOBILE-SCOPE`):** App tập trung vào **học tập + kênh giảng viên** (chế độ xem & thao tác nhẹ). Không có giỏ hàng, lịch sử đơn hàng hay thanh toán trong app. Khóa học trả phí có nút **"Mua trên website"** mở `${EXPO_PUBLIC_WEB_BASE_URL}/courses/{id}` qua `expo-web-browser`.
 - **Phòng học & Tiến độ (Learning & Progress):** Phát video chuẩn qua `expo-video` (fallback WebView), ghi nhận lượt xem (`visit`), đánh dấu hoàn thành thủ công (D-33), chúc mừng và tải chứng chỉ PDF có chữ ký số.
 - **Hỏi & Đáp (Q&A) & Đánh giá (Review):** Diễn đàn trao đổi theo từng bài học/khóa học, đánh dấu câu hỏi đã giải quyết, đánh giá 1–5 sao kèm nhận xét.
 - **Chế độ Doanh thu Giảng viên (Instructor Money Mode - Phân hệ 06):**
@@ -48,7 +48,9 @@ EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:5000/api/v1
 # Đối với thiết bị vật lý qua mạng LAN:
 # EXPO_PUBLIC_API_BASE_URL=http://192.168.1.xxx:5000/api/v1
 
-# URL của website Edumy (dùng cho thanh toán giỏ hàng, xác thực chứng chỉ)
+# URL của website Edumy (dùng cho "Mua trên website", làm quiz, xác thực chứng chỉ)
+# Trên trình duyệt web: http://localhost:3000
+# Trên thiết bị vật lý (điện thoại thật): KHÔNG dùng localhost; hãy thay bằng IP LAN (ví dụ http://192.168.1.xxx:3000)
 EXPO_PUBLIC_WEB_BASE_URL=http://localhost:3000
 ```
 

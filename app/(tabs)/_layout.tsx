@@ -68,16 +68,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="cart"
-        options={{
-          title: 'Giỏ hàng đồng bộ',
-          tabBarLabel: 'Giỏ hàng',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="instructor"
         options={{
           title: 'Thu nhập Giảng viên',

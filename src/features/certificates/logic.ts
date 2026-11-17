@@ -45,8 +45,11 @@ export async function downloadAndShareCertificate(
 /**
  * Copies the public verification web link to the device clipboard.
  */
-export async function copyCertificateVerificationLink(code: string): Promise<string> {
-  const link = webLinks.certificate(code);
+export async function copyCertificateVerificationLink(
+  code: string,
+  verifyUrl?: string | null
+): Promise<string> {
+  const link = verifyUrl || webLinks.certificateVerify(code);
   await Clipboard.setStringAsync(link);
   return link;
 }
