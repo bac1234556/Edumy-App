@@ -4,8 +4,8 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Alert,
 } from 'react-native';
+import { confirm, notify } from '../../../src/lib/dialog';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import {
   useLessonDetail,
@@ -66,24 +66,23 @@ export default function LessonLearnScreen() {
     setCompletion(
       { lessonId: numericLessonId, completed: nextCompleted },
       {
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
           if (data.certificateJustIssued) {
-            Alert.alert(
-              'Hoàn thành khóa học',
-              'Chúc mừng bạn đã hoàn tất 100% chương trình học và được cấp chứng chỉ tốt nghiệp xác thực từ Edumy.',
-              [
-                { text: 'Đóng', style: 'default' },
-                {
-                  text: 'Xem chứng chỉ',
-                  onPress: () => router.push('/account/certificates' as const),
-                },
-              ]
-            );
+            const viewCert = await confirm({
+              title: 'Hoàn thành khóa học',
+              message:
+                'Chúc mừng bạn đã hoàn tất 100% chương trình học và được cấp chứng chỉ tốt nghiệp xác thực từ Edumy.',
+              confirmText: 'Xem chứng chỉ',
+              cancelText: 'Đóng',
+            });
+            if (viewCert) {
+              router.push('/account/certificates' as const);
+            }
           }
         },
         onError: (err) => {
           const appErr = err as unknown as AppError;
-          Alert.alert('Lỗi cập nhật', appErr.message || 'Không thể cập nhật tiến độ bài học.');
+          void notify('Lỗi cập nhật', appErr.message || 'Không thể cập nhật tiến độ bài học.');
         },
       }
     );

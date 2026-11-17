@@ -2,7 +2,8 @@
 // React Query mutation hooks for profile operations.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateProfileApi, changePasswordApi, resendVerificationEmailApi, ChangePasswordRequest } from './api';
+import { updateProfileApi, changePasswordApi, ChangePasswordRequest } from './api';
+import { resendVerificationApi } from '../auth/api';
 import { useSessionStore } from '../../store/session';
 import { queryKeys } from '../../api/query-keys';
 
@@ -27,6 +28,6 @@ export function useChangePassword() {
 
 export function useResendVerificationEmail() {
   return useMutation({
-    mutationFn: () => resendVerificationEmailApi(),
+    mutationFn: (email?: string) => resendVerificationApi(email),
   });
 }

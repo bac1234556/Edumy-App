@@ -7,8 +7,8 @@ import {
   Image,
   TouchableOpacity,
   Linking,
-  Alert,
 } from 'react-native';
+import { notify } from '../../../src/lib/dialog';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useCourseDetail, useFreeEnroll, useAddToCart } from '../../../src/features/catalog/hooks';
 import { resolveCourseAction } from '../../../src/features/catalog/logic';
@@ -74,7 +74,7 @@ export default function CourseDetailScreen() {
           },
           onError: (err) => {
             const appErr = err as unknown as AppError;
-            Alert.alert('Không thể ghi danh', appErr.message || 'Vui lòng thử lại sau.');
+            void notify('Không thể ghi danh', appErr.message || 'Vui lòng thử lại sau.');
           },
         });
         break;
@@ -86,7 +86,7 @@ export default function CourseDetailScreen() {
         addToCart(course.id, {
           onError: (err) => {
             const appErr = err as unknown as AppError;
-            Alert.alert('Giỏ hàng', appErr.message || 'Không thể thêm vào giỏ.');
+            void notify('Giỏ hàng', appErr.message || 'Không thể thêm vào giỏ.');
           },
         });
         break;

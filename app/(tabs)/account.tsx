@@ -1,7 +1,8 @@
 // app/(tabs)/account.tsx — Tài khoản & Bảo mật (Swiss Editorial Console)
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { confirm } from '../../src/lib/dialog';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
 import { useSessionStore } from '../../src/store/session';
@@ -50,15 +51,17 @@ export default function AccountScreen() {
     });
   };
 
-  const handleLogout = () => {
-    Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn kết thúc phiên đăng nhập trên thiết bị này?', [
-      { text: 'Hủy', style: 'cancel' },
-      {
-        text: 'Đăng xuất',
-        style: 'destructive',
-        onPress: () => logout(),
-      },
-    ]);
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: 'Đăng xuất',
+      message: 'Bạn có chắc chắn muốn kết thúc phiên đăng nhập trên thiết bị này?',
+      confirmText: 'Đăng xuất',
+      cancelText: 'Hủy',
+      destructive: true,
+    });
+    if (ok) {
+      logout();
+    }
   };
 
   return (

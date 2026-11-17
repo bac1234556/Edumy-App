@@ -8,8 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
+import { confirm, notify } from '../../../src/lib/dialog';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -95,22 +95,20 @@ export default function NewWithdrawalScreen() {
     setServerError(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setClientError(null);
     setServerError(null);
 
     if (!hasPayoutAccount) {
-      Alert.alert(
-        'Yêu cầu tài khoản nhận tiền',
-        'Bạn cần thiết lập tài khoản ngân hàng nhận tiền trước khi tạo yêu cầu rút.',
-        [
-          { text: 'Hủy', style: 'cancel' },
-          {
-            text: 'Thiết lập ngay',
-            onPress: () => router.push('/instructor/payout-account' as const),
-          },
-        ]
-      );
+      const ok = await confirm({
+        title: 'Yêu cầu tài khoản nhận tiền',
+        message: 'Bạn cần thiết lập tài khoản ngân hàng nhận tiền trước khi tạo yêu cầu rút.',
+        confirmText: 'Thiết lập ngay',
+        cancelText: 'Hủy',
+      });
+      if (ok) {
+        router.push('/instructor/payout-account' as const);
+      }
       return;
     }
 
@@ -122,17 +120,12 @@ export default function NewWithdrawalScreen() {
     }
 
     requestWithdrawal(numericAmount, {
-      onSuccess: () => {
-        Alert.alert(
+      onSuccess: async () => {
+        await notify(
           'Yêu cầu thành công',
-          `Yêu cầu rút ${numericAmount.toLocaleString('vi-VN')} đ đã được tạo và đang chờ xử lý.`,
-          [
-            {
-              text: 'Xem lịch sử',
-              onPress: () => router.replace('/instructor/withdrawals' as const),
-            },
-          ]
+          `Yêu cầu rút ${numericAmount.toLocaleString('vi-VN')} đ đã được tạo và đang chờ xử lý.`
         );
+        router.replace('/instructor/withdrawals' as const);
       },
       onError: (err) => {
         const appError = err as unknown as AppError;

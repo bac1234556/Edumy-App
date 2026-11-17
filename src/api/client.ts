@@ -1,11 +1,11 @@
 // src/api/client.ts
-// Centralized Axios client with Bearer auth, single-flight token refresh & RFC 9457 error parsing.
+// Centralized Axios client with Bearer auth, single-flight epoch-guarded token refresh & v2 error parsing.
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ENV } from '../config/env';
-import { useSessionStore } from '../store/session';
+import { emitSessionExpired, useSessionStore } from '../store/session';
 import { getRefreshToken, setRefreshToken, removeRefreshToken } from './tokens';
-import { parseAppError } from './problem';
+import { AppError, parseAppError } from './problem';
 import { unwrap } from './envelope';
 import { components } from './schema';
 
@@ -39,7 +39,7 @@ client.interceptors.request.use(
   (error) => Promise.reject(parseAppError(error))
 );
 
-// Response Interceptor: Handle 401 with single-flight refresh
+// Response Interceptor: Handle 401 with single-flight epoch-guarded refresh
 client.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -52,18 +52,21 @@ client.interceptors.response.use(
     const is401 = error.response.status === 401;
     const isAuthEndpoint = originalRequest.url?.includes('/auth/mobile/');
 
+    // Never refresh for 403 or /auth/mobile/* endpoints
     if (is401 && !isAuthEndpoint && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         if (!refreshPromise) {
+          const epochAtStart = useSessionStore.getState().sessionEpoch;
+
           refreshPromise = (async () => {
             const currentRefreshToken = await getRefreshToken();
             if (!currentRefreshToken) {
               throw new Error('NO_REFRESH_TOKEN');
             }
 
-            // Call /auth/mobile/refresh directly using a clean axios instance to avoid recursive interceptors
+            // Call /auth/mobile/refresh directly using clean axios to avoid recursive interceptors
             const response = await axios.post(
               `${ENV.API_BASE_URL}/auth/mobile/refresh`,
               { refreshToken: currentRefreshToken },
@@ -73,6 +76,17 @@ client.interceptors.response.use(
               }
             );
 
+            // Epoch guard: if user logged out while refresh was in flight, discard rotated tokens
+            if (useSessionStore.getState().sessionEpoch !== epochAtStart) {
+              const endedErr: AppError = {
+                kind: 'problem',
+                status: 401,
+                code: 'SESSION_ENDED',
+                message: 'Phiên đăng nhập đã kết thúc.',
+              };
+              throw endedErr;
+            }
+
             const data = unwrap<MobileTokensDto>(response.data);
             const newAccessToken = data?.accessToken;
             const newRefreshToken = data?.refreshToken;
@@ -81,10 +95,18 @@ client.interceptors.response.use(
               throw new Error('INVALID_TOKEN_RESPONSE');
             }
 
-            // Save rotated refresh token in secure storage
-            await setRefreshToken(newRefreshToken);
+            // Re-check epoch right before saving tokens
+            if (useSessionStore.getState().sessionEpoch !== epochAtStart) {
+              const endedErr: AppError = {
+                kind: 'problem',
+                status: 401,
+                code: 'SESSION_ENDED',
+                message: 'Phiên đăng nhập đã kết thúc.',
+              };
+              throw endedErr;
+            }
 
-            // Update in-memory access token
+            await setRefreshToken(newRefreshToken);
             useSessionStore.getState().setAccessToken(newAccessToken);
 
             return newAccessToken;
@@ -97,17 +119,29 @@ client.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return client(originalRequest);
       } catch (refreshErr) {
-        const axiosErr = refreshErr as AxiosError;
-        const status = axiosErr.response?.status;
+        const parsedRefreshErr = parseAppError(refreshErr);
 
-        // If refresh fails with 400 or 401 (token expired/revoked/reuse detected), clear session
-        if (status === 400 || status === 401 || (refreshErr as Error).message === 'NO_REFRESH_TOKEN') {
-          await removeRefreshToken();
-          useSessionStore.getState().clearSession();
+        if (parsedRefreshErr.code === 'SESSION_ENDED') {
+          return Promise.reject(parsedRefreshErr);
         }
 
-        // On network failure during refresh, do NOT clear tokens (allow offline/retry)
-        return Promise.reject(parseAppError(refreshErr));
+        const status = parsedRefreshErr.status;
+        const errMsg = refreshErr instanceof Error ? refreshErr.message : '';
+
+        // If refresh fails with 401 or 403 (token expired/revoked/reused/account locked), clear session & notify
+        if (
+          status === 401 ||
+          status === 403 ||
+          errMsg === 'NO_REFRESH_TOKEN' ||
+          errMsg === 'INVALID_TOKEN_RESPONSE'
+        ) {
+          await removeRefreshToken();
+          useSessionStore.getState().clearSession();
+          emitSessionExpired();
+        }
+
+        // On network/timeout failure during refresh, preserve refresh token
+        return Promise.reject(parsedRefreshErr);
       }
     }
 

@@ -6,8 +6,8 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
+import { notify } from '../../../src/lib/dialog';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useCourseDetail } from '../../../src/features/catalog/hooks';
 import { useSubmitReview } from '../../../src/features/reviews/hooks';
@@ -63,10 +63,9 @@ export default function WriteReviewScreen() {
         },
       },
       {
-        onSuccess: () => {
-          Alert.alert('Thành công', 'Cảm ơn bạn đã gửi đánh giá cho khóa học này!', [
-            { text: 'Đồng ý', onPress: () => router.back() },
-          ]);
+        onSuccess: async () => {
+          await notify('Thành công', 'Cảm ơn bạn đã gửi đánh giá cho khóa học này!');
+          router.back();
         },
         onError: (err) => {
           const appErr = err as unknown as AppError;

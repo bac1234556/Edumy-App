@@ -8,8 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
+import { notify } from '../../src/lib/dialog';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,10 +42,9 @@ export default function ProfileScreen() {
   const onSubmit = (data: UpdateProfileFormData) => {
     setServerError(null);
     updateProfile(data.fullName, {
-      onSuccess: () => {
-        Alert.alert('Thành công', 'Thông tin hồ sơ đã được cập nhật.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+      onSuccess: async () => {
+        await notify('Thành công', 'Thông tin hồ sơ đã được cập nhật.');
+        router.back();
       },
       onError: (err) => {
         const appErr = err as unknown as AppError;

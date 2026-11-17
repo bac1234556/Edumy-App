@@ -2,7 +2,7 @@
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { client } from '../client';
-import { useSessionStore } from '../../store/session';
+import { subscribeSessionExpired, useSessionStore } from '../../store/session';
 import * as tokens from '../tokens';
 
 jest.mock('../tokens', () => ({
@@ -19,7 +19,12 @@ describe('Axios Client & Single-flight 401 Token Refresh', () => {
     jest.clearAllMocks();
     mockClient = new MockAdapter(client);
     mockAxios = new MockAdapter(axios);
-    useSessionStore.setState({ accessToken: 'old-access-token', me: null, status: 'authenticated' });
+    useSessionStore.setState({
+      accessToken: 'old-access-token',
+      me: null,
+      status: 'authenticated',
+      sessionEpoch: 0,
+    });
   });
 
   afterEach(() => {
@@ -129,5 +134,84 @@ describe('Axios Client & Single-flight 401 Token Refresh', () => {
 
     // Do NOT remove refresh token on network failure
     expect(tokens.removeRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it('does not save rotated tokens when logout (clearSession) runs mid-refresh', async () => {
+    (tokens.getRefreshToken as jest.Mock).mockResolvedValue('valid-refresh-token');
+
+    mockAxios.onPost('http://10.0.2.2:5000/api/v1/auth/mobile/refresh').reply(() => {
+      // Simulate user tapping Logout while refresh request is in flight
+      useSessionStore.getState().clearSession();
+      return [
+        200,
+        {
+          success: true,
+          message: 'OK',
+          data: {
+            accessToken: 'stale-new-access-token',
+            refreshToken: 'stale-new-refresh-token',
+          },
+          errors: null,
+        },
+      ];
+    });
+
+    mockClient.onGet('/protected-race').reply(401, {
+      success: false,
+      message: 'Unauthorized',
+      data: null,
+      errors: { code: 'UNAUTHORIZED', fields: null, traceId: 't1' },
+    });
+
+    await expect(client.get('/protected-race')).rejects.toMatchObject({
+      code: 'SESSION_ENDED',
+      status: 401,
+    });
+
+    expect(tokens.setRefreshToken).not.toHaveBeenCalled();
+    expect(useSessionStore.getState().accessToken).toBeNull();
+    expect(useSessionStore.getState().status).toBe('unauthenticated');
+  });
+
+  it('does not trigger token refresh on normal 403 Forbidden', async () => {
+    let refreshCalls = 0;
+    mockAxios.onPost('http://10.0.2.2:5000/api/v1/auth/mobile/refresh').reply(() => {
+      refreshCalls++;
+      return [200, {}];
+    });
+
+    mockClient.onGet('/learn/courses/99').reply(403, {
+      success: false,
+      message: 'Bạn chưa ghi danh khóa học này.',
+      data: null,
+      errors: { code: 'NOT_ENROLLED', fields: null, traceId: 't-403' },
+    });
+
+    await expect(client.get('/learn/courses/99')).rejects.toMatchObject({
+      kind: 'problem',
+      status: 403,
+      code: 'NOT_ENROLLED',
+    });
+
+    expect(refreshCalls).toBe(0);
+  });
+
+  it('emits onSessionExpired when refresh fails with 401', async () => {
+    const expiredListener = jest.fn();
+    const unsub = subscribeSessionExpired(expiredListener);
+
+    (tokens.getRefreshToken as jest.Mock).mockResolvedValue('expired-refresh');
+    mockAxios.onPost('http://10.0.2.2:5000/api/v1/auth/mobile/refresh').reply(401, {
+      success: false,
+      message: 'Refresh token invalid',
+      data: null,
+      errors: { code: 'AUTH_REFRESH_INVALID', fields: null, traceId: 't-exp' },
+    });
+    mockClient.onGet('/me').reply(401);
+
+    await expect(client.get('/me')).rejects.toMatchObject({ status: 401 });
+    expect(expiredListener).toHaveBeenCalledTimes(1);
+
+    unsub();
   });
 });

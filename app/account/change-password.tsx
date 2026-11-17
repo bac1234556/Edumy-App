@@ -8,13 +8,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { changePasswordSchema, ChangePasswordFormData } from '../../src/features/profile/logic';
 import { useChangePassword } from '../../src/features/profile/hooks';
+import { performLogout } from '../../src/features/auth/hooks';
+import { notify } from '../../src/lib/dialog';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
 import { Screen } from '../../src/components/ui/Screen';
@@ -23,6 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { mutate: changePassword, isPending } = useChangePassword();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -50,17 +53,19 @@ export default function ChangePasswordScreen() {
         newPassword: data.newPassword,
       },
       {
-        onSuccess: () => {
-          Alert.alert(
-            'Đổi mật khẩu thành công',
-            'Mật khẩu của bạn đã được thay đổi. Các phiên đăng nhập trên thiết bị khác và trình duyệt web đã được đăng xuất để bảo mật.',
-            [{ text: 'OK', onPress: () => router.back() }]
-          );
+        onSuccess: async () => {
+          await notify('Đã đổi mật khẩu', 'Vui lòng đăng nhập lại trên mọi thiết bị.');
+          await performLogout(queryClient, (href) => router.replace(href));
         },
         onError: (err) => {
           const appErr = err as unknown as AppError;
-          if (appErr.code === 'PASSWORD_INCORRECT') {
-            setError('currentPassword', { message: 'Mật khẩu hiện tại không chính xác' });
+          if (
+            appErr.code === 'CURRENT_PASSWORD_INCORRECT' ||
+            appErr.code === 'PASSWORD_INCORRECT'
+          ) {
+            setError('currentPassword', {
+              message: appErr.message || 'Mật khẩu hiện tại không chính xác',
+            });
           } else if (appErr.code === 'PASSWORD_SAME_AS_OLD') {
             setError('newPassword', { message: 'Mật khẩu mới không được trùng với mật khẩu cũ' });
           } else {
@@ -96,7 +101,7 @@ export default function ChangePasswordScreen() {
           <View style={styles.securityNotice}>
             <Ionicons name="information-circle-outline" size={20} color="#0284C7" />
             <Text style={styles.securityNoticeText}>
-              Lưu ý: Sau khi đổi mật khẩu thành công, phiên trên thiết bị này vẫn giữ nguyên, nhưng toàn bộ các phiên đăng nhập khác (bao gồm trên web) sẽ tự động bị đăng xuất.
+              Lưu ý: Sau khi đổi mật khẩu thành công, toàn bộ phiên đăng nhập trên app và trình duyệt web sẽ bị thu hồi và bạn cần đăng nhập lại.
             </Text>
           </View>
 

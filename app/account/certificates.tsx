@@ -4,9 +4,9 @@ import {
   View,
   StyleSheet,
   FlatList,
-  Alert,
   RefreshControl,
 } from 'react-native';
+import { notify } from '../../src/lib/dialog';
 import { useRouter, Stack } from 'expo-router';
 import { useCertificates, useCertificateActions } from '../../src/features/certificates/hooks';
 import { useRefetchOnScreenFocus } from '../../src/hooks/useRefetchOnScreenFocus';
@@ -46,10 +46,10 @@ export default function CertificatesScreen() {
   const handleCopy = (code: string) => {
     copyVerificationLink(code, {
       onSuccess: () => {
-        Alert.alert('Đã sao chép', 'Liên kết xác thực chứng chỉ công khai đã được lưu vào bộ nhớ tạm.');
+        void notify('Đã sao chép', 'Liên kết xác thực chứng chỉ công khai đã được lưu vào bộ nhớ tạm.');
       },
       onError: () => {
-        Alert.alert('Lỗi', 'Không thể sao chép liên kết.');
+        void notify('Lỗi', 'Không thể sao chép liên kết.');
       },
     });
   };
@@ -57,7 +57,7 @@ export default function CertificatesScreen() {
   const handleDownload = (code: string) => {
     downloadAndShare(code, {
       onError: (err) => {
-        Alert.alert('Tải chứng chỉ', err.message || 'Không thể tải tệp PDF chứng chỉ.');
+        void notify('Tải chứng chỉ', err.message || 'Không thể tải tệp PDF chứng chỉ.');
       },
     });
   };

@@ -7,9 +7,9 @@ import {
   Image,
   TouchableOpacity,
   Linking,
-  Alert,
   RefreshControl,
 } from 'react-native';
+import { confirm, notify } from '../../src/lib/dialog';
 import { useRouter } from 'expo-router';
 import { useCart, useRemoveFromCart } from '../../src/features/cart/hooks';
 import { CartItem, getUnavailableReasonInfo } from '../../src/features/cart/logic';
@@ -78,26 +78,21 @@ export default function CartScreen() {
     );
   }
 
-  const handleConfirmRemove = (courseId: number, title: string) => {
-    Alert.alert(
-      'Xác nhận xóa',
-      `Bạn có chắc chắn muốn bỏ "${title}" khỏi giỏ hàng?`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: () => {
-            removeItem(courseId, {
-              onError: (err) => {
-                const appErr = err as unknown as AppError;
-                Alert.alert('Lỗi', appErr.message || 'Không thể xóa khóa học khỏi giỏ hàng.');
-              },
-            });
-          },
-        },
-      ]
-    );
+  const handleConfirmRemove = async (courseId: number, title: string) => {
+    const ok = await confirm({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc chắn muốn bỏ "${title}" khỏi giỏ hàng?`,
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      destructive: true,
+    });
+    if (!ok) return;
+    removeItem(courseId, {
+      onError: (err) => {
+        const appErr = err as unknown as AppError;
+        void notify('Lỗi', appErr.message || 'Không thể xóa khóa học khỏi giỏ hàng.');
+      },
+    });
   };
 
   const handleEnrollNow = (courseId: number) => {
@@ -108,7 +103,7 @@ export default function CartScreen() {
       },
       onError: (err) => {
         const appErr = err as unknown as AppError;
-        Alert.alert('Không thể ghi danh', appErr.message || 'Vui lòng thử lại sau.');
+        void notify('Không thể ghi danh', appErr.message || 'Vui lòng thử lại sau.');
       },
     });
   };

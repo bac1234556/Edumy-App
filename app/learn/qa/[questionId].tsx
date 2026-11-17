@@ -6,10 +6,10 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { confirm, notify } from '../../../src/lib/dialog';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import {
   useQuestionDetail,
@@ -67,30 +67,30 @@ export default function QuestionDetailScreen() {
     resolveQuestion(!thread.resolved, {
       onError: (err) => {
         const appErr = err as unknown as AppError;
-        Alert.alert('Lỗi', appErr.message || 'Không thể cập nhật trạng thái.');
+        void notify('Lỗi', appErr.message || 'Không thể cập nhật trạng thái.');
       },
     });
   };
 
-  const handleDelete = () => {
-    Alert.alert('Xóa câu hỏi', 'Bạn có chắc chắn muốn xóa câu hỏi này cùng các câu trả lời?', [
-      { text: 'Hủy', style: 'cancel' },
-      {
-        text: 'Xóa',
-        style: 'destructive',
-        onPress: () => {
-          deleteQuestion(numericId, {
-            onSuccess: () => {
-              router.back();
-            },
-            onError: (err) => {
-              const appErr = err as unknown as AppError;
-              Alert.alert('Lỗi', appErr.message || 'Không thể xóa câu hỏi.');
-            },
-          });
-        },
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: 'Xóa câu hỏi',
+      message: 'Bạn có chắc chắn muốn xóa câu hỏi này cùng các câu trả lời?',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
+      destructive: true,
+    });
+    if (!ok) return;
+
+    deleteQuestion(numericId, {
+      onSuccess: () => {
+        router.back();
       },
-    ]);
+      onError: (err) => {
+        const appErr = err as unknown as AppError;
+        void notify('Lỗi', appErr.message || 'Không thể xóa câu hỏi.');
+      },
+    });
   };
 
   const handleSendAnswer = () => {

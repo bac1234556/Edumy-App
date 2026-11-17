@@ -1,25 +1,44 @@
 // app/_layout.tsx
 import React, { useEffect, useState } from 'react';
-import { AppState, AppStateStatus, Platform } from 'react-native';
-import { Stack } from 'expo-router';
+import { AppState, AppStateStatus, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import * as Network from 'expo-network';
 import {
   QueryClient,
   QueryClientProvider,
   focusManager,
   onlineManager,
+  useQueryClient,
 } from '@tanstack/react-query';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useRestoreSession } from '../src/features/auth/hooks';
 import { useForegroundSync } from '../src/hooks/useForegroundSync';
 import { Loading } from '../src/components/ui/Loading';
 import { Screen } from '../src/components/ui/Screen';
+import { Text } from '../src/components/ui/Text';
 import { parseAppError } from '../src/api/problem';
+import { subscribeSessionExpired, useSessionStore } from '../src/store/session';
+import { notify } from '../src/lib/dialog';
 import { semantic } from '../src/theme/tokens';
 
 function RootNavigator() {
-  const { isRestored } = useRestoreSession();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const status = useSessionStore((s) => s.status);
+  const { isRestored, isRetrying, retryRestore } = useRestoreSession();
   useForegroundSync();
+
+  useEffect(() => {
+    return subscribeSessionExpired(() => {
+      queryClient.clear();
+      router.replace('/(auth)/login');
+      void notify(
+        'Phiên đăng nhập đã hết hạn',
+        'Phiên làm việc của bạn đã kết thúc. Vui lòng đăng nhập lại để tiếp tục.'
+      );
+    });
+  }, [queryClient, router]);
 
   if (!isRestored) {
     return (
@@ -30,32 +49,56 @@ function RootNavigator() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: semantic.surfaceCanvas },
-        headerShadowVisible: false,
-        headerTintColor: semantic.textPrimary,
-        headerTitleStyle: {
-          fontWeight: '700',
-          fontSize: 17,
-        },
-        contentStyle: { backgroundColor: semantic.surfaceCanvas },
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="(auth)/login"
-        options={{ title: 'Đăng nhập', headerShown: false }}
-      />
-      <Stack.Screen
-        name="(auth)/register"
-        options={{ title: 'Đăng ký', headerShown: false }}
-      />
-      <Stack.Screen
-        name="(auth)/forgot-password"
-        options={{ title: 'Quên mật khẩu', headerShown: false }}
-      />
-    </Stack>
+    <View style={styles.rootContainer}>
+      {status === 'offline' && (
+        <SafeAreaView edges={['top']} style={styles.offlineBannerWrap}>
+          <View style={styles.offlineBanner}>
+            <View style={styles.offlineLeft}>
+              <Ionicons name="cloud-offline-outline" size={18} color="#92400E" />
+              <Text style={styles.offlineText}>Không kết nối được máy chủ</Text>
+            </View>
+            <TouchableOpacity
+              onPress={retryRestore}
+              disabled={isRetrying}
+              style={styles.retryButton}
+              accessibilityRole="button"
+              accessibilityLabel="Thử lại kết nối máy chủ"
+            >
+              <Text style={styles.retryText}>{isRetrying ? 'Đang thử...' : 'Thử lại'}</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      )}
+
+      <View style={styles.stackWrap}>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: semantic.surfaceCanvas },
+            headerShadowVisible: false,
+            headerTintColor: semantic.textPrimary,
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 17,
+            },
+            contentStyle: { backgroundColor: semantic.surfaceCanvas },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(auth)/login"
+            options={{ title: 'Đăng nhập', headerShown: false }}
+          />
+          <Stack.Screen
+            name="(auth)/register"
+            options={{ title: 'Đăng ký', headerShown: false }}
+          />
+          <Stack.Screen
+            name="(auth)/forgot-password"
+            options={{ title: 'Quên mật khẩu', headerShown: false }}
+          />
+        </Stack>
+      </View>
+    </View>
   );
 }
 
@@ -141,3 +184,48 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+  },
+  offlineBannerWrap: {
+    backgroundColor: '#FEF3C7',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FDE68A',
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  offlineLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  offlineText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  retryButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#D97706',
+    minHeight: 32,
+    justifyContent: 'center',
+  },
+  retryText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  stackWrap: {
+    flex: 1,
+  },
+});

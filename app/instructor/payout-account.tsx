@@ -8,9 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   RefreshControl,
 } from 'react-native';
+import { notify } from '../../src/lib/dialog';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -86,7 +86,7 @@ export default function PayoutAccountScreen() {
             currentPassword: '',
           });
           setIsEditing(false);
-          Alert.alert('Thành công', 'Thông tin tài khoản nhận tiền đã được lưu an toàn.');
+          void notify('Thành công', 'Thông tin tài khoản nhận tiền đã được lưu an toàn.');
         },
         onError: (err) => {
           const appErr = err as unknown as AppError;

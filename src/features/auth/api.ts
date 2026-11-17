@@ -1,5 +1,5 @@
 // src/features/auth/api.ts
-// Direct typed API calls for Authentication & User Profile.
+// Direct typed API calls for Authentication & User Profile (v2 endpoints).
 
 import axios from 'axios';
 import { client } from '../../api/client';
@@ -10,6 +10,7 @@ import { ENV } from '../../config/env';
 export type MobileTokens = components['schemas']['MobileTokensDto'];
 export type MobileLoginRequest = components['schemas']['MobileLoginRequest'];
 export type MobileRegisterRequest = components['schemas']['MobileRegisterRequest'];
+export type ForgotPasswordRequest = components['schemas']['ForgotPasswordDto'];
 export type Me = components['schemas']['MeDto'];
 export type UserProfile = Me;
 
@@ -34,23 +35,34 @@ export async function refreshApi(refreshToken: string): Promise<MobileTokens> {
 
 export async function logoutApi(refreshToken?: string | null): Promise<void> {
   try {
-    await client.post('/auth/mobile/logout', {
-      refreshToken: refreshToken || undefined,
-    });
+    await client.post(
+      '/auth/mobile/logout',
+      { refreshToken: refreshToken || undefined },
+      { timeout: 3000 }
+    );
   } catch {
-    // Logout API failure is ignored so client session is always cleared locally
+    // Best-effort logout: server failure or timeout is ignored
   }
 }
 
-export async function getMeApi(): Promise<Me> {
-  const response = await client.get('/me');
+export async function getMeApi(accessTokenOverride?: string): Promise<Me> {
+  const response = await client.get(
+    '/me',
+    accessTokenOverride
+      ? { headers: { Authorization: `Bearer ${accessTokenOverride}` } }
+      : undefined
+  );
   return unwrap<Me>(response.data);
 }
 
 export async function forgotPasswordApi(email: string): Promise<void> {
-  await client.post('/auth/password/forgot', { email });
+  const body: ForgotPasswordRequest = { email };
+  await client.post('/auth/forgot-password', body);
 }
 
-export async function resendVerificationApi(): Promise<void> {
-  await client.post('/auth/email-verification/resend');
+export async function resendVerificationApi(email?: string): Promise<void> {
+  await client.post(
+    '/auth/verification-email/resend',
+    email ? { email } : undefined
+  );
 }

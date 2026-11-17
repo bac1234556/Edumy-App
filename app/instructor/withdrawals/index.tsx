@@ -6,8 +6,8 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  Alert,
 } from 'react-native';
+import { confirm, notify } from '../../../src/lib/dialog';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -34,30 +34,26 @@ export default function WithdrawalsHistoryScreen() {
 
   const withdrawals = withdrawalsData?.content || [];
 
-  const handleCancel = (item: WithdrawalRecord) => {
+  const handleCancel = async (item: WithdrawalRecord) => {
     const itemId = item.id;
     if (itemId === undefined) return;
-    Alert.alert(
-      'Xác nhận hủy yêu cầu',
-      `Bạn có chắc chắn muốn hủy yêu cầu rút ${(item.amount ?? 0).toLocaleString('vi-VN')} đ này không? Số tiền sẽ được hoàn lại vào số dư khả dụng ngay lập tức.`,
-      [
-        { text: 'Không', style: 'cancel' },
-        {
-          text: 'Hủy yêu cầu',
-          style: 'destructive',
-          onPress: () => {
-            cancelWithdrawal(itemId, {
-              onSuccess: () => {
-                Alert.alert('Thành công', 'Yêu cầu rút tiền đã được hủy.');
-              },
-              onError: (err) => {
-                Alert.alert('Lỗi', err.message || 'Không thể hủy yêu cầu rút tiền.');
-              },
-            });
-          },
-        },
-      ]
-    );
+    const ok = await confirm({
+      title: 'Xác nhận hủy yêu cầu',
+      message: `Bạn có chắc chắn muốn hủy yêu cầu rút ${(item.amount ?? 0).toLocaleString('vi-VN')} đ này không? Số tiền sẽ được hoàn lại vào số dư khả dụng ngay lập tức.`,
+      confirmText: 'Hủy yêu cầu',
+      cancelText: 'Không',
+      destructive: true,
+    });
+    if (!ok) return;
+
+    cancelWithdrawal(itemId, {
+      onSuccess: () => {
+        void notify('Thành công', 'Yêu cầu rút tiền đã được hủy.');
+      },
+      onError: (err) => {
+        void notify('Lỗi', err.message || 'Không thể hủy yêu cầu rút tiền.');
+      },
+    });
   };
 
   const renderWithdrawalItem = ({ item }: { item: WithdrawalRecord }) => {
