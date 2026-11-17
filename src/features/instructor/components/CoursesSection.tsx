@@ -56,10 +56,11 @@ export function CoursesSection({
 
   const handleAccept = async (inv: CoInstructorInvitation) => {
     const id = inv.invitationId ?? inv.id;
+    if (id === undefined) return;
     const sharePct = ((inv.shareBps ?? 0) / 100).toFixed(0);
     const ok = await confirm({
       title: 'Chấp nhận lời mời đồng giảng viên',
-      message: `Xác nhận tham gia đồng giảng viên khóa "${inv.courseTitle}" (tỷ lệ chia ${sharePct}%)?`,
+      message: `Xác nhận tham gia đồng giảng viên khóa "${inv.courseTitle ?? ''}" (tỷ lệ chia ${sharePct}%)?`,
       confirmText: 'Chấp nhận',
       cancelText: 'Hủy',
     });
@@ -78,9 +79,10 @@ export function CoursesSection({
 
   const handleDecline = async (inv: CoInstructorInvitation) => {
     const id = inv.invitationId ?? inv.id;
+    if (id === undefined) return;
     const ok = await confirm({
       title: 'Từ chối lời mời',
-      message: `Bạn có chắc muốn từ chối lời mời cộng tác khóa "${inv.courseTitle}"?`,
+      message: `Bạn có chắc muốn từ chối lời mời cộng tác khóa "${inv.courseTitle ?? ''}"?`,
       confirmText: 'Từ chối',
       cancelText: 'Hủy',
       destructive: true,

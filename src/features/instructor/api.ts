@@ -23,19 +23,8 @@ export type InstructorQuestionsResponse =
   components['schemas']['PageResponseQuestionSummaryResponse'];
 export type InstructorQuestionItem = components['schemas']['QuestionSummaryResponse'];
 
-export interface CoInstructorInvitation {
-  id: number;
-  invitationId?: number;
-  courseId: number;
-  courseTitle: string;
-  instructorId?: number;
-  fullName?: string;
-  email?: string;
-  status: string;
-  shareBps: number;
-  invitedAt?: string;
-  respondedAt?: string;
-}
+export type CoInstructorInvitation = components['schemas']['CoInstructorInvitationDto'];
+export type InvitationActionResponse = components['schemas']['InvitationActionResponse'];
 
 export async function getInstructorOverviewApi(): Promise<InstructorOverview> {
   const response = await client.get('/instructor/overview');

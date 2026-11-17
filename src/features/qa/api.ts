@@ -10,33 +10,10 @@ export type PageMetadata = PageMeta;
 export type CreateQuestionInput = components['schemas']['CreateQuestionRequest'];
 export type CreateAnswerInput = components['schemas']['CreateAnswerRequest'];
 export type QuestionListResponse = Page<QuestionSummary>;
-
-export interface QuestionAnswer {
-  id: number;
-  authorId?: number;
-  authorName?: string;
-  authorAvatar?: string;
-  authorType?: string;
-  content: string;
-  visibilityStatus?: string;
-  createdAt: string;
-}
-
-export interface QuestionThread {
-  id: number;
-  courseId: number;
-  courseTitle?: string;
-  lessonId?: number;
-  title: string;
-  content: string;
-  askerId?: number;
-  askerName?: string;
-  askerAvatar?: string;
-  isResolved: boolean;
-  visibilityStatus?: string;
-  createdAt: string;
-  answers: QuestionAnswer[];
-}
+export type QuestionAnswer = components['schemas']['AnswerResponse'];
+export type QuestionThread = components['schemas']['QuestionThreadResponse'];
+export type ResolveQuestionInput = components['schemas']['ResolveQuestionRequest'];
+export type QaMessageResponse = components['schemas']['QaMessageResponse'];
 
 function normalizeQuestionPage(raw: unknown): QuestionListResponse {
   if (!raw || typeof raw !== 'object') {

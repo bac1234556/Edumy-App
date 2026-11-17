@@ -11,6 +11,8 @@ export type MobileTokens = components['schemas']['MobileTokensDto'];
 export type MobileLoginRequest = components['schemas']['MobileLoginRequest'];
 export type MobileRegisterRequest = components['schemas']['MobileRegisterRequest'];
 export type ForgotPasswordRequest = components['schemas']['ForgotPasswordDto'];
+export type ResendVerificationRequest = components['schemas']['ResendVerificationRequest'];
+export type AuthMessageResponse = components['schemas']['AuthMessageResponse'];
 export type Me = components['schemas']['MeDto'];
 export type UserProfile = Me;
 
@@ -61,8 +63,6 @@ export async function forgotPasswordApi(email: string): Promise<void> {
 }
 
 export async function resendVerificationApi(email?: string): Promise<void> {
-  await client.post(
-    '/auth/verification-email/resend',
-    email ? { email } : undefined
-  );
+  const body: ResendVerificationRequest | undefined = email ? { email } : undefined;
+  await client.post('/auth/verification-email/resend', body);
 }

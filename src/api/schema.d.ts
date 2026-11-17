@@ -6618,6 +6618,78 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        UpdateQuestionRequest: {
+            title?: string;
+            content?: string;
+        };
+        AnswerResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            authorId?: number;
+            authorName?: string;
+            authorAvatar?: string;
+            authorType?: string;
+            content?: string;
+            visibilityStatus?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            answerId?: number;
+        };
+        QuestionThreadResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            courseId?: number;
+            courseTitle?: string;
+            /** Format: int32 */
+            lessonId?: number;
+            title?: string;
+            content?: string;
+            /** Format: int32 */
+            askerId?: number;
+            askerName?: string;
+            askerAvatar?: string;
+            isResolved?: boolean;
+            visibilityStatus?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            answers?: components["schemas"]["AnswerResponse"][];
+            /** Format: int64 */
+            questionId?: number;
+        };
+        UpdateAnswerRequest: {
+            content?: string;
+        };
+        ResolveQuestionRequest: {
+            resolved?: boolean;
+        };
+        QuestionSummaryResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            courseId?: number;
+            courseTitle?: string;
+            /** Format: int32 */
+            lessonId?: number;
+            title?: string;
+            content?: string;
+            /** Format: int32 */
+            askerId?: number;
+            askerName?: string;
+            askerAvatar?: string;
+            isResolved?: boolean;
+            /** Format: int64 */
+            answerCount?: number;
+            hasInstructorAnswer?: boolean;
+            visibilityStatus?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            questionId?: number;
+            contentSnippet?: string;
+        };
         UpdatePayoutAccountRequest: {
             bankName: string;
             accountNumber: string;
@@ -6862,9 +6934,9 @@ export interface components {
             answerId?: number;
             content?: string;
             isCorrect?: boolean;
+            answerText?: string;
             /** Format: int32 */
             id?: number;
-            answerText?: string;
         };
         QuestionDto: {
             /** Format: int32 */
@@ -6874,9 +6946,9 @@ export interface components {
             points?: number;
             explanation?: string;
             answers?: components["schemas"]["AnswerDto"][];
+            questionText?: string;
             /** Format: int32 */
             id?: number;
-            questionText?: string;
         };
         QuizDto: {
             /** Format: int32 */
@@ -6989,6 +7061,28 @@ export interface components {
             /** Format: date-time */
             processedAt?: string;
         };
+        CoInstructorInvitationDto: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int32 */
+            invitationId?: number;
+            /** Format: int32 */
+            courseId?: number;
+            courseTitle?: string;
+            /** Format: int32 */
+            instructorId?: number;
+            fullName?: string;
+            email?: string;
+            status?: string;
+            /** Format: int32 */
+            shareBps?: number;
+            invitedAt?: string;
+            respondedAt?: string;
+        };
+        InvitationActionResponse: {
+            invitation?: components["schemas"]["CoInstructorInvitationDto"];
+            message?: string;
+        };
         CreateReviewDto: {
             /** Format: int32 */
             rating?: number;
@@ -7014,6 +7108,12 @@ export interface components {
             /** Format: int32 */
             categoryId?: number;
             thumbnailUrl?: string;
+        };
+        ResendVerificationRequest: {
+            email?: string;
+        };
+        AuthMessageResponse: {
+            message?: string;
         };
         ResetPasswordDto: {
             email: string;
@@ -7272,31 +7372,6 @@ export interface components {
             content?: components["schemas"]["QuestionSummaryResponse"][];
             page?: components["schemas"]["PageMeta"];
         };
-        QuestionSummaryResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int32 */
-            courseId?: number;
-            courseTitle?: string;
-            /** Format: int32 */
-            lessonId?: number;
-            title?: string;
-            content?: string;
-            /** Format: int32 */
-            askerId?: number;
-            askerName?: string;
-            askerAvatar?: string;
-            isResolved?: boolean;
-            /** Format: int64 */
-            answerCount?: number;
-            hasInstructorAnswer?: boolean;
-            visibilityStatus?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: int64 */
-            questionId?: number;
-            contentSnippet?: string;
-        };
         InstructorOverviewDto: {
             totals?: components["schemas"]["TotalsDto"];
             money?: components["schemas"]["MoneyDto"];
@@ -7404,6 +7479,40 @@ export interface components {
             instructorHeadline?: string;
             categoryName?: string;
             recommendationReason?: string;
+        };
+        PageQuestionSummaryResponse: {
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["QuestionSummaryResponse"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
+            empty?: boolean;
+        };
+        PageableObject: {
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            paged?: boolean;
+            unpaged?: boolean;
+            /** Format: int64 */
+            offset?: number;
+            sort?: components["schemas"]["SortObject"];
+        };
+        SortObject: {
+            sorted?: boolean;
+            unsorted?: boolean;
+            empty?: boolean;
         };
         InstantCourseSearchDTO: {
             /** Format: int32 */
@@ -7545,6 +7654,9 @@ export interface components {
             name?: string;
             slug?: string;
         };
+        QaMessageResponse: {
+            message?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -7571,7 +7683,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionThreadResponse"];
                 };
             };
         };
@@ -7587,9 +7699,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateQuestionRequest"];
             };
         };
         responses: {
@@ -7599,7 +7709,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionThreadResponse"];
                 };
             };
         };
@@ -7621,7 +7731,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QaMessageResponse"];
                 };
             };
         };
@@ -7637,9 +7747,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateQuestionRequest"];
             };
         };
         responses: {
@@ -7649,7 +7757,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionThreadResponse"];
                 };
             };
         };
@@ -7671,7 +7779,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionThreadResponse"];
                 };
             };
         };
@@ -7687,9 +7795,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateQuestionRequest"];
             };
         };
         responses: {
@@ -7699,7 +7805,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionThreadResponse"];
                 };
             };
         };
@@ -7721,7 +7827,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QaMessageResponse"];
                 };
             };
         };
@@ -7737,9 +7843,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateQuestionRequest"];
             };
         };
         responses: {
@@ -7749,7 +7853,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionThreadResponse"];
                 };
             };
         };
@@ -7765,9 +7869,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateAnswerRequest"];
             };
         };
         responses: {
@@ -7777,7 +7879,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AnswerResponse"];
                 };
             };
         };
@@ -7799,7 +7901,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QaMessageResponse"];
                 };
             };
         };
@@ -7815,9 +7917,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateAnswerRequest"];
             };
         };
         responses: {
@@ -7827,7 +7927,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AnswerResponse"];
                 };
             };
         };
@@ -7843,9 +7943,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateAnswerRequest"];
             };
         };
         responses: {
@@ -7855,7 +7953,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AnswerResponse"];
                 };
             };
         };
@@ -7877,7 +7975,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QaMessageResponse"];
                 };
             };
         };
@@ -7893,9 +7991,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["UpdateAnswerRequest"];
             };
         };
         responses: {
@@ -7905,7 +8001,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AnswerResponse"];
                 };
             };
         };
@@ -8075,7 +8171,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResolveQuestionRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8083,7 +8183,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -8097,7 +8197,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResolveQuestionRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8105,7 +8209,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -8119,7 +8223,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResolveQuestionRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8127,7 +8235,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -8141,7 +8249,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResolveQuestionRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8149,7 +8261,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -8163,7 +8275,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResolveQuestionRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8171,7 +8287,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -8185,7 +8301,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResolveQuestionRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8193,7 +8313,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -9593,14 +9713,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review updated */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -9615,14 +9733,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review deleted */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -9641,14 +9757,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review updated */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -9663,14 +9777,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review deleted */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -9689,14 +9801,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review updated */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -9711,14 +9821,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review deleted */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -9737,14 +9845,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review updated */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -9759,14 +9865,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Review deleted */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "*/*": Record<string, never>;
-                };
+                content?: never;
             };
         };
     };
@@ -10427,7 +10531,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AnswerResponse"];
                 };
             };
         };
@@ -10453,7 +10557,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AnswerResponse"];
                 };
             };
         };
@@ -11739,7 +11843,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["InvitationActionResponse"];
                 };
             };
         };
@@ -11761,7 +11865,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["InvitationActionResponse"];
                 };
             };
         };
@@ -11783,7 +11887,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["InvitationActionResponse"];
                 };
             };
         };
@@ -11805,7 +11909,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["InvitationActionResponse"];
                 };
             };
         };
@@ -12035,13 +12139,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Review created */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["Review"];
                 };
             };
         };
@@ -12061,13 +12165,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Review created */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["Review"];
                 };
             };
         };
@@ -12087,13 +12191,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Review created */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["Review"];
                 };
             };
         };
@@ -12121,7 +12225,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["PageQuestionSummaryResponse"];
                 };
             };
         };
@@ -12147,7 +12251,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -12175,7 +12279,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["PageQuestionSummaryResponse"];
                 };
             };
         };
@@ -12201,7 +12305,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["QuestionSummaryResponse"];
                 };
             };
         };
@@ -12957,7 +13061,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -12965,7 +13073,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -12977,7 +13085,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -12985,7 +13097,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -12997,7 +13109,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -13005,7 +13121,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -13017,7 +13133,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -13025,7 +13145,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -13037,7 +13157,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -13045,7 +13169,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -13057,7 +13181,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -13065,7 +13193,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -13737,7 +13865,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -13761,7 +13889,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -13785,7 +13913,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["AuthMessageResponse"];
                 };
             };
         };
@@ -16568,7 +16696,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["CoInstructorInvitationDto"][];
                 };
             };
         };
@@ -16588,7 +16716,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": Record<string, never>;
+                    "*/*": components["schemas"]["CoInstructorInvitationDto"][];
                 };
             };
         };
