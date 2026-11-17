@@ -16,7 +16,7 @@ export function useCertificates(page: number = 0) {
   const isLoggedIn = status === 'authenticated';
 
   return useQuery({
-    queryKey: queryKeys.certificates.all(page),
+    queryKey: queryKeys.certificates.list(page),
     queryFn: () => getCertificatesApi(page),
     enabled: isLoggedIn,
   });

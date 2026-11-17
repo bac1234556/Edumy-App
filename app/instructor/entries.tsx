@@ -47,8 +47,8 @@ export default function InstructorEntriesScreen() {
 
   const renderEntryItem = ({ item }: { item: EarningEntry }) => {
     const isMain = item.role === 'main';
-    const platformFeePct = (item.platformFeeBps / 100).toFixed(0);
-    const sharePct = (item.shareBps / 100).toFixed(0);
+    const platformFeePct = ((item.platformFeeBps ?? 0) / 100).toFixed(0);
+    const sharePct = ((item.shareBps ?? 0) / 100).toFixed(0);
 
     return (
       <View style={styles.entryCard}>

@@ -2,17 +2,17 @@
 // Profile update, password change & email verification API endpoints.
 
 import { client } from '../../api/client';
-import { UserProfile } from '../auth/api';
+import { unwrap } from '../../api/envelope';
+import { components } from '../../api/schema';
+import { Me } from '../auth/api';
 
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
+export type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
+export type UpdateMeRequest = components['schemas']['UpdateMeRequest'];
 
-export async function updateProfileApi(fullName: string): Promise<UserProfile> {
-  const response = await client.patch<UserProfile>('/me', { fullName });
-  const data = (response.data as { data?: UserProfile }).data || response.data;
-  return data;
+export async function updateProfileApi(fullName: string): Promise<Me> {
+  const body: UpdateMeRequest = { fullName };
+  const response = await client.patch('/me', body);
+  return unwrap<Me>(response.data);
 }
 
 export async function changePasswordApi(data: ChangePasswordRequest): Promise<void> {

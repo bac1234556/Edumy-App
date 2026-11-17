@@ -1,56 +1,60 @@
 ---
 trigger: glob
 globs: "src/api/**, src/features/**/api.ts, src/features/**/hooks.ts"
-description: "HTTP client, token refresh, generated types and RFC 9457 error handling for Edumy Mobile."
+description: "HTTP client, token refresh, generated types and v2 error handling for Edumy Mobile."
 ---
 
-# 20 — API client & errors
+# 20 — API client & errors (v2)
 
-Endpoint list and shapes: @docs/ai/api-contract.md (read it; never call an endpoint that is not listed there).
+Endpoint list and shapes: `@docs/ai/api-contract-v2.md` and `@docs/ai/openapi.json` (never call `/cart/**` or `/orders/**`).
 
-## Client
+## Client & Envelope
 - One axios instance in `src/api/client.ts`, `baseURL = env.apiBaseUrl` (ends with `/api/v1`), JSON, timeout 15 s.
-- Request interceptor adds `Authorization: Bearer <accessToken>` when a session exists.
-- Generated types: `npx openapi-typescript <API_ORIGIN>/v3/api-docs -o src/api/schema.d.ts` (backend in `dev` profile).
-  Use `components['schemas'][...]` types in `api.ts`. If a needed schema is missing from OpenAPI → STOP and ask.
+- Response envelope: `{ success: true, message: "OK", data: T, errors: null }`. Always unwrap using `unwrap<T>(response.data)` from `src/api/envelope.ts` (never use `.data || response.data`).
+- Generated types: `npm run gen:api` (`openapi-typescript docs/ai/openapi.json -o src/api/schema.d.ts`).
+  Use `components['schemas'][...]` in `api.ts`. Never hand-write types for server responses.
 
-## Token refresh (NFR-M02) — single flight
+## Token refresh — single flight + epoch guard
 - On a 401 from any endpoint except `/auth/mobile/*`: if no refresh is running, start ONE
-  `POST /auth/mobile/refresh {refreshToken}`; all other 401 requests wait for that same promise, then retry once
-  with the new access token.
-- Refresh fails (401/400) → clear secure store + session, navigate to login. Network error during refresh → keep
-  tokens, surface a retryable network error (do not log the user out because of airplane mode).
-- A request is retried at most once (flag on the config) — no refresh loops.
-- Store the new refresh token from every refresh response (tokens rotate; the old one becomes invalid).
+  `POST /auth/mobile/refresh {refreshToken}` recording `epochAtStart = useSessionStore.getState().sessionEpoch`.
+- When refresh returns, if `sessionEpoch !== epochAtStart` (e.g., user logged out mid-flight), **do NOT** save tokens and reject with `SESSION_ENDED`.
+- Refresh fails with 401 or 403 → remove token, `clearSession()`, trigger `onSessionExpired`.
+- Normal 403 errors (e.g., `NOT_ENROLLED`, `FORBIDDEN`) **never** trigger token refresh.
+- Requests to `/auth/mobile/*` **never** go through the refresh flow.
+- Network/timeout error during refresh → keep tokens and surface retryable network error.
 
-## ProblemDetail → AppError (`src/api/problem.ts`)
-Server errors look like `{type,title,status,detail,code,traceId,errors?:[{field,message}]}`.
-Convert every failure into `AppError {kind:'problem'|'network'|'timeout', status, code, message, fieldErrors, retryAfterSec, traceId}`.
-- `message` = server `detail` (Vietnamese) when present, else a generic Vietnamese text by status.
-- `fieldErrors` = `errors[]` → react-hook-form `setError(field, …)`.
-- 429 → read `Retry-After` header (seconds) into `retryAfterSec`; disable the action and show a countdown.
-- Show `traceId` only in a small "Mã lỗi" line on generic error screens (helps backend debugging).
+## Error Envelope v2 → `AppError` (`src/api/problem.ts`)
+Server error envelope:
+```json
+{
+  "success": false,
+  "message": "<Vietnamese user message>",
+  "data": null,
+  "errors": {
+    "code": "UPPER_SNAKE_CODE",
+    "fields": { "<field>": "<msg>" },
+    "traceId": "<uuid>"
+  }
+}
+```
+Convert every failure into `AppError {kind:'problem'|'network'|'timeout'|'unknown', status, code, message, fieldErrors, retryAfterSec, traceId}`:
+- `code = body.errors?.code`
+- `fieldErrors = body.errors?.fields` (only string entries; **never** put `code` or `traceId` into `fieldErrors`)
+- `traceId = body.errors?.traceId`
+- `message = body.message` (when string), else fallback by HTTP status.
+- 429 → read `Retry-After` header (seconds) into `retryAfterSec`.
 
-## Codes with dedicated UX (do not show a generic toast)
-| Code | UX |
+## Codes with dedicated actions/UX (otherwise show server `message`)
+| Code | UX / Action |
 |---|---|
-| `UNAUTHENTICATED` | refresh flow / back to login |
-| `AUTH_INVALID_CREDENTIALS` | "Email hoặc mật khẩu không đúng" under the form |
-| `AUTH_ACCOUNT_LOCKED` | blocking message: account locked, contact support |
-| `AUTH_LOGIN_TEMPORARILY_BLOCKED` | countdown from `Retry-After` |
-| `EMAIL_ALREADY_REGISTERED` | field error on `email` |
-| `TOKEN_RESEND_TOO_SOON` / `RATE_LIMITED` | countdown from `Retry-After` |
-| `ENROLLMENT_REQUIRED` | navigate to the course page |
-| `RESOURCE_NOT_FOUND` | "Không tìm thấy" screen (never reveal more) |
-| `CART_COURSE_FREE` | offer "Ghi danh miễn phí" instead |
-| `CART_COURSE_ALREADY_OWNED` | offer "Vào học" |
-| `CART_OWN_COURSE`, `ENROLLMENT_OWN_COURSE` | "Bạn là giảng viên của khóa học này" |
-| `CART_ITEM_DUPLICATE` | refresh cart, show "Đã có trong giỏ" |
-| `REVIEW_HIDDEN_BY_ADMIN`, `QA_CONTENT_HIDDEN_BY_ADMIN` | read-only state, explain it was hidden by an admin |
-| `QA_QUESTION_DUPLICATE` | "Bạn vừa gửi câu hỏi này" |
-| `WITHDRAWAL_BELOW_MINIMUM`, `WITHDRAWAL_EXCEEDS_BALANCE`, `PAYOUT_ACCOUNT_REQUIRED`, `WITHDRAWAL_ALREADY_OPEN` | form-level messages (UC-I27 E1–E4) |
-| `SERVICE_UNAVAILABLE` (503) | retryable error state |
+| `AUTH_REFRESH_INVALID` / `AUTH_REFRESH_REUSED` / `AUTH_ACCOUNT_LOCKED` | Clear token/session on restore or refresh → login |
+| `EMAIL_RESEND_TOO_SOON` / `RATE_LIMITED` (429) | Disable button + countdown from `retryAfterSec` |
+| `CURRENT_PASSWORD_INCORRECT` (422) | Field error on `currentPassword` |
+| `NOT_ENROLLED` (403) | Navigate back to course page with notification |
+| `PAYOUT_ACCOUNT_REQUIRED` (422) | `confirm` → navigate to `/instructor/payout-account` |
+| `WITHDRAWAL_ALREADY_OPEN` (409) | Navigate to `/instructor/withdrawals` |
+| `WITHDRAWAL_EXCEEDS_BALANCE` / `WITHDRAWAL_BELOW_MINIMUM` (422) | Inline error under amount input |
 
 ## Downloads
-Certificate PDF needs the bearer token: use `FileSystem.downloadAsync(url, localUri, {headers:{Authorization}})`,
-then `Sharing.shareAsync(localUri)`. Delete old files in the cache directory; never keep PDFs in documents.
+Certificate PDF needs the bearer token: on native use `FileSystem.downloadAsync(url, localUri, {headers:{Authorization}})`,
+then `Sharing.shareAsync(localUri)`. On web open `verifyUrl` via `WebBrowser.openBrowserAsync`.

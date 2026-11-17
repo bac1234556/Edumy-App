@@ -42,10 +42,10 @@ export default function LessonPreviewScreen() {
 
       {/* Media or Content Viewer */}
       <LessonContentViewer
-        contentType={lesson.contentType}
+        contentType={lesson.contentType === 'video' ? 'video' : 'article'}
         videoUrl={lesson.videoUrl}
         articleContent={lesson.articleContent}
-        title={lesson.title}
+        title={lesson.title ?? ''}
       />
 
       {/* Lesson Details Info */}
@@ -65,18 +65,6 @@ export default function LessonPreviewScreen() {
         <Text variant="h2" style={styles.title}>
           {lesson.title}
         </Text>
-
-        {lesson.chapterTitle && (
-          <Text style={styles.chapterSubtitle}>Chương: {lesson.chapterTitle}</Text>
-        )}
-
-        <View style={styles.courseCard}>
-          <Ionicons name="school-outline" size={20} color="#0D9488" />
-          <View style={styles.courseMeta}>
-            <Text style={styles.courseMetaLabel}>Thuộc khóa học</Text>
-            <Text style={styles.courseMetaTitle}>{lesson.courseTitle}</Text>
-          </View>
-        </View>
       </ScrollView>
     </View>
   );

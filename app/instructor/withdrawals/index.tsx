@@ -35,16 +35,18 @@ export default function WithdrawalsHistoryScreen() {
   const withdrawals = withdrawalsData?.content || [];
 
   const handleCancel = (item: WithdrawalRecord) => {
+    const itemId = item.id;
+    if (itemId === undefined) return;
     Alert.alert(
       'Xác nhận hủy yêu cầu',
-      `Bạn có chắc chắn muốn hủy yêu cầu rút ${item.amount.toLocaleString('vi-VN')} đ này không? Số tiền sẽ được hoàn lại vào số dư khả dụng ngay lập tức.`,
+      `Bạn có chắc chắn muốn hủy yêu cầu rút ${(item.amount ?? 0).toLocaleString('vi-VN')} đ này không? Số tiền sẽ được hoàn lại vào số dư khả dụng ngay lập tức.`,
       [
         { text: 'Không', style: 'cancel' },
         {
           text: 'Hủy yêu cầu',
           style: 'destructive',
           onPress: () => {
-            cancelWithdrawal(item.id, {
+            cancelWithdrawal(itemId, {
               onSuccess: () => {
                 Alert.alert('Thành công', 'Yêu cầu rút tiền đã được hủy.');
               },
@@ -59,7 +61,7 @@ export default function WithdrawalsHistoryScreen() {
   };
 
   const renderWithdrawalItem = ({ item }: { item: WithdrawalRecord }) => {
-    const statusInfo = getWithdrawalStatusInfo(item.status);
+    const statusInfo = getWithdrawalStatusInfo(item.status ?? '');
     const isRequested = item.status === 'requested';
     const isPaid = item.status === 'paid';
     const isRejected = item.status === 'rejected';

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useCourseLearnRoom } from '../../../src/features/learning/hooks';
+import { useRefetchOnScreenFocus } from '../../../src/hooks/useRefetchOnScreenFocus';
 import { resolveFirstOrUncompletedLesson } from '../../../src/features/learning/logic';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
@@ -26,6 +27,7 @@ export default function CourseLearnRoomScreen() {
   const { data: room, isLoading, isError, error, refetch, isRefetching } = useCourseLearnRoom(
     numericCourseId
   );
+  useRefetchOnScreenFocus(refetch);
 
   if (isLoading) {
     return <Loading message="Đang tải đề cương phòng học..." />;
@@ -88,7 +90,7 @@ export default function CourseLearnRoomScreen() {
                   {room.progress?.percent || 0}% HOÀN THÀNH
                 </Text>
                 <Text style={styles.progressCount}>
-                  {room.progress?.completedLessons || 0}/{room.progress?.totalLessons || 0} BÀI HỌC
+                  {room.progress?.completedItems || 0}/{room.progress?.totalItems || 0} MỤC HỌC
                 </Text>
               </View>
 

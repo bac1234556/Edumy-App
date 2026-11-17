@@ -61,9 +61,9 @@ export default function CourseReviewsScreen() {
         </View>
         <View style={styles.reviewerInfo}>
           <Text style={styles.reviewerName}>{item.reviewerName || 'Học viên Edumy'}</Text>
-          <Text style={styles.reviewDate}>{formatDate(item.createdAt)}</Text>
+          <Text style={styles.reviewDate}>{formatDate(item.createdAt ?? '')}</Text>
         </View>
-        {renderStars(item.rating)}
+        {renderStars(item.rating ?? 0)}
       </View>
 
       {item.comment ? (
@@ -94,7 +94,7 @@ export default function CourseReviewsScreen() {
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           onEndReached={() => {
-            if (data?.page && page + 1 < data.page.totalPages) {
+            if (data?.page && page + 1 < (data.page.totalPages ?? 0)) {
               setPage((prev) => prev + 1);
             }
           }}

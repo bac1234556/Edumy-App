@@ -2,24 +2,56 @@
 import { parseAppError, applyFieldErrors } from '../problem';
 import { AxiosError, AxiosResponse } from 'axios';
 
-describe('parseAppError', () => {
-  it('parses RFC 9457 ProblemDetail with errors array', () => {
+describe('parseAppError (v2 envelope)', () => {
+  it('parses AUTH_INVALID_CREDENTIALS (401) without polluting fieldErrors with code/traceId', () => {
+    const error = {
+      isAxiosError: true,
+      response: {
+        status: 401,
+        headers: {},
+        data: {
+          success: false,
+          message: 'Email hoặc mật khẩu không đúng.',
+          data: null,
+          errors: {
+            code: 'AUTH_INVALID_CREDENTIALS',
+            fields: null,
+            traceId: '9f8a7b6c-1234-4567-890a-bcdef0123456',
+          },
+        },
+      } as unknown as AxiosResponse,
+    } as unknown as AxiosError;
+
+    const parsed = parseAppError(error);
+    expect(parsed).toEqual({
+      kind: 'problem',
+      status: 401,
+      code: 'AUTH_INVALID_CREDENTIALS',
+      message: 'Email hoặc mật khẩu không đúng.',
+      fieldErrors: undefined,
+      retryAfterSec: undefined,
+      traceId: '9f8a7b6c-1234-4567-890a-bcdef0123456',
+    });
+  });
+
+  it('parses VALIDATION_ERROR (400) with errors.fields', () => {
     const error = {
       isAxiosError: true,
       response: {
         status: 400,
         headers: {},
         data: {
-          type: 'https://edumy.com/errors/validation',
-          title: 'Validation Error',
-          status: 400,
-          detail: 'Dữ liệu không hợp lệ',
-          code: 'VALIDATION_FAILED',
-          traceId: 'trace-12345',
-          errors: [
-            { field: 'email', message: 'Email đã tồn tại' },
-            { field: 'password', message: 'Mật khẩu quá ngắn' },
-          ],
+          success: false,
+          message: 'Dữ liệu đầu vào không hợp lệ.',
+          data: null,
+          errors: {
+            code: 'VALIDATION_ERROR',
+            fields: {
+              email: 'Email không đúng định dạng',
+              password: 'Mật khẩu phải từ 8 ký tự trở lên',
+            },
+            traceId: 'trace-val-001',
+          },
         },
       } as unknown as AxiosResponse,
     } as unknown as AxiosError;
@@ -27,29 +59,74 @@ describe('parseAppError', () => {
     const parsed = parseAppError(error);
     expect(parsed.kind).toBe('problem');
     expect(parsed.status).toBe(400);
-    expect(parsed.code).toBe('VALIDATION_FAILED');
-    expect(parsed.message).toBe('Dữ liệu không hợp lệ');
-    expect(parsed.traceId).toBe('trace-12345');
+    expect(parsed.code).toBe('VALIDATION_ERROR');
+    expect(parsed.message).toBe('Dữ liệu đầu vào không hợp lệ.');
+    expect(parsed.traceId).toBe('trace-val-001');
     expect(parsed.fieldErrors).toEqual({
-      email: 'Email đã tồn tại',
-      password: 'Mật khẩu quá ngắn',
+      email: 'Email không đúng định dạng',
+      password: 'Mật khẩu phải từ 8 ký tự trở lên',
     });
   });
 
-  it('parses ProblemDetail without errors array and uses default Vietnamese status message if detail is missing', () => {
+  it('parses WITHDRAWAL_EXCEEDS_BALANCE (422) from v2 envelope', () => {
     const error = {
       isAxiosError: true,
       response: {
-        status: 404,
+        status: 422,
         headers: {},
-        data: {},
+        data: {
+          success: false,
+          message: 'Số tiền rút vượt quá số dư khả dụng.',
+          data: null,
+          errors: {
+            code: 'WITHDRAWAL_EXCEEDS_BALANCE',
+            fields: null,
+            traceId: 'trace-wd-422',
+          },
+        },
       } as unknown as AxiosResponse,
     } as unknown as AxiosError;
 
     const parsed = parseAppError(error);
     expect(parsed.kind).toBe('problem');
-    expect(parsed.status).toBe(404);
-    expect(parsed.message).toBe('Không tìm thấy tài nguyên yêu cầu.');
+    expect(parsed.status).toBe(422);
+    expect(parsed.code).toBe('WITHDRAWAL_EXCEEDS_BALANCE');
+    expect(parsed.message).toBe('Số tiền rút vượt quá số dư khả dụng.');
+    expect(parsed.fieldErrors).toBeUndefined();
+    expect(parsed.traceId).toBe('trace-wd-422');
+  });
+
+  it('parses 500 INTERNAL_ERROR from v2 envelope and falls back on empty body', () => {
+    const error = {
+      isAxiosError: true,
+      response: {
+        status: 500,
+        headers: {},
+        data: {
+          success: false,
+          message: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
+          data: null,
+          errors: {
+            code: 'INTERNAL_ERROR',
+            fields: null,
+            traceId: 'trace-500-xyz',
+          },
+        },
+      } as unknown as AxiosResponse,
+    } as unknown as AxiosError;
+
+    const parsed = parseAppError(error);
+    expect(parsed.kind).toBe('problem');
+    expect(parsed.status).toBe(500);
+    expect(parsed.code).toBe('INTERNAL_ERROR');
+    expect(parsed.message).toBe('Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.');
+    expect(parsed.traceId).toBe('trace-500-xyz');
+
+    const empty500 = parseAppError({
+      isAxiosError: true,
+      response: { status: 500, headers: {}, data: {} } as unknown as AxiosResponse,
+    });
+    expect(empty500.message).toBe('Hệ thống đang gặp sự cố. Vui lòng thử lại sau.');
   });
 
   it('reads Retry-After header for 429 status', () => {
@@ -58,11 +135,17 @@ describe('parseAppError', () => {
       response: {
         status: 429,
         headers: {
-          'retry-after': '60',
+          'retry-after': '58',
         },
         data: {
-          detail: 'Bạn đã thử quá nhiều lần.',
-          code: 'RATE_LIMITED',
+          success: false,
+          message: 'Vui lòng chờ 58 giây trước khi gửi lại email xác thực.',
+          data: null,
+          errors: {
+            code: 'EMAIL_RESEND_TOO_SOON',
+            fields: null,
+            traceId: 'trace-429',
+          },
         },
       } as unknown as AxiosResponse,
     } as unknown as AxiosError;
@@ -70,8 +153,8 @@ describe('parseAppError', () => {
     const parsed = parseAppError(error);
     expect(parsed.kind).toBe('problem');
     expect(parsed.status).toBe(429);
-    expect(parsed.code).toBe('RATE_LIMITED');
-    expect(parsed.retryAfterSec).toBe(60);
+    expect(parsed.code).toBe('EMAIL_RESEND_TOO_SOON');
+    expect(parsed.retryAfterSec).toBe(58);
   });
 
   it('handles timeout error correctly', () => {

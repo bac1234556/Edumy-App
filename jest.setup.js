@@ -44,4 +44,17 @@ jest.mock('expo-clipboard', () => ({
   getStringAsync: jest.fn(async () => ''),
 }));
 
+jest.mock('expo-network', () => ({
+  NetworkStateType: { NONE: 'NONE', WIFI: 'WIFI' },
+  getNetworkStateAsync: jest.fn(async () => ({
+    type: 'WIFI',
+    isConnected: true,
+    isInternetReachable: true,
+  })),
+}));
+
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn(async () => ({ type: 'opened' })),
+}));
+
 

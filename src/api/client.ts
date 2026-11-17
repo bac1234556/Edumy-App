@@ -6,6 +6,10 @@ import { ENV } from '../config/env';
 import { useSessionStore } from '../store/session';
 import { getRefreshToken, setRefreshToken, removeRefreshToken } from './tokens';
 import { parseAppError } from './problem';
+import { unwrap } from './envelope';
+import { components } from './schema';
+
+type MobileTokensDto = components['schemas']['MobileTokensDto'];
 
 export const client = axios.create({
   baseURL: ENV.API_BASE_URL,
@@ -69,10 +73,9 @@ client.interceptors.response.use(
               }
             );
 
-            // Handle both raw MobileTokensDto and wrapped ApiResponse
-            const data = response.data?.data || response.data;
-            const newAccessToken = data.accessToken;
-            const newRefreshToken = data.refreshToken;
+            const data = unwrap<MobileTokensDto>(response.data);
+            const newAccessToken = data?.accessToken;
+            const newRefreshToken = data?.refreshToken;
 
             if (!newAccessToken || !newRefreshToken) {
               throw new Error('INVALID_TOKEN_RESPONSE');

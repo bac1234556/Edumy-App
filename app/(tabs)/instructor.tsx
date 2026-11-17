@@ -13,7 +13,7 @@ import {
   useCourseEarnings,
   useMonthlyEarnings,
 } from '../../src/features/instructor/hooks';
-import { getMaturityExplanation } from '../../src/features/instructor/logic';
+import { useRefetchOnScreenFocus } from '../../src/hooks/useRefetchOnScreenFocus';
 import { useSessionStore } from '../../src/store/session';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
@@ -38,11 +38,13 @@ export default function InstructorTabScreen() {
   const { data: courses, refetch: refetchCourses } = useCourseEarnings();
   const { data: monthly, refetch: refetchMonthly } = useMonthlyEarnings();
 
-  const handleRefresh = () => {
+  const handleRefresh = React.useCallback(() => {
     refetchSummary();
     refetchCourses();
     refetchMonthly();
-  };
+  }, [refetchSummary, refetchCourses, refetchMonthly]);
+
+  useRefetchOnScreenFocus(handleRefresh);
 
   if (isSummaryLoading) {
     return <Loading message="Đang tải dữ liệu thu nhập..." />;
@@ -57,7 +59,11 @@ export default function InstructorTabScreen() {
     );
   }
 
-  const maturityText = getMaturityExplanation(summary?.maturityPolicy);
+  const holdDays = summary?.holdDays;
+  const maturityText =
+    holdDays === 0
+      ? 'Thu nhập khả dụng ngay sau khi đơn hàng được thanh toán (chế độ demo)'
+      : `Mỗi khoản thu nhập khả dụng sau ${holdDays ?? 7} ngày kể từ khi đơn hàng được thanh toán`;
 
   return (
     <ScrollView
@@ -99,18 +105,18 @@ export default function InstructorTabScreen() {
       <View
         style={[
           styles.maturityNotice,
-          summary?.maturityPolicy === 'immediate' && styles.demoNotice,
+          holdDays === 0 && styles.demoNotice,
         ]}
       >
         <Ionicons
-          name={summary?.maturityPolicy === 'immediate' ? 'flash-outline' : 'calendar-outline'}
+          name={holdDays === 0 ? 'flash-outline' : 'calendar-outline'}
           size={16}
-          color={summary?.maturityPolicy === 'immediate' ? '#0D9488' : '#B45309'}
+          color={holdDays === 0 ? '#0D9488' : '#B45309'}
         />
         <Text
           style={[
             styles.maturityText,
-            summary?.maturityPolicy === 'immediate' && styles.demoNoticeText,
+            holdDays === 0 && styles.demoNoticeText,
           ]}
         >
           {maturityText}

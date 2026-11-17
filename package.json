@@ -10,7 +10,8 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "gen:api": "openapi-typescript http://localhost:5000/v3/api-docs -o src/api/schema.d.ts"
+    "gen:api": "openapi-typescript docs/ai/openapi.json -o src/api/schema.d.ts",
+    "gen:api:live": "openapi-typescript http://localhost:5000/v3/api-docs -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
@@ -23,11 +24,13 @@
     "expo-file-system": "~17.0.1",
     "expo-font": "~12.0.10",
     "expo-linking": "~6.3.1",
+    "expo-network": "~6.0.1",
     "expo-router": "~3.5.24",
     "expo-secure-store": "~13.0.2",
     "expo-sharing": "~12.0.1",
     "expo-status-bar": "~1.12.1",
     "expo-video": "~1.1.9",
+    "expo-web-browser": "~13.0.3",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.52.0",

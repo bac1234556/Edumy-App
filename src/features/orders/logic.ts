@@ -1,11 +1,10 @@
 // src/features/orders/logic.ts
 // Pure business logic and status/cancelReason formatters for Orders (EDU-MOB-SRS-001).
 
-import { components } from '../../api/schema';
+import { OrderSummary, OrderDetail, OrderDetailItem } from './api';
 
-export type OrderSummary = components['schemas']['OrderSummary'];
-export type OrderDetail = components['schemas']['OrderDetail'];
-export type OrderItem = components['schemas']['OrderItem'];
+export type { OrderSummary, OrderDetail };
+export type OrderItem = OrderDetailItem;
 
 export interface OrderStatusConfig {
   label: string;

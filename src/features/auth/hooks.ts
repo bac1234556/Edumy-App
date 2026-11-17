@@ -39,6 +39,9 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (data: MobileLoginRequest) => {
       const tokens = await loginApi(data);
+      if (!tokens.accessToken || !tokens.refreshToken) {
+        throw new Error('Phản hồi đăng nhập không hợp lệ.');
+      }
       await setRefreshToken(tokens.refreshToken);
       useSessionStore.getState().setAccessToken(tokens.accessToken);
       const profile = await getMeApi();
@@ -56,6 +59,9 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (data: MobileRegisterRequest) => {
       const tokens = await registerApi(data);
+      if (!tokens.accessToken || !tokens.refreshToken) {
+        throw new Error('Phản hồi đăng ký không hợp lệ.');
+      }
       await setRefreshToken(tokens.refreshToken);
       useSessionStore.getState().setAccessToken(tokens.accessToken);
       const profile = await getMeApi();
@@ -112,6 +118,9 @@ export function useRestoreSession() {
 
         // Attempt token refresh
         const tokens = await refreshApi(storedRefreshToken);
+        if (!tokens.accessToken || !tokens.refreshToken) {
+          throw new Error('INVALID_TOKEN_RESPONSE');
+        }
         await setRefreshToken(tokens.refreshToken);
         useSessionStore.getState().setAccessToken(tokens.accessToken);
 

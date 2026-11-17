@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useCertificates, useCertificateActions } from '../../src/features/certificates/hooks';
+import { useRefetchOnScreenFocus } from '../../src/hooks/useRefetchOnScreenFocus';
 import { CertificateItem } from '../../src/features/certificates/logic';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
@@ -24,6 +25,7 @@ export default function CertificatesScreen() {
   const [page, setPage] = useState(0);
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useCertificates(page);
+  useRefetchOnScreenFocus(refetch);
   const { downloadAndShare, isDownloading, copyVerificationLink } = useCertificateActions();
 
   const certificates = data?.content || [];
@@ -68,7 +70,7 @@ export default function CertificatesScreen() {
           <Text style={styles.badgeText}>CHỨNG CHỈ HOÀN THÀNH</Text>
         </View>
         <View style={styles.codePill}>
-          <Text style={styles.certCode}>#{item.certificateCode}</Text>
+          <Text style={styles.certCode}>#{item.code}</Text>
         </View>
       </View>
 
@@ -78,30 +80,16 @@ export default function CertificatesScreen() {
 
       <View style={styles.metaGrid}>
         <View style={styles.infoRow}>
-          <Ionicons name="person-outline" size={14} color={semantic.textMuted} />
-          <Text style={styles.infoLabel}>Học viên:</Text>
-          <Text style={styles.infoValue}>{item.studentName}</Text>
-        </View>
-
-        {item.instructorName && (
-          <View style={styles.infoRow}>
-            <Ionicons name="school-outline" size={14} color={semantic.textMuted} />
-            <Text style={styles.infoLabel}>Giảng viên:</Text>
-            <Text style={styles.infoValue}>{item.instructorName}</Text>
-          </View>
-        )}
-
-        <View style={styles.infoRow}>
           <Ionicons name="calendar-outline" size={14} color={semantic.textMuted} />
           <Text style={styles.infoLabel}>Ngày cấp:</Text>
-          <Text style={styles.infoValueTabular}>{formatDate(item.issuedAt)}</Text>
+          <Text style={styles.infoValueTabular}>{formatDate(item.issuedAt ?? '')}</Text>
         </View>
       </View>
 
       <View style={styles.actionButtons}>
         <Button
           title="Tải PDF & Chia sẻ"
-          onPress={() => handleDownload(item.certificateCode)}
+          onPress={() => item.code && handleDownload(item.code)}
           loading={isDownloading}
           icon={<Ionicons name="share-outline" size={16} color="#FFFFFF" />}
           style={styles.downloadBtn}
@@ -110,7 +98,7 @@ export default function CertificatesScreen() {
         <Button
           title="Sao chép link"
           variant="outline"
-          onPress={() => handleCopy(item.certificateCode)}
+          onPress={() => item.code && handleCopy(item.code)}
           style={styles.copyBtn}
         />
       </View>
@@ -132,12 +120,12 @@ export default function CertificatesScreen() {
       ) : (
         <FlatList
           data={certificates}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item, idx) => item.code ?? String(item.courseId ?? idx)}
           renderItem={renderCertCard}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           onEndReached={() => {
-            if (data?.page && page + 1 < data.page.totalPages) {
+            if (data?.page && page + 1 < (data.page.totalPages ?? 0)) {
               setPage((prev) => prev + 1);
             }
           }}

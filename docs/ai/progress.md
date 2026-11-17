@@ -21,4 +21,6 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 | M08 instructor earnings | done | aaf97b5 | tsc: pass · lint: pass · test: 106/106 pass | Instructor money mode, balance breakdown hero, monthly & course stats, entries filter by month/course |
 | M09 payout account & withdrawals | done | aaf97b5 | tsc: pass · lint: pass · test: 106/106 pass | Payout account masked display & password update, withdrawal request with quick chips & validations, withdrawal history & cancel |
 | M10 polish & hand-over | done | pending | tsc: pass · lint: pass · test: 106/106 pass | AC checklist (AC-M01..M18), Demo script, security audit (0 AsyncStorage, 0 token leaks), README updated |
+| P2-0 rules & deps | done | pending | - | Updated AGENTS.md & .agents/rules/* for v2 scope; copied openapi.json & api-contract-v2.md; installed expo-network & expo-web-browser |
+| P2-1 types, API, errors, query sync | done | pending | tsc: pass · lint: pass · test: 111/111 pass | Generated schema.d.ts from openapi.json; added envelope unwrap/Page<T>; rewrote parseAppError for v2; wired focusManager, onlineManager, useForegroundSync & useRefetchOnScreenFocus |
 | Ads | blocked | | | Q-M01 |

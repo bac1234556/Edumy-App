@@ -1,24 +1,23 @@
 // src/api/problem.ts
-// RFC 9457 ProblemDetail to AppError normalization & form error helpers.
+// Backend v2 error envelope normalization to AppError & react-hook-form helpers.
 
 import { AxiosError } from 'axios';
 import { UseFormSetError, FieldValues, Path } from 'react-hook-form';
 
-export interface FieldErrorItem {
-  field?: string;
-  message?: string;
+export interface V2ErrorDetails {
+  code?: string;
+  fields?: Record<string, string> | null;
+  traceId?: string;
 }
 
-export interface ProblemDetailResponse {
-  type?: string;
-  title?: string;
-  status?: number;
-  detail?: string;
-  code?: string;
-  traceId?: string;
-  errors?: FieldErrorItem[] | Record<string, string>;
+export interface V2ErrorBody {
+  success?: boolean;
   message?: string;
-  error?: unknown;
+  data?: unknown;
+  errors?: V2ErrorDetails | null;
+  // Legacy / Spring default fallback fields
+  detail?: string;
+  traceId?: string;
 }
 
 export interface AppError {
@@ -36,6 +35,7 @@ const DEFAULT_STATUS_MESSAGES: Record<number, string> = {
   401: 'Phiên đăng nhập đã hết hạn hoặc không hợp lệ.',
   403: 'Bạn không có quyền thực hiện hành động này.',
   404: 'Không tìm thấy tài nguyên yêu cầu.',
+  405: 'Phương thức yêu cầu không được hỗ trợ.',
   409: 'Dữ liệu bị trùng lặp hoặc xung đột trạng thái.',
   422: 'Dữ liệu gửi lên không đúng định dạng hoặc vi phạm quy tắc.',
   429: 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.',
@@ -43,6 +43,19 @@ const DEFAULT_STATUS_MESSAGES: Record<number, string> = {
   502: 'Không thể kết nối đến máy chủ. Vui lòng thử lại.',
   503: 'Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.',
 };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function isAppError(err: unknown): err is AppError {
+  return (
+    isPlainObject(err) &&
+    typeof err.kind === 'string' &&
+    ['problem', 'network', 'timeout', 'unknown'].includes(err.kind) &&
+    typeof err.message === 'string'
+  );
+}
 
 export function parseAppError(error: unknown): AppError {
   if (!error) {
@@ -52,7 +65,11 @@ export function parseAppError(error: unknown): AppError {
     };
   }
 
-  const axiosError = error as AxiosError<ProblemDetailResponse>;
+  if (isAppError(error)) {
+    return error;
+  }
+
+  const axiosError = error as AxiosError<V2ErrorBody>;
 
   // 1. Timeout error
   if (axiosError.code === 'ECONNABORTED' || axiosError.message?.includes('timeout')) {
@@ -70,37 +87,38 @@ export function parseAppError(error: unknown): AppError {
     };
   }
 
-  // 3. Server HTTP error response
+  // 3. Server HTTP error response (v2 envelope: { success: false, message, data: null, errors: { code, fields, traceId } })
   if (axiosError.response) {
     const status = axiosError.response.status;
-    const data = axiosError.response.data || {};
+    const rawData = axiosError.response.data;
+    const data: V2ErrorBody = isPlainObject(rawData) ? (rawData as V2ErrorBody) : {};
     const headers = axiosError.response.headers || {};
 
-    // Extract detail or message
-    let message = data.detail || data.message;
-    if (!message || typeof message !== 'string') {
+    // Prioritize Vietnamese message from server v2 envelope
+    let message =
+      typeof data.message === 'string' && data.message.trim().length > 0
+        ? data.message
+        : typeof data.detail === 'string' && data.detail.trim().length > 0
+          ? data.detail
+          : '';
+    if (!message) {
       message = DEFAULT_STATUS_MESSAGES[status] || 'Đã có lỗi xảy ra từ máy chủ.';
     }
 
-    // Extract code
-    let code = data.code;
-    if (!code && typeof data.error === 'object' && data.error !== null) {
-      const errObj = data.error as Record<string, unknown>;
-      if (typeof errObj.code === 'string') {
-        code = errObj.code;
-      }
-    }
+    const errObj = isPlainObject(data.errors) ? (data.errors as V2ErrorDetails) : undefined;
 
-    // Extract field errors
+    const code = typeof errObj?.code === 'string' ? errObj.code : undefined;
+    const traceId =
+      typeof errObj?.traceId === 'string'
+        ? errObj.traceId
+        : typeof data.traceId === 'string'
+          ? data.traceId
+          : undefined;
+
+    // Extract field errors strictly from errors.fields (never pull code or traceId)
     const fieldErrors: Record<string, string> = {};
-    if (Array.isArray(data.errors)) {
-      for (const item of data.errors) {
-        if (item && item.field && item.message) {
-          fieldErrors[item.field] = item.message;
-        }
-      }
-    } else if (data.errors && typeof data.errors === 'object') {
-      for (const [k, v] of Object.entries(data.errors)) {
+    if (isPlainObject(errObj?.fields)) {
+      for (const [k, v] of Object.entries(errObj.fields)) {
         if (typeof v === 'string') {
           fieldErrors[k] = v;
         }
@@ -110,7 +128,7 @@ export function parseAppError(error: unknown): AppError {
     // Extract Retry-After header for 429
     let retryAfterSec: number | undefined;
     const retryHeader = headers['retry-after'] || headers['Retry-After'];
-    if (retryHeader) {
+    if (retryHeader !== undefined) {
       const parsed = parseInt(String(retryHeader), 10);
       if (!isNaN(parsed) && parsed > 0) {
         retryAfterSec = parsed;
@@ -124,7 +142,7 @@ export function parseAppError(error: unknown): AppError {
       message,
       fieldErrors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
       retryAfterSec,
-      traceId: data.traceId,
+      traceId,
     };
   }
 

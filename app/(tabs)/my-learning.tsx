@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMyEnrollments } from '../../src/features/learning/hooks';
+import { useRefetchOnScreenFocus } from '../../src/hooks/useRefetchOnScreenFocus';
 import { Enrollment } from '../../src/features/learning/logic';
 import { useSessionStore } from '../../src/store/session';
 import { Text } from '../../src/components/ui/Text';
@@ -27,6 +28,7 @@ export default function MyLearningScreen() {
   const [page, setPage] = useState(0);
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useMyEnrollments(page);
+  useRefetchOnScreenFocus(refetch);
   const enrollments = data?.content || [];
 
   if (!isLoggedIn) {
@@ -70,13 +72,13 @@ export default function MyLearningScreen() {
     );
   }
 
-  const completedCount = enrollments.filter((e) => e.progressPercent >= 100).length;
+  const completedCount = enrollments.filter((e) => (e.progressPercent ?? 0) >= 100).length;
   const inProgressCount = enrollments.length - completedCount;
 
   const handleResumeCourse = (enrollment: Enrollment) => {
     if (enrollment.lastAccessedLessonId) {
       router.push(`/learn/lesson/${enrollment.lastAccessedLessonId}` as const);
-    } else {
+    } else if (enrollment.course?.id) {
       router.push(`/learn/${enrollment.course.id}` as const);
     }
   };
@@ -105,16 +107,17 @@ export default function MyLearningScreen() {
   );
 
   const renderEnrollmentCard = ({ item }: { item: Enrollment }) => {
-    const isCompleted = item.progressPercent >= 100;
+    const progressPercent = item.progressPercent ?? 0;
+    const isCompleted = progressPercent >= 100;
 
     return (
       <TouchableOpacity
         style={[styles.card, microShadow]}
-        onPress={() => router.push(`/learn/${item.course.id}` as const)}
+        onPress={() => item.course?.id && router.push(`/learn/${item.course.id}` as const)}
         activeOpacity={0.82}
       >
         <View style={styles.cardHeaderRow}>
-          {item.course.thumbnailUrl ? (
+          {item.course?.thumbnailUrl ? (
             <Image source={{ uri: item.course.thumbnailUrl }} style={styles.thumbnail} />
           ) : (
             <View style={styles.placeholderThumbnail}>
@@ -124,7 +127,7 @@ export default function MyLearningScreen() {
 
           <View style={styles.cardMeta}>
             <Text numberOfLines={2} style={styles.courseTitle}>
-              {item.course.title}
+              {item.course?.title}
             </Text>
 
             {item.certificateCode ? (
@@ -144,10 +147,10 @@ export default function MyLearningScreen() {
         <View style={styles.progressSection}>
           <View style={styles.statsRow}>
             <Text style={styles.progressPercentText}>
-              {item.progressPercent}% HOÀN THÀNH
+              {progressPercent}% HOÀN THÀNH
             </Text>
             <Text style={styles.lessonsCountText}>
-              {item.completedLessons}/{item.totalLessons} bài giảng
+              {item.completedItems ?? 0}/{item.totalItems ?? 0} mục học
             </Text>
           </View>
 
@@ -156,7 +159,7 @@ export default function MyLearningScreen() {
               style={[
                 styles.progressBarFill,
                 isCompleted && styles.progressBarCompleted,
-                { width: `${Math.min(100, item.progressPercent)}%` },
+                { width: `${Math.min(100, progressPercent)}%` },
               ]}
             />
           </View>
@@ -185,7 +188,7 @@ export default function MyLearningScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         onEndReached={() => {
-          if (data?.page && page + 1 < data.page.totalPages) {
+          if (data?.page && page + 1 < (data.page.totalPages ?? 0)) {
             setPage((prev) => prev + 1);
           }
         }}

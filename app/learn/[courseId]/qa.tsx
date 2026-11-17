@@ -207,7 +207,7 @@ export default function CourseQaScreen() {
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           onEndReached={() => {
-            if (data?.page && page + 1 < data.page.totalPages) {
+            if (data?.page && page + 1 < (data.page.totalPages ?? 0)) {
               setPage((prev) => prev + 1);
             }
           }}

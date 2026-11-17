@@ -1,143 +1,74 @@
 // src/features/instructor/api.ts
-// Typed API fetchers for Instructor Earnings, Payout Account and Withdrawals.
+// Typed API fetchers for Instructor Channel, Earnings, Payout Account and Withdrawals.
 
 import { client } from '../../api/client';
-import { PageMetadata } from '../catalog/api';
+import { unwrap } from '../../api/envelope';
+import { components } from '../../api/schema';
 
-export interface EarningsSummary {
-  hasEarnings: boolean;
-  totalEarned: number;
-  pendingBalance: number;
-  inWithdrawal: number;
-  withdrawn: number;
-  availableBalance: number;
-  minWithdrawal: number;
-  maturityPolicy: 'monthly' | 'immediate' | string;
-}
-
-export interface MonthlyEarning {
-  month: string; // "2026-11"
-  amount: number;
-  matured: boolean;
-}
-
-export interface CourseEarning {
-  courseId: number;
-  courseTitle: string;
-  role: 'main' | 'co' | string;
-  amount: number;
-}
-
-export interface EarningEntry {
-  id: number;
-  orderCode: string;
-  courseId: number;
-  courseTitle: string;
-  role: 'main' | 'co' | string;
-  unitPrice: number;
-  platformFeeBps: number;
-  shareBps: number;
-  amount: number;
-  earnedAt: string;
-  maturesAt: string;
-}
-
-export interface EarningEntriesResponse {
-  content: EarningEntry[];
-  page: PageMetadata;
-}
-
-export interface PayoutAccount {
-  bankName: string;
-  accountNumberLast4: string;
-  accountHolder: string;
-  updatedAt?: string;
-}
-
-export interface UpdatePayoutAccountInput {
-  bankName: string;
-  accountNumber: string;
-  accountHolder: string;
-  currentPassword: string;
-}
-
-export interface WithdrawalRecord {
-  id: number;
-  amount: number;
-  bankName: string;
-  accountNumberLast4: string;
-  accountHolder: string;
-  status: 'requested' | 'paid' | 'rejected' | 'cancelled' | string;
-  transferReference?: string;
-  rejectReason?: string;
-  createdAt: string;
-  processedAt?: string;
-}
-
-export interface WithdrawalsResponse {
-  content: WithdrawalRecord[];
-  page: PageMetadata;
-}
+export type EarningsSummary = components['schemas']['EarningSummaryDto'];
+export type MonthlyEarning = components['schemas']['MonthlyEarningDto'];
+export type CourseEarning = components['schemas']['CourseEarningDto'];
+export type EarningEntry = components['schemas']['EarningEntryDto'];
+export type EarningEntriesResponse = components['schemas']['PageResponseEarningEntryDto'];
+export type PayoutAccount = components['schemas']['PayoutAccountDto'];
+export type UpdatePayoutAccountInput = components['schemas']['UpdatePayoutAccountRequest'];
+export type WithdrawalRecord = components['schemas']['WithdrawalResponseDto'];
+export type WithdrawalsResponse = components['schemas']['PageResponseWithdrawalResponseDto'];
 
 export async function getEarningsSummaryApi(): Promise<EarningsSummary> {
-  const response = await client.get<EarningsSummary>('/me/earnings/summary');
-  const data = (response.data as { data?: EarningsSummary }).data || response.data;
-  return data;
+  const response = await client.get('/me/earnings/summary');
+  return unwrap<EarningsSummary>(response.data);
 }
 
 export async function getMonthlyEarningsApi(year?: number): Promise<MonthlyEarning[]> {
-  const response = await client.get<MonthlyEarning[]>('/me/earnings/monthly', {
+  const response = await client.get('/me/earnings/monthly', {
     params: { year },
   });
-  const data = (response.data as { data?: MonthlyEarning[] }).data || response.data;
-  return data;
+  return unwrap<MonthlyEarning[]>(response.data);
 }
 
 export async function getCourseEarningsApi(): Promise<CourseEarning[]> {
-  const response = await client.get<CourseEarning[]>('/me/earnings/courses');
-  const data = (response.data as { data?: CourseEarning[] }).data || response.data;
-  return data;
+  const response = await client.get('/me/earnings/courses');
+  return unwrap<CourseEarning[]>(response.data);
 }
 
-export async function getEarningEntriesApi(params: {
-  courseId?: number;
-  month?: string;
-  page?: number;
-  size?: number;
-} = {}): Promise<EarningEntriesResponse> {
-  const response = await client.get<EarningEntriesResponse>('/me/earnings/entries', {
+export async function getEarningEntriesApi(
+  params: {
+    courseId?: number;
+    month?: string;
+    page?: number;
+    size?: number;
+  } = {}
+): Promise<EarningEntriesResponse> {
+  const response = await client.get('/me/earnings/entries', {
     params: { page: 0, size: 20, ...params },
   });
-  const data = (response.data as { data?: EarningEntriesResponse }).data || response.data;
-  return data;
+  return unwrap<EarningEntriesResponse>(response.data);
 }
 
 export async function getPayoutAccountApi(): Promise<PayoutAccount> {
-  const response = await client.get<PayoutAccount>('/me/payout-account');
-  const data = (response.data as { data?: PayoutAccount }).data || response.data;
-  return data;
+  const response = await client.get('/me/payout-account');
+  return unwrap<PayoutAccount>(response.data);
 }
 
 export async function updatePayoutAccountApi(
   input: UpdatePayoutAccountInput
 ): Promise<PayoutAccount> {
-  const response = await client.put<PayoutAccount>('/me/payout-account', input);
-  const data = (response.data as { data?: PayoutAccount }).data || response.data;
-  return data;
+  const response = await client.put('/me/payout-account', input);
+  return unwrap<PayoutAccount>(response.data);
 }
 
 export async function getWithdrawalsApi(page: number = 0): Promise<WithdrawalsResponse> {
-  const response = await client.get<WithdrawalsResponse>('/me/withdrawals', {
+  const response = await client.get('/me/withdrawals', {
     params: { page, size: 20 },
   });
-  const data = (response.data as { data?: WithdrawalsResponse }).data || response.data;
-  return data;
+  return unwrap<WithdrawalsResponse>(response.data);
 }
 
 export async function requestWithdrawalApi(amount: number): Promise<WithdrawalRecord> {
-  const response = await client.post<WithdrawalRecord>('/me/withdrawals', { amount });
-  const data = (response.data as { data?: WithdrawalRecord }).data || response.data;
-  return data;
+  const body: components['schemas']['WithdrawalRequestDto'] = { amount };
+  const response = await client.post('/me/withdrawals', body);
+  return unwrap<WithdrawalRecord>(response.data);
 }
 
 export async function cancelWithdrawalApi(id: number): Promise<void> {

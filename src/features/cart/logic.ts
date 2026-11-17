@@ -1,10 +1,9 @@
 // src/features/cart/logic.ts
 // Pure business logic and reason mapping for Cart (BR-M01, D-M06).
 
-import { components } from '../../api/schema';
+import { CartItem, Cart } from './api';
 
-export type CartItem = components['schemas']['CartItem'];
-export type Cart = components['schemas']['Cart'];
+export type { CartItem, Cart };
 
 export type UnavailableReasonCode =
   | 'course_unavailable'

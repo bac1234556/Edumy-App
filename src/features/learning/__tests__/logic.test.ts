@@ -8,22 +8,21 @@ describe('resolveFirstOrUncompletedLesson', () => {
     const room: CourseLearnRoom = {
       courseId: 1,
       title: 'Khóa học',
-      enrolled: true,
-      progress: { completedLessons: 1, totalLessons: 3, percent: 33 },
+      progress: { completedItems: 1, totalItems: 3, percent: 33 },
       chapters: [
         {
           id: 1,
           title: 'Chương 1',
           lessons: [
-            { id: 101, title: 'Bài 1', contentType: 'video', preview: true, completed: true },
-            { id: 102, title: 'Bài 2', contentType: 'video', preview: false, completed: false },
+            { id: 101, title: 'Bài 1', contentType: 'video', completed: true },
+            { id: 102, title: 'Bài 2', contentType: 'video', completed: false },
           ],
         },
         {
           id: 2,
           title: 'Chương 2',
           lessons: [
-            { id: 103, title: 'Bài 3', contentType: 'article', preview: false, completed: false },
+            { id: 103, title: 'Bài 3', contentType: 'article', completed: false },
           ],
         },
       ],
@@ -36,15 +35,14 @@ describe('resolveFirstOrUncompletedLesson', () => {
     const room: CourseLearnRoom = {
       courseId: 1,
       title: 'Khóa học',
-      enrolled: true,
-      progress: { completedLessons: 2, totalLessons: 2, percent: 100 },
+      progress: { completedItems: 2, totalItems: 2, percent: 100 },
       chapters: [
         {
           id: 1,
           title: 'Chương 1',
           lessons: [
-            { id: 201, title: 'Bài 1', contentType: 'video', preview: true, completed: true },
-            { id: 202, title: 'Bài 2', contentType: 'video', preview: false, completed: true },
+            { id: 201, title: 'Bài 1', contentType: 'video', completed: true },
+            { id: 202, title: 'Bài 2', contentType: 'video', completed: true },
           ],
         },
       ],
@@ -57,8 +55,7 @@ describe('resolveFirstOrUncompletedLesson', () => {
     const room: CourseLearnRoom = {
       courseId: 1,
       title: 'Khóa học',
-      enrolled: true,
-      progress: null,
+      progress: undefined,
       chapters: [],
     };
 

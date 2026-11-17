@@ -67,7 +67,7 @@ export default function LessonLearnScreen() {
       { lessonId: numericLessonId, completed: nextCompleted },
       {
         onSuccess: (data) => {
-          if (data.certificateIssued) {
+          if (data.certificateJustIssued) {
             Alert.alert(
               'Hoàn thành khóa học',
               'Chúc mừng bạn đã hoàn tất 100% chương trình học và được cấp chứng chỉ tốt nghiệp xác thực từ Edumy.',
@@ -100,10 +100,10 @@ export default function LessonLearnScreen() {
 
       {/* Modern Dark Cinema Media/Article Viewer */}
       <LessonContentViewer
-        contentType={lesson.contentType}
+        contentType={lesson.contentType === 'video' ? 'video' : 'article'}
         videoUrl={lesson.videoUrl}
         articleContent={lesson.articleContent}
-        title={lesson.title}
+        title={lesson.title ?? ''}
       />
 
       {/* Editorial Control & Completion Panel */}

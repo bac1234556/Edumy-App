@@ -1,36 +1,35 @@
 // src/features/auth/api.ts
 // Direct typed API calls for Authentication & User Profile.
 
-import { client } from '../../api/client';
-import { components } from '../../api/schema';
 import axios from 'axios';
+import { client } from '../../api/client';
+import { unwrap } from '../../api/envelope';
+import { components } from '../../api/schema';
 import { ENV } from '../../config/env';
 
-export type MobileTokens = components['schemas']['MobileTokens'];
+export type MobileTokens = components['schemas']['MobileTokensDto'];
 export type MobileLoginRequest = components['schemas']['MobileLoginRequest'];
 export type MobileRegisterRequest = components['schemas']['MobileRegisterRequest'];
-export type UserProfile = components['schemas']['UserProfile'];
+export type Me = components['schemas']['MeDto'];
+export type UserProfile = Me;
 
 export async function loginApi(data: MobileLoginRequest): Promise<MobileTokens> {
-  const response = await client.post<MobileTokens>('/auth/mobile/login', data);
-  const resData = (response.data as { data?: MobileTokens }).data || response.data;
-  return resData;
+  const response = await client.post('/auth/mobile/login', data);
+  return unwrap<MobileTokens>(response.data);
 }
 
 export async function registerApi(data: MobileRegisterRequest): Promise<MobileTokens> {
-  const response = await client.post<MobileTokens>('/auth/mobile/register', data);
-  const resData = (response.data as { data?: MobileTokens }).data || response.data;
-  return resData;
+  const response = await client.post('/auth/mobile/register', data);
+  return unwrap<MobileTokens>(response.data);
 }
 
 export async function refreshApi(refreshToken: string): Promise<MobileTokens> {
-  const response = await axios.post<MobileTokens>(
+  const response = await axios.post(
     `${ENV.API_BASE_URL}/auth/mobile/refresh`,
     { refreshToken },
     { timeout: 15000 }
   );
-  const resData = (response.data as { data?: MobileTokens }).data || response.data;
-  return resData;
+  return unwrap<MobileTokens>(response.data);
 }
 
 export async function logoutApi(refreshToken?: string | null): Promise<void> {
@@ -43,10 +42,9 @@ export async function logoutApi(refreshToken?: string | null): Promise<void> {
   }
 }
 
-export async function getMeApi(): Promise<UserProfile> {
-  const response = await client.get<UserProfile>('/me');
-  const resData = (response.data as { data?: UserProfile }).data || response.data;
-  return resData;
+export async function getMeApi(): Promise<Me> {
+  const response = await client.get('/me');
+  return unwrap<Me>(response.data);
 }
 
 export async function forgotPasswordApi(email: string): Promise<void> {

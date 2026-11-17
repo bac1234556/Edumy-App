@@ -48,8 +48,14 @@ export default function CourseDetailScreen() {
 
   const actionState = resolveCourseAction({
     isLoggedIn,
-    isFree: course.isFree,
-    viewer: course.viewer,
+    isFree: Boolean(course.isFree),
+    viewer: course.viewer
+      ? {
+          owned: Boolean(course.viewer.owned),
+          inCart: false,
+          isInstructor: Boolean(course.viewer.isInstructor),
+        }
+      : null,
   });
 
   const handlePrimaryAction = () => {
@@ -61,6 +67,7 @@ export default function CourseDetailScreen() {
         router.push(`/learn/${course.id}` as const);
         break;
       case 'FREE_ENROLL':
+        if (!course.id) break;
         freeEnroll(course.id, {
           onSuccess: () => {
             router.push(`/learn/${course.id}` as const);
@@ -75,6 +82,7 @@ export default function CourseDetailScreen() {
         router.push('/(tabs)/cart');
         break;
       case 'ADD_TO_CART':
+        if (!course.id) break;
         addToCart(course.id, {
           onError: (err) => {
             const appErr = err as unknown as AppError;
@@ -175,7 +183,9 @@ export default function CourseDetailScreen() {
             </View>
             <View style={styles.instructorInfo}>
               <Text style={styles.instructorLabel}>GIẢNG VIÊN CHÍNH</Text>
-              <Text style={styles.instructorName}>{course.mainInstructor.fullName}</Text>
+              <Text style={styles.instructorName}>
+                {course.mainInstructor?.fullName || course.instructorName || 'Giảng viên Edumy'}
+              </Text>
               {course.coInstructors && course.coInstructors.length > 0 && (
                 <Text style={styles.coInstructorsText}>
                   Đồng giảng viên: {course.coInstructors.map((c) => c.fullName).join(', ')}
@@ -216,7 +226,7 @@ export default function CourseDetailScreen() {
                 </View>
 
                 <View style={styles.lessonList}>
-                  {chapter.lessons.map((lesson, lessonIdx) => (
+                  {(chapter.lessons ?? []).map((lesson, lessonIdx) => (
                     <View key={lesson.id} style={styles.lessonRow}>
                       <View style={styles.lessonLeft}>
                         <Text style={styles.lessonNumber}>

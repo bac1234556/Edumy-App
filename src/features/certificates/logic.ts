@@ -6,17 +6,9 @@ import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
 import { ENV } from '../../config/env';
 import { webLinks } from '../../lib/web-links';
+import { CertificateItem } from './api';
 
-export interface CertificateItem {
-  id: number;
-  certificateCode: string;
-  enrollmentId: number;
-  courseId: number;
-  courseTitle: string;
-  studentName: string;
-  instructorName?: string;
-  issuedAt: string;
-}
+export type { CertificateItem };
 
 /**
  * Downloads the certificate PDF with Bearer auth and triggers system share dialog (Rules 20).

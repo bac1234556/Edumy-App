@@ -59,7 +59,9 @@ export function useSetLessonCompletion(courseId?: number) {
       setLessonCompletionApi(lessonId, completed),
     onSuccess: (data) => {
       // Invalidate lesson query
-      queryClient.invalidateQueries({ queryKey: queryKeys.learning.lessonDetail(data.lessonId) });
+      if (data.lessonId !== undefined) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.learning.lessonDetail(data.lessonId) });
+      }
 
       // Invalidate course learning room outline & progress
       if (courseId) {
@@ -68,8 +70,9 @@ export function useSetLessonCompletion(courseId?: number) {
         queryClient.invalidateQueries({ queryKey: ['learning', 'course'] });
       }
 
-      // Invalidate enrollments list so progressPercent updates
-      queryClient.invalidateQueries({ queryKey: queryKeys.learning.myEnrollments() });
+      // Invalidate all learning & certificates queries so progressPercent & certs update
+      queryClient.invalidateQueries({ queryKey: queryKeys.learning.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.certificates.all });
     },
   });
 }

@@ -53,6 +53,7 @@ export default function WriteReviewScreen() {
       return;
     }
 
+    if (!course.id) return;
     submitReview(
       {
         courseId: course.id,

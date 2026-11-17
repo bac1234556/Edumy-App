@@ -1,5 +1,5 @@
 // src/hooks/useForegroundSync.ts
-// Invalidate Cart, Orders and My Learning queries whenever the app returns to foreground (M05).
+// Invalidate learning, certificates, earnings, instructor & profile queries when returning to foreground.
 
 import { useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
@@ -12,10 +12,11 @@ export function useForegroundSync() {
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        // User may have just completed a checkout or payment on the website
-        queryClient.invalidateQueries({ queryKey: queryKeys.cart.current });
-        queryClient.invalidateQueries({ queryKey: ['orders'] });
-        queryClient.invalidateQueries({ queryKey: queryKeys.learning.myEnrollments() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.learning.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.certificates.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.earnings.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.instructor.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
       }
     };
 

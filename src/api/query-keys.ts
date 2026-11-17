@@ -24,22 +24,38 @@ export const queryKeys = {
     detail: (orderCode: string) => ['orders', 'detail', orderCode] as const,
   },
   learning: {
+    all: ['learning'] as const,
     myEnrollments: (page: number = 0) => ['learning', 'enrollments', page] as const,
     courseProgress: (courseId: number) => ['learning', 'course', courseId] as const,
     lessonDetail: (lessonId: number) => ['learning', 'lesson', lessonId] as const,
   },
   qa: {
-    courseQuestions: (courseId: number, page: number = 0) =>
-      ['qa', 'course', courseId, 'questions', page] as const,
+    all: ['qa'] as const,
+    courseQuestions: (
+      courseId: number,
+      pageOrFilters: number | Record<string, unknown> = 0
+    ) => ['qa', 'course', courseId, 'questions', pageOrFilters] as const,
     questionDetail: (id: number) => ['qa', 'question', id] as const,
   },
   reviews: {
     byCourse: (courseId: number) => ['reviews', 'course', courseId] as const,
   },
   certificates: {
-    all: (page: number = 0) => ['certificates', page] as const,
+    all: ['certificates'] as const,
+    list: (page: number = 0) => ['certificates', page] as const,
+  },
+  instructor: {
+    all: ['instructor'] as const,
+    overview: () => ['instructor', 'overview'] as const,
+    courses: () => ['instructor', 'courses'] as const,
+    courseStudents: (courseId: number, page: number = 0) =>
+      ['instructor', 'courses', courseId, 'students', page] as const,
+    questions: (filters: Record<string, unknown> = {}) =>
+      ['instructor', 'questions', filters] as const,
+    invitations: () => ['instructor', 'invitations'] as const,
   },
   earnings: {
+    all: ['earnings'] as const,
     summary: ['earnings', 'summary'] as const,
     monthly: (year?: number) => ['earnings', 'monthly', year] as const,
     courses: ['earnings', 'courses'] as const,

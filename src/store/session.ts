@@ -2,17 +2,16 @@
 // In-memory authentication and session state (Zustand).
 
 import { create } from 'zustand';
+import { components } from '../api/schema';
 
-export interface UserProfile {
-  id: number;
-  email: string;
-  fullName: string;
-  emailVerified: boolean;
-  roles: string[];
-  createdAt: string;
-}
+export type UserProfile = components['schemas']['MeDto'];
 
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+export type AuthStatus =
+  | 'idle'
+  | 'loading'
+  | 'authenticated'
+  | 'unauthenticated'
+  | 'offline';
 
 interface SessionState {
   status: AuthStatus;
@@ -31,7 +30,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   setSession: (accessToken, me) =>
     set({ accessToken, me, status: 'authenticated' }),
   setAccessToken: (accessToken) =>
-    set((state) => ({
+    set(() => ({
       accessToken,
       status: accessToken ? 'authenticated' : 'unauthenticated',
     })),

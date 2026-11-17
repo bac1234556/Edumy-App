@@ -1,39 +1,34 @@
 ---
 trigger: glob
 globs: "app/**/*.tsx, src/components/**/*.tsx, src/features/**/components/**/*.tsx"
-description: "UI/UX conventions of Edumy Mobile: Vietnamese copy, formats, screen states, accessibility."
+description: "UI/UX conventions and cross-platform dialog rules of Edumy Mobile."
 ---
 
-# 50 — UI & UX conventions (NFR-M03…NFR-M08)
+# 50 — UI & UX conventions
+
+## Platform rules (Android, iOS, Web)
+- **Cấm dùng trực tiếp `Alert.alert`.** Mọi hộp thoại xác nhận hoặc thông báo phải đi qua `src/lib/dialog.ts` (`confirm` / `notify`), không import `Alert` ở nơi khác (enforced by ESLint `no-restricted-syntax`).
+- Mọi tính năng (đăng nhập, đăng xuất, xác nhận, tải/xem chứng chỉ, mở web, kênh giảng viên, rút tiền) phải chạy được trên cả Android, iOS và Web (`expo start --web`).
 
 ## Copy
-- All user-facing text in Vietnamese, natural tone, no machine-translated phrasing. Keep strings in the component
-  or in `src/features/<f>/copy.ts`; no i18n library (single language).
-- Server error texts are already Vietnamese: show `detail` as is.
-- Labels used everywhere: "Khám phá", "Học tập", "Giỏ hàng", "Tài khoản", "Giảng viên", "Vào học", "Học tiếp",
-  "Thêm vào giỏ", "Mua trên website", "Ghi danh miễn phí", "Đánh dấu hoàn thành", "Rút tiền".
+- All user-facing text in Vietnamese, natural tone. Single language (no i18n library).
+- Show server Vietnamese `message` as-is unless a specific action/code UX applies.
+- Standard labels: "Khám phá", "Học tập", "Giảng viên", "Tài khoản", "Vào học", "Học tiếp",
+  "Mua trên website", "Đăng nhập để ghi danh", "Ghi danh miễn phí", "Đánh dấu hoàn thành", "Rút tiền",
+  "Doanh số bán", "Thu nhập thực nhận".
 
 ## Formats
 - Money: `formatVnd(499000)` → `499.000 đ`; free → "Miễn phí". Integer only.
-- Dates: `formatDate(iso)` → `16/11/2026`, `formatDateTime(iso)` → `14:05 16/11/2026`, both in `Asia/Ho_Chi_Minh`.
-  Verify that `Intl.DateTimeFormat` with `timeZone` works on the Hermes version in use; if not, ask before adding a library.
-- Progress: `{progressPercent}%` from the server + a progress bar.
+- Dates: `formatDate(iso)` → `16/11/2026`, `formatDateTime(iso)` → `16/11/2026 14:05` (or `14:05 16/11/2026`), in `Asia/Ho_Chi_Minh`.
+- Progress: `{progressPercent}%` from the server + progress bar.
 
-## Every screen has four states
-Loading (skeleton or spinner) · Empty (EmptyState with a next step, e.g. empty cart → "Khám phá khóa học") ·
-Error (ErrorState with message + "Thử lại", `traceId` small) · Content. Lists use pull-to-refresh and infinite scroll
-(page size 20).
+## Screen states & interaction
+- Every screen has Loading, Empty, Error (with retry + small `traceId`), and Content states. Lists use pull-to-refresh and infinite scroll (page size 20).
+- Disable submit buttons while a mutation is running (`isPending`) to prevent double submit.
+- Destructive actions (delete question/answer, cancel withdrawal, accept/decline co-instructor invitation, logout) confirm via `confirm(...)` from `src/lib/dialog.ts`.
+- Keep form values on error; show field errors under each input.
+- On foreground return (`AppState` active), invalidate `['learning']`, `['certificates']`, `['earnings']`, `['instructor']`, `['auth', 'me']`.
 
-## Interaction
-- Disable submit buttons while a mutation is running (no double submit, NFR-M06).
-- Destructive actions (delete question/answer, withdraw review, cancel withdrawal, logout) ask for confirmation.
-- Forms keep their values on error; field errors appear under the field.
-- After returning from the website (AppState `active`), refetch My learning, Cart, Orders, Earnings.
-
-## Accessibility
-Touch targets ≥ 44 pt; icon-only buttons have `accessibilityLabel` in Vietnamese; respect system font scaling
-(no fixed heights on text containers); sufficient contrast in light and dark mode. Layout works from 360 pt width.
-
-## Visual
-Use `src/components/ui/*` primitives and one theme file (colors, spacing scale of 4, radius 8, font sizes).
-No UI kit library unless a prompt asks for it. Icons from `@expo/vector-icons`.
+## Accessibility & Visual
+- Touch targets ≥ 44 pt; icon-only buttons have Vietnamese `accessibilityLabel`; respect font scaling; usable from 360 pt width.
+- Use `src/components/ui/*` primitives and `src/theme/tokens.ts`. Icons from `@expo/vector-icons`.

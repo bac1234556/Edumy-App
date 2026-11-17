@@ -1,12 +1,19 @@
 // src/features/learning/logic.ts
 // Pure business logic for Learning room, progress, and lesson navigation.
 
-import { components } from '../../api/schema';
+import {
+  Enrollment,
+  CourseLearnRoom,
+  LessonDetail,
+  LessonCompletionResponse,
+} from './api';
 
-export type Enrollment = components['schemas']['Enrollment'];
-export type CourseLearnRoom = components['schemas']['CourseLearnRoom'];
-export type LessonDetail = components['schemas']['LessonDetail'];
-export type LessonCompletionResponse = components['schemas']['LessonCompletionResponse'];
+export type {
+  Enrollment,
+  CourseLearnRoom,
+  LessonDetail,
+  LessonCompletionResponse,
+};
 
 /**
  * Finds the first uncompleted lesson in the course outline,
@@ -17,8 +24,8 @@ export function resolveFirstOrUncompletedLesson(room: CourseLearnRoom): number |
 
   // First pass: find the first lesson where completed === false
   for (const chapter of room.chapters) {
-    for (const lesson of chapter.lessons) {
-      if (!lesson.completed) {
+    for (const lesson of chapter.lessons ?? []) {
+      if (!lesson.completed && lesson.id !== undefined) {
         return lesson.id;
       }
     }
@@ -27,7 +34,7 @@ export function resolveFirstOrUncompletedLesson(room: CourseLearnRoom): number |
   // Fallback: first lesson of the first chapter
   const firstChapter = room.chapters[0];
   if (firstChapter.lessons && firstChapter.lessons.length > 0) {
-    return firstChapter.lessons[0].id;
+    return firstChapter.lessons[0].id ?? null;
   }
 
   return null;
