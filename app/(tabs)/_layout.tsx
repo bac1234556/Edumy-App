@@ -70,7 +70,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="instructor"
         options={{
-          title: 'Thu nhập Giảng viên',
+          title: 'Kênh Giảng viên',
           tabBarLabel: 'Giảng viên',
           href: showInstructor ? '/(tabs)/instructor' : null,
           tabBarIcon: ({ color, size }) => (

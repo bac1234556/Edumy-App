@@ -100,7 +100,12 @@ export default function InstructorEntriesScreen() {
           <View style={styles.dateRow}>
             <Ionicons name="time-outline" size={13} color="#94A3B8" />
             <Text style={styles.dateText}>
-              Đáo hạn: {formatDate(item.maturesAt)}
+              Khả dụng từ: {formatDate(item.maturesAt)}
+            </Text>
+          </View>
+          <View style={item.matured ? styles.maturedBadge : styles.pendingBadge}>
+            <Text style={item.matured ? styles.maturedBadgeText : styles.pendingBadgeText}>
+              {item.matured ? 'Đã khả dụng' : 'Đang chờ'}
             </Text>
           </View>
         </View>
@@ -383,10 +388,35 @@ const styles = StyleSheet.create({
   },
   cardFooter: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 6,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
     paddingTop: 10,
+  },
+  maturedBadge: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  maturedBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  pendingBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  pendingBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#D97706',
   },
   dateRow: {
     flexDirection: 'row',

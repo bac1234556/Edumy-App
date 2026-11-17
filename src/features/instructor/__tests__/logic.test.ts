@@ -4,7 +4,9 @@
 import {
   validateWithdrawalAmount,
   getWithdrawalStatusInfo,
-  getMaturityExplanation,
+  getCourseStatusInfo,
+  formatHoldDaysExplanation,
+  formatNextMaturityLine,
   maskAccountNumber,
   payoutAccountSchema,
 } from '../logic';
@@ -57,7 +59,7 @@ describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
   describe('getWithdrawalStatusInfo', () => {
     it('returns proper labels and colors for all 4 states', () => {
       const req = getWithdrawalStatusInfo('requested');
-      expect(req.label).toBe('Đang chờ xử lý');
+      expect(req.label).toBe('Đang chờ duyệt');
       expect(req.color).toBe('#D97706');
 
       const paid = getWithdrawalStatusInfo('paid');
@@ -79,14 +81,33 @@ describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
     });
   });
 
-  describe('getMaturityExplanation', () => {
-    it('explains demo immediate policy', () => {
-      expect(getMaturityExplanation('immediate')).toContain('Chế độ demo: thu nhập khả dụng ngay');
+  describe('BR-PAY-HOLD formatters', () => {
+    it('explains demo mode when holdDays is 0', () => {
+      expect(formatHoldDaysExplanation(0)).toBe(
+        'Thu nhập khả dụng ngay sau khi đơn hàng được thanh toán (chế độ demo)'
+      );
     });
 
-    it('explains standard monthly policy', () => {
-      expect(getMaturityExplanation('monthly')).toContain('ngày 01 của tháng kế tiếp');
-      expect(getMaturityExplanation()).toContain('ngày 01 của tháng kế tiếp');
+    it('explains rolling hold when holdDays is 7', () => {
+      expect(formatHoldDaysExplanation(7)).toBe(
+        'Mỗi khoản thu nhập khả dụng sau 7 ngày kể từ khi đơn hàng được thanh toán'
+      );
+    });
+
+    it('formats nextMaturityAt in Asia/Ho_Chi_Minh dd/MM/yyyy HH:mm', () => {
+      expect(formatNextMaturityLine(null)).toBeNull();
+      expect(formatNextMaturityLine('2026-11-24T07:05:00Z')).toBe(
+        'Khoản tiếp theo khả dụng lúc 24/11/2026 14:05'
+      );
+    });
+  });
+
+  describe('getCourseStatusInfo', () => {
+    it('maps backend course statuses to Vietnamese labels', () => {
+      expect(getCourseStatusInfo('Published').label).toBe('Đã xuất bản');
+      expect(getCourseStatusInfo('PendingApproval').label).toBe('Chờ duyệt');
+      expect(getCourseStatusInfo('Draft').label).toBe('Bản nháp');
+      expect(getCourseStatusInfo('Hidden').label).toBe('Đang ẩn');
     });
   });
 

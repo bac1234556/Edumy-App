@@ -1,7 +1,8 @@
 // src/features/instructor/logic.ts
-// Pure business logic, validation and formatters for Instructor Money Mode (Phân hệ 06, Rules 40).
+// Pure business logic, BR-PAY-HOLD formatters, validation & labels for Instructor Channel.
 
 import { z } from 'zod';
+import { formatDateTimeDmY } from '../../lib/date';
 
 export interface WithdrawalStatusInfo {
   label: string;
@@ -13,7 +14,7 @@ export function getWithdrawalStatusInfo(status: string): WithdrawalStatusInfo {
   switch (status?.toLowerCase()) {
     case 'requested':
       return {
-        label: 'Đang chờ xử lý',
+        label: 'Đang chờ duyệt',
         color: '#D97706',
         backgroundColor: '#FEF3C7',
       };
@@ -41,6 +42,31 @@ export function getWithdrawalStatusInfo(status: string): WithdrawalStatusInfo {
         color: '#64748B',
         backgroundColor: '#F1F5F9',
       };
+  }
+}
+
+export interface CourseStatusInfo {
+  label: string;
+  color: string;
+  backgroundColor: string;
+}
+
+export function getCourseStatusInfo(status?: string): CourseStatusInfo {
+  switch (status?.toLowerCase()) {
+    case 'published':
+      return { label: 'Đã xuất bản', color: '#059669', backgroundColor: '#D1FAE5' };
+    case 'pendingapproval':
+    case 'pending_approval':
+    case 'pending':
+      return { label: 'Chờ duyệt', color: '#D97706', backgroundColor: '#FEF3C7' };
+    case 'draft':
+      return { label: 'Bản nháp', color: '#475569', backgroundColor: '#F1F5F9' };
+    case 'hidden':
+      return { label: 'Đang ẩn', color: '#64748B', backgroundColor: '#E2E8F0' };
+    case 'rejected':
+      return { label: 'Bị từ chối', color: '#DC2626', backgroundColor: '#FEE2E2' };
+    default:
+      return { label: status || 'Không rõ', color: '#64748B', backgroundColor: '#F1F5F9' };
   }
 }
 
@@ -79,11 +105,22 @@ export function validateWithdrawalAmount(
   return { valid: true };
 }
 
-export function getMaturityExplanation(policy?: string): string {
-  if (policy === 'immediate') {
-    return 'Chế độ demo: thu nhập khả dụng ngay.';
+/**
+ * BR-PAY-HOLD rolling hold explanation driven strictly by server holdDays.
+ */
+export function formatHoldDaysExplanation(holdDays?: number | null): string {
+  const days = holdDays ?? 0;
+  if (days === 0) {
+    return 'Thu nhập khả dụng ngay sau khi đơn hàng được thanh toán (chế độ demo)';
   }
-  return 'Thu nhập phát sinh trong tháng M sẽ khả dụng để rút từ ngày 01 của tháng kế tiếp (theo giờ Việt Nam).';
+  return `Mỗi khoản thu nhập khả dụng sau ${days} ngày kể từ khi đơn hàng được thanh toán`;
+}
+
+export function formatNextMaturityLine(nextMaturityAt?: string | null): string | null {
+  if (!nextMaturityAt) return null;
+  const formatted = formatDateTimeDmY(nextMaturityAt);
+  if (!formatted) return null;
+  return `Khoản tiếp theo khả dụng lúc ${formatted}`;
 }
 
 export function maskAccountNumber(last4?: string): string {

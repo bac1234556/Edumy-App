@@ -42,3 +42,10 @@ export function formatDateTime(isoString: string | null | undefined): string {
 
   return `${hour}:${minute} ${day}/${month}/${year}`;
 }
+
+export function formatDateTimeDmY(isoString: string | null | undefined): string {
+  const formatted = formatDateTime(isoString);
+  if (!formatted) return '';
+  const [timePart, datePart] = formatted.split(' ');
+  return `${datePart} ${timePart}`;
+}

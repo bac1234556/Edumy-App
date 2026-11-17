@@ -15,6 +15,75 @@ export type UpdatePayoutAccountInput = components['schemas']['UpdatePayoutAccoun
 export type WithdrawalRecord = components['schemas']['WithdrawalResponseDto'];
 export type WithdrawalsResponse = components['schemas']['PageResponseWithdrawalResponseDto'];
 
+export type InstructorOverview = components['schemas']['InstructorOverviewDto'];
+export type InstructorCourse = components['schemas']['InstructorCourseDto'];
+export type StudentRosterItem = components['schemas']['StudentRosterItemDto'];
+export type StudentRosterResponse = components['schemas']['PageResponseStudentRosterItemDto'];
+export type InstructorQuestionsResponse =
+  components['schemas']['PageResponseQuestionSummaryResponse'];
+export type InstructorQuestionItem = components['schemas']['QuestionSummaryResponse'];
+
+export interface CoInstructorInvitation {
+  id: number;
+  invitationId?: number;
+  courseId: number;
+  courseTitle: string;
+  instructorId?: number;
+  fullName?: string;
+  email?: string;
+  status: string;
+  shareBps: number;
+  invitedAt?: string;
+  respondedAt?: string;
+}
+
+export async function getInstructorOverviewApi(): Promise<InstructorOverview> {
+  const response = await client.get('/instructor/overview');
+  return unwrap<InstructorOverview>(response.data);
+}
+
+export async function getInstructorCoursesApi(): Promise<InstructorCourse[]> {
+  const response = await client.get('/instructor/courses');
+  return unwrap<InstructorCourse[]>(response.data);
+}
+
+export async function getInstructorCourseStudentsApi(
+  courseId: number,
+  page: number = 0
+): Promise<StudentRosterResponse> {
+  const response = await client.get(`/instructor/courses/${courseId}/students`, {
+    params: { page, size: 20 },
+  });
+  return unwrap<StudentRosterResponse>(response.data);
+}
+
+export async function getInstructorQuestionsApi(
+  params: {
+    courseId?: number;
+    status?: 'unanswered' | 'all';
+    page?: number;
+    size?: number;
+  } = {}
+): Promise<InstructorQuestionsResponse> {
+  const response = await client.get('/instructor/questions', {
+    params: { page: 0, size: 20, ...params },
+  });
+  return unwrap<InstructorQuestionsResponse>(response.data);
+}
+
+export async function getInstructorInvitationsApi(): Promise<CoInstructorInvitation[]> {
+  const response = await client.get('/instructor/invitations');
+  return unwrap<CoInstructorInvitation[]>(response.data);
+}
+
+export async function acceptInvitationApi(invitationId: number): Promise<void> {
+  await client.post(`/instructor/invitations/${invitationId}/accept`);
+}
+
+export async function declineInvitationApi(invitationId: number): Promise<void> {
+  await client.post(`/instructor/invitations/${invitationId}/decline`);
+}
+
 export async function getEarningsSummaryApi(): Promise<EarningsSummary> {
   const response = await client.get('/me/earnings/summary');
   return unwrap<EarningsSummary>(response.data);
