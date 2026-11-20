@@ -34,10 +34,17 @@ if (
   );
 }
 
+function getOptionalEnv(value: string | undefined): string | undefined {
+  if (!value || value.trim() === '') return undefined;
+  return value.trim();
+}
+
 export const ENV = {
   API_BASE_URL:
     Platform.OS === 'web'
       ? rawApiBaseUrl.replace('://10.0.2.2:', '://localhost:')
       : rawApiBaseUrl,
   WEB_BASE_URL: webBaseUrl,
+  ADMOB_BANNER_ID: getOptionalEnv(process.env.EXPO_PUBLIC_ADMOB_BANNER_ID),
+  ADMOB_INTERSTITIAL_ID: getOptionalEnv(process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID),
 } as const;

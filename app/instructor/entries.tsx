@@ -8,7 +8,7 @@ import {
   RefreshControl,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   useEarningEntries,
@@ -17,14 +17,16 @@ import {
 } from '../../src/features/instructor/hooks';
 import { EarningEntry } from '../../src/features/instructor/api';
 import { Text } from '../../src/components/ui/Text';
+import { Badge } from '../../src/components/ui/Badge';
 import { Loading } from '../../src/components/ui/Loading';
 import { ErrorState } from '../../src/components/ui/ErrorState';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { MoneyText } from '../../src/components/ui/MoneyText';
+import { ResponsiveContainer } from '../../src/components/ui/ResponsiveContainer';
 import { formatDate, formatDateTime } from '../../src/lib/date';
+import { layout, microShadow, monoFontFamily, radius, semantic } from '../../src/theme/tokens';
 
 export default function InstructorEntriesScreen() {
-  const router = useRouter();
   const [selectedCourseId, setSelectedCourseId] = useState<number | undefined>(undefined);
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined);
 
@@ -51,20 +53,17 @@ export default function InstructorEntriesScreen() {
     const sharePct = ((item.shareBps ?? 0) / 100).toFixed(0);
 
     return (
-      <View style={styles.entryCard}>
-        {/* Top row: Order Code & Role */}
+      <View style={[styles.entryCard, microShadow]}>
         <View style={styles.cardHeader}>
           <View style={styles.orderBadge}>
             <Text style={styles.orderCode}>Đơn hàng #{item.orderCode}</Text>
           </View>
-          <View style={[styles.roleTag, isMain ? styles.roleMain : styles.roleCo]}>
-            <Text style={[styles.roleTagText, isMain ? styles.roleMainText : styles.roleCoText]}>
-              {isMain ? 'GV chính' : 'Đồng GV'}
-            </Text>
-          </View>
+          <Badge
+            variant={isMain ? 'info' : 'neutral'}
+            label={isMain ? 'GV chính' : 'Đồng GV'}
+          />
         </View>
 
-        {/* Course Title */}
         <Text numberOfLines={2} style={styles.courseTitle}>
           {item.courseTitle}
         </Text>
@@ -91,23 +90,24 @@ export default function InstructorEntriesScreen() {
 
         {/* Dates Footer */}
         <View style={styles.cardFooter}>
-          <View style={styles.dateRow}>
-            <Ionicons name="calendar-outline" size={13} color="#94A3B8" />
-            <Text style={styles.dateText}>
-              Ghi nhận: {formatDateTime(item.earnedAt)}
-            </Text>
+          <View style={styles.datesCol}>
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={13} color={semantic.textMuted} />
+              <Text style={styles.dateText}>
+                Ghi nhận: {formatDateTime(item.earnedAt)}
+              </Text>
+            </View>
+            <View style={styles.dateRow}>
+              <Ionicons name="time-outline" size={13} color={semantic.textMuted} />
+              <Text style={styles.dateText}>
+                Khả dụng từ: {formatDate(item.maturesAt)}
+              </Text>
+            </View>
           </View>
-          <View style={styles.dateRow}>
-            <Ionicons name="time-outline" size={13} color="#94A3B8" />
-            <Text style={styles.dateText}>
-              Khả dụng từ: {formatDate(item.maturesAt)}
-            </Text>
-          </View>
-          <View style={item.matured ? styles.maturedBadge : styles.pendingBadge}>
-            <Text style={item.matured ? styles.maturedBadgeText : styles.pendingBadgeText}>
-              {item.matured ? 'Đã khả dụng' : 'Đang chờ'}
-            </Text>
-          </View>
+          <Badge
+            variant={item.matured ? 'success' : 'warning'}
+            label={item.matured ? 'Đã khả dụng' : 'Đang chờ'}
+          />
         </View>
       </View>
     );
@@ -115,96 +115,86 @@ export default function InstructorEntriesScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          accessibilityLabel="Quay lại"
-          accessibilityRole="button"
-        >
-          <Ionicons name="arrow-back" size={24} color="#0F172A" />
-        </TouchableOpacity>
-        <Text variant="h2" style={styles.title}>
-          Bút toán thu nhập
-        </Text>
-      </View>
+      <Stack.Screen options={{ title: 'Bút toán thu nhập', headerBackTitle: 'Quay lại' }} />
 
       {/* Filter Section */}
-      <View style={styles.filtersSection}>
-        {/* Month Pills */}
-        {monthly && monthly.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterPillsContainer}
-          >
-            <TouchableOpacity
-              style={[styles.pill, !selectedMonth && styles.pillActive]}
-              onPress={() => setSelectedMonth(undefined)}
-            >
-              <Text style={[styles.pillText, !selectedMonth && styles.pillTextActive]}>
-                Tất cả tháng
-              </Text>
-            </TouchableOpacity>
-            {monthly.map((m) => {
-              const active = selectedMonth === m.month;
-              return (
+      {((monthly && monthly.length > 0) || (courses && courses.length > 0)) && (
+        <View style={styles.filtersSection}>
+          <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+            {monthly && monthly.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterPillsContainer}
+              >
                 <TouchableOpacity
-                  key={m.month}
-                  style={[styles.pill, active && styles.pillActive]}
-                  onPress={() => setSelectedMonth(active ? undefined : m.month)}
+                  style={[styles.pill, !selectedMonth && styles.pillActive]}
+                  onPress={() => setSelectedMonth(undefined)}
                 >
-                  <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                    {m.month}
+                  <Text style={[styles.pillText, !selectedMonth && styles.pillTextActive]}>
+                    Tất cả tháng
                   </Text>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
+                {monthly.map((m) => {
+                  const active = selectedMonth === m.month;
+                  return (
+                    <TouchableOpacity
+                      key={m.month}
+                      style={[styles.pill, active && styles.pillActive]}
+                      onPress={() => setSelectedMonth(active ? undefined : m.month)}
+                    >
+                      <Text style={[styles.pillText, active && styles.pillTextActive]}>
+                        {m.month}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
 
-        {/* Course Pills */}
-        {courses && courses.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterPillsContainer}
-          >
-            <TouchableOpacity
-              style={[styles.pill, !selectedCourseId && styles.pillActive]}
-              onPress={() => setSelectedCourseId(undefined)}
-            >
-              <Text style={[styles.pillText, !selectedCourseId && styles.pillTextActive]}>
-                Tất cả khóa học
-              </Text>
-            </TouchableOpacity>
-            {courses.map((c) => {
-              const active = selectedCourseId === c.courseId;
-              return (
+            {courses && courses.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterPillsContainer}
+              >
                 <TouchableOpacity
-                  key={c.courseId}
-                  style={[styles.pill, active && styles.pillActive]}
-                  onPress={() => setSelectedCourseId(active ? undefined : c.courseId)}
+                  style={[styles.pill, !selectedCourseId && styles.pillActive]}
+                  onPress={() => setSelectedCourseId(undefined)}
                 >
-                  <Text
-                    numberOfLines={1}
-                    style={[styles.pillText, active && styles.pillTextActive]}
-                  >
-                    {c.courseTitle}
+                  <Text style={[styles.pillText, !selectedCourseId && styles.pillTextActive]}>
+                    Tất cả khóa học
                   </Text>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
-      </View>
+                {courses.map((c) => {
+                  const active = selectedCourseId === c.courseId;
+                  return (
+                    <TouchableOpacity
+                      key={c.courseId}
+                      style={[styles.pill, active && styles.pillActive]}
+                      onPress={() => setSelectedCourseId(active ? undefined : c.courseId)}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        style={[styles.pillText, active && styles.pillTextActive]}
+                      >
+                        {c.courseTitle}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </ResponsiveContainer>
+        </View>
+      )}
 
       {/* Main Content Area */}
       {isLoading ? (
         <Loading message="Đang tải danh sách bút toán..." />
       ) : isError ? (
         <ErrorState
+          error={error}
           message={error?.message || 'Không thể tải danh sách bút toán.'}
           onRetry={refetch}
         />
@@ -240,31 +230,12 @@ export default function InstructorEntriesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    gap: 12,
-  },
-  backButton: {
-    padding: 4,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    backgroundColor: semantic.surfaceCanvas,
   },
   filtersSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: semantic.surfacePage,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: semantic.borderSubtle,
     paddingVertical: 8,
   },
   filterPillsContainer: {
@@ -273,21 +244,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    minHeight: 36,
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    backgroundColor: semantic.surfaceCard,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   pillActive: {
-    backgroundColor: '#0D9488',
-    borderColor: '#0D9488',
+    backgroundColor: semantic.brandPrimary,
+    borderColor: semantic.brandPrimary,
   },
   pillText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: semantic.textSecondary,
+    fontVariant: ['tabular-nums'],
   },
   pillTextActive: {
     color: '#FFFFFF',
@@ -295,14 +269,17 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 32,
+    width: '100%',
+    maxWidth: layout.maxContentWidth,
+    alignSelf: 'center',
   },
   entryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -311,51 +288,29 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   orderBadge: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: semantic.surfaceMuted,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   orderCode: {
+    fontFamily: monoFontFamily,
     fontSize: 12,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
     fontVariant: ['tabular-nums'],
-  },
-  roleTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  roleMain: {
-    backgroundColor: '#E6FFFA',
-  },
-  roleCo: {
-    backgroundColor: '#EEF2FF',
-  },
-  roleTagText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  roleMainText: {
-    color: '#0D9488',
-  },
-  roleCoText: {
-    color: '#6366F1',
   },
   courseTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontWeight: '700',
+    color: semantic.textPrimary,
     lineHeight: 20,
     marginBottom: 12,
   },
   calcGrid: {
     flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
+    backgroundColor: semantic.surfaceCanvas,
+    borderRadius: radius.btn,
     padding: 10,
     justifyContent: 'space-between',
     marginBottom: 12,
@@ -365,80 +320,60 @@ const styles = StyleSheet.create({
   },
   calcLabel: {
     fontSize: 11,
-    color: '#64748B',
-    marginBottom: 2,
+    color: semantic.textMuted,
+    marginBottom: 3,
   },
   calcValue: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0F172A',
-    fontVariant: ['tabular-nums'],
+    color: semantic.textPrimary,
   },
   calcPct: {
+    fontFamily: monoFontFamily,
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: semantic.textSecondary,
     fontVariant: ['tabular-nums'],
   },
   payoutValue: {
     fontSize: 13,
-    fontWeight: '800',
-    color: '#0D9488',
-    fontVariant: ['tabular-nums'],
+    fontWeight: '700',
+    color: semantic.brandPrimary,
   },
   cardFooter: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: semantic.surfaceMuted,
     paddingTop: 10,
   },
-  maturedBadge: {
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  maturedBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  pendingBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  pendingBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#D97706',
+  datesCol: {
+    gap: 3,
+    flex: 1,
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
   dateText: {
     fontSize: 11,
-    color: '#64748B',
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   footerNotice: {
-    marginTop: 12,
+    marginTop: 8,
     padding: 12,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.btn,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   noticeText: {
-    fontSize: 11,
-    color: '#94A3B8',
-    lineHeight: 16,
-    fontStyle: 'italic',
+    fontSize: 12,
+    color: semantic.textMuted,
+    lineHeight: 17,
   },
 });

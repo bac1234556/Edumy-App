@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: semantic.textPrimary,
-    letterSpacing: -0.6,
+    letterSpacing: -0.5,
     lineHeight: 30,
   },
   h2: {
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   body: {
     fontSize: 15,
     fontWeight: '400',
-    color: semantic.textSecondary,
+    color: semantic.textBody,
     lineHeight: 22,
   },
   bodySmall: {
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: semantic.textMuted,
-    letterSpacing: 0.8,
+    letterSpacing: 0.7,
     textTransform: 'uppercase',
     lineHeight: 14,
   },

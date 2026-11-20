@@ -6,10 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { CourseEarning, EarningsSummary, MonthlyEarning } from '../api';
 import { formatHoldDaysExplanation, formatNextMaturityLine } from '../logic';
 import { Text } from '../../../components/ui/Text';
+import { Badge } from '../../../components/ui/Badge';
+import { Card } from '../../../components/ui/Card';
 import { MoneyText } from '../../../components/ui/MoneyText';
 import { Loading } from '../../../components/ui/Loading';
 import { ErrorState } from '../../../components/ui/ErrorState';
-import { radius, semantic } from '../../../theme/tokens';
+import { microShadow, radius, semantic } from '../../../theme/tokens';
 
 interface EarningsSectionProps {
   summary?: EarningsSummary;
@@ -17,6 +19,7 @@ interface EarningsSectionProps {
   monthly?: MonthlyEarning[];
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   errorMessage?: string;
   onRetry: () => void;
 }
@@ -27,6 +30,7 @@ export function EarningsSection({
   monthly,
   isLoading,
   isError,
+  error,
   errorMessage,
   onRetry,
 }: EarningsSectionProps) {
@@ -39,6 +43,7 @@ export function EarningsSection({
   if (isError) {
     return (
       <ErrorState
+        error={error}
         message={errorMessage || 'Không thể tải bảng tổng kết thu nhập.'}
         onRetry={onRetry}
       />
@@ -51,21 +56,46 @@ export function EarningsSection({
 
   return (
     <View style={styles.container}>
-      {/* Hero Balance */}
-      <View style={styles.heroCard}>
-        <Text style={styles.heroLabel}>SỐ DƯ KHẢ DỤNG ĐỂ RÚT</Text>
-        <MoneyText amount={summary?.availableBalance ?? 0} style={styles.heroAmount} />
-        <Text style={styles.heroNote}>
-          Thu nhập thực nhận đã trừ 30% phí nền tảng và phần chia đồng giảng viên.
-        </Text>
-      </View>
+      {/* Primary Light Hero Card: Số dư khả dụng & Thu nhập thực nhận */}
+      <Card style={styles.heroCard}>
+        <View style={styles.heroAccentHeader}>
+          <Text style={styles.heroLabel}>Số dư khả dụng để rút</Text>
+          <MoneyText amount={summary?.availableBalance ?? 0} style={styles.heroAmount} />
+          <Text style={styles.heroNote}>
+            Thu nhập thực nhận đã trừ 30% phí nền tảng và phần chia đồng giảng viên.
+          </Text>
+        </View>
 
-      {/* BR-PAY-HOLD Notice */}
+        <View style={styles.breakdownRow}>
+          <View style={styles.breakdownCell}>
+            <Text style={styles.breakdownLabel}>Thu nhập thực nhận</Text>
+            <MoneyText amount={summary?.totalEarned ?? 0} style={styles.breakdownPrimaryVal} />
+          </View>
+          <View style={styles.verticalDivider} />
+          <View style={styles.breakdownCell}>
+            <Text style={styles.breakdownLabel}>Đang chờ khả dụng</Text>
+            <MoneyText amount={summary?.pendingBalance ?? 0} style={styles.breakdownWarnVal} />
+          </View>
+        </View>
+
+        <View style={styles.breakdownSecondaryRow}>
+          <View style={styles.breakdownPair}>
+            <Text style={styles.pairLabel}>Đang rút:</Text>
+            <MoneyText amount={summary?.inWithdrawal ?? 0} style={styles.pairValue} />
+          </View>
+          <View style={styles.breakdownPair}>
+            <Text style={styles.pairLabel}>Đã rút về TK:</Text>
+            <MoneyText amount={summary?.withdrawn ?? 0} style={styles.pairValue} />
+          </View>
+        </View>
+      </Card>
+
+      {/* BR-PAY-HOLD Rolling Hold Info Box */}
       <View style={[styles.holdNotice, holdDays === 0 && styles.holdNoticeDemo]}>
         <Ionicons
           name={holdDays === 0 ? 'flash-outline' : 'time-outline'}
           size={18}
-          color={holdDays === 0 ? '#0D9488' : '#B45309'}
+          color={holdDays === 0 ? semantic.brandPrimary : semantic.warning}
         />
         <View style={{ flex: 1 }}>
           <Text style={[styles.holdText, holdDays === 0 && styles.holdTextDemo]}>
@@ -77,36 +107,17 @@ export function EarningsSection({
         </View>
       </View>
 
-      {/* Breakdown Grid */}
-      <View style={styles.statsGrid}>
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Đang chờ khả dụng</Text>
-          <MoneyText amount={summary?.pendingBalance ?? 0} style={styles.statValue} />
-        </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Đang rút</Text>
-          <MoneyText amount={summary?.inWithdrawal ?? 0} style={styles.statValue} />
-        </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Đã rút về TK</Text>
-          <MoneyText amount={summary?.withdrawn ?? 0} style={styles.statValue} />
-        </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Thu nhập thực nhận</Text>
-          <MoneyText amount={summary?.totalEarned ?? 0} style={styles.statValue} />
-        </View>
-      </View>
-
       {/* Link to detailed entries */}
       <TouchableOpacity
-        style={styles.entriesLink}
+        style={[styles.entriesLink, microShadow]}
         onPress={() => router.push('/instructor/entries' as const)}
+        accessibilityRole="button"
       >
         <View style={styles.linkLeft}>
-          <Ionicons name="receipt-outline" size={20} color="#0D9488" />
+          <Ionicons name="receipt-outline" size={20} color={semantic.brandPrimary} />
           <Text style={styles.linkText}>Chi tiết bút toán thu nhập</Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+        <Ionicons name="chevron-forward" size={18} color={semantic.textPlaceholder} />
       </TouchableOpacity>
 
       {/* Course Earnings */}
@@ -118,7 +129,7 @@ export function EarningsSection({
           courses.map((c, idx) => {
             const isMain = c.role === 'main';
             return (
-              <View key={c.courseId ?? idx} style={styles.courseCard}>
+              <Card key={c.courseId ?? idx} style={styles.courseCard}>
                 <View style={{ flex: 1, marginRight: 10 }}>
                   <Text numberOfLines={2} style={styles.courseTitle}>
                     {c.courseTitle}
@@ -128,7 +139,7 @@ export function EarningsSection({
                   </Text>
                 </View>
                 <MoneyText amount={c.amount ?? 0} style={styles.courseAmount} />
-              </View>
+              </Card>
             );
           })
         ) : (
@@ -143,17 +154,16 @@ export function EarningsSection({
             Thu nhập theo tháng
           </Text>
           {monthly.map((m, idx) => (
-            <View key={m.month ?? idx} style={styles.monthlyRow}>
+            <Card key={m.month ?? idx} style={styles.monthlyRow}>
               <View style={styles.monthLeft}>
                 <Text style={styles.monthName}>Tháng {m.month}</Text>
-                <View style={m.matured ? styles.maturedBadge : styles.pendingBadge}>
-                  <Text style={m.matured ? styles.maturedText : styles.pendingBadgeText}>
-                    {m.matured ? 'Đã khả dụng' : 'Đang chờ'}
-                  </Text>
-                </View>
+                <Badge
+                  variant={m.matured ? 'success' : 'warning'}
+                  label={m.matured ? 'Đã khả dụng' : 'Đang chờ'}
+                />
               </View>
               <MoneyText amount={m.amount ?? 0} style={styles.monthAmount} />
-            </View>
+            </Card>
           ))}
         </View>
       )}
@@ -166,82 +176,124 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   heroCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: radius.lg,
+    padding: 0,
+    overflow: 'hidden',
+    borderColor: semantic.brandBorder,
+  },
+  heroAccentHeader: {
+    backgroundColor: semantic.brandSoft,
     padding: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.brandBorder,
   },
   heroLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.6,
+    color: semantic.brandPrimaryStrong,
   },
   heroAmount: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#34D399',
-    marginVertical: 8,
+    color: semantic.brandPrimary,
+    marginVertical: 6,
   },
   heroNote: {
-    fontSize: 11,
-    color: '#CBD5E1',
+    fontSize: 12,
+    color: semantic.textSecondary,
+    lineHeight: 18,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.surfaceMuted,
+  },
+  breakdownCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  verticalDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: semantic.borderSubtle,
+  },
+  breakdownLabel: {
+    fontSize: 12,
+    color: semantic.textMuted,
+    fontWeight: '600',
+  },
+  breakdownPrimaryVal: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: semantic.textPrimary,
+  },
+  breakdownWarnVal: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: semantic.warning,
+  },
+  breakdownSecondaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: semantic.surfaceCanvas,
+  },
+  breakdownPair: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pairLabel: {
+    fontSize: 12,
+    color: semantic.textMuted,
+  },
+  pairValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: semantic.textPrimary,
   },
   holdNotice: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: semantic.warningSoft,
+    borderWidth: 1,
+    borderColor: semantic.warningBorder,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: radius.card,
     gap: 8,
   },
   holdNoticeDemo: {
-    backgroundColor: '#CCFBF1',
+    backgroundColor: semantic.brandSoft,
+    borderColor: semantic.brandBorder,
   },
   holdText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#B45309',
-    lineHeight: 17,
+    color: semantic.warning,
+    lineHeight: 18,
   },
   holdTextDemo: {
-    color: '#0F766E',
+    color: semantic.brandPrimaryStrong,
   },
   nextMaturityText: {
     fontSize: 11,
-    color: '#92400E',
+    color: semantic.warning,
     marginTop: 4,
     fontWeight: '700',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  statBox: {
-    width: '48%',
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    padding: 13,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: semantic.textMuted,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: semantic.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   entriesLink: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     padding: 14,
+    minHeight: 52,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
   },
@@ -265,11 +317,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: semantic.surfaceCard,
-    padding: 13,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
+    padding: 14,
   },
   courseTitle: {
     fontSize: 14,
@@ -277,7 +325,7 @@ const styles = StyleSheet.create({
     color: semantic.textPrimary,
   },
   roleText: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textMuted,
     marginTop: 2,
   },
@@ -296,11 +344,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: semantic.surfaceCard,
-    padding: 13,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
+    padding: 14,
   },
   monthLeft: {
     flexDirection: 'row',
@@ -311,28 +355,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: semantic.textPrimary,
-  },
-  maturedBadge: {
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  maturedText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  pendingBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  pendingBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#D97706',
+    fontVariant: ['tabular-nums'],
   },
   monthAmount: {
     fontSize: 14,

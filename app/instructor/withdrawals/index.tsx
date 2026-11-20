@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { confirm, notify } from '../../../src/lib/dialog';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { confirm, notify } from '../../../src/lib/dialog';
 import {
   useCancelWithdrawal,
   useInfiniteWithdrawals,
@@ -23,11 +23,26 @@ import {
 import { WithdrawalRecord } from '../../../src/features/instructor/api';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
+import { Badge, BadgeVariant } from '../../../src/components/ui/Badge';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
 import { MoneyText } from '../../../src/components/ui/MoneyText';
 import { formatDateTime } from '../../../src/lib/date';
+import { layout, microShadow, radius, semantic } from '../../../src/theme/tokens';
+
+function mapWithdrawalVariant(status?: string): BadgeVariant {
+  switch (status?.toLowerCase()) {
+    case 'paid':
+      return 'success';
+    case 'requested':
+      return 'warning';
+    case 'rejected':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
+}
 
 export default function WithdrawalsHistoryScreen() {
   const router = useRouter();
@@ -77,54 +92,47 @@ export default function WithdrawalsHistoryScreen() {
     const isRejected = normalizedStatus === 'rejected';
 
     return (
-      <View style={styles.card}>
-        {/* Header: Amount & Status Badge */}
+      <View style={[styles.card, microShadow]}>
         <View style={styles.cardHeader}>
           <MoneyText amount={item.amount} style={styles.amount} />
-          <View style={[styles.badge, { backgroundColor: statusInfo.backgroundColor }]}>
-            <Text style={[styles.badgeText, { color: statusInfo.color }]}>
-              {statusInfo.label}
-            </Text>
-          </View>
+          <Badge
+            label={statusInfo.label}
+            variant={mapWithdrawalVariant(item.status)}
+          />
         </View>
 
-        {/* Bank & Account Meta */}
         <View style={styles.bankRow}>
-          <Ionicons name="card-outline" size={16} color="#64748B" />
+          <Ionicons name="card-outline" size={16} color={semantic.textMuted} />
           <Text style={styles.bankText}>
-            {item.bankName} • {maskAccountNumber(item.accountNumberLast4)} ({item.accountHolder})
+            {item.bankName} · {maskAccountNumber(item.accountNumberLast4)} ({item.accountHolder})
           </Text>
         </View>
 
-        {/* Created At */}
         <View style={styles.dateRow}>
-          <Ionicons name="time-outline" size={14} color="#94A3B8" />
+          <Ionicons name="time-outline" size={14} color={semantic.textPlaceholder} />
           <Text style={styles.dateText}>
             Tạo lúc: {formatDateTime(item.createdAt)}
           </Text>
         </View>
 
-        {/* Paid Info */}
-        {isPaid && item.transferReference && (
+        {isPaid && Boolean(item.transferReference) && (
           <View style={styles.paidInfoBox}>
-            <Ionicons name="checkmark-circle" size={16} color="#059669" />
+            <Ionicons name="checkmark-circle-outline" size={16} color={semantic.success} />
             <Text style={styles.paidInfoText}>
               Mã giao dịch: <Text style={styles.refText}>{item.transferReference}</Text>
             </Text>
           </View>
         )}
 
-        {/* Rejected Reason */}
-        {isRejected && item.rejectReason && (
+        {isRejected && Boolean(item.rejectReason) && (
           <View style={styles.rejectedInfoBox}>
-            <Ionicons name="alert-circle" size={16} color="#DC2626" />
+            <Ionicons name="alert-circle-outline" size={16} color={semantic.danger} />
             <Text style={styles.rejectedInfoText}>
               Lý do từ chối: {item.rejectReason}
             </Text>
           </View>
         )}
 
-        {/* Cancel Button if status == requested */}
         {isRequested && (
           <View style={styles.actionRow}>
             <Button
@@ -132,6 +140,7 @@ export default function WithdrawalsHistoryScreen() {
               variant="outline"
               onPress={() => handleCancel(item)}
               disabled={isCancelling}
+              loading={isCancelling}
               style={styles.cancelBtn}
             />
           </View>
@@ -142,38 +151,29 @@ export default function WithdrawalsHistoryScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            accessibilityLabel="Quay lại"
-            accessibilityRole="button"
-          >
-            <Ionicons name="arrow-back" size={24} color="#0F172A" />
-          </TouchableOpacity>
-          <Text variant="h2" style={styles.title}>
-            Lịch sử rút tiền
-          </Text>
-        </View>
+      <Stack.Screen
+        options={{
+          title: 'Lịch sử rút tiền',
+          headerBackTitle: 'Quay lại',
+          headerRight: () => (
+            <TouchableOpacity
+              style={styles.newBtn}
+              onPress={() => router.push('/instructor/withdrawals/new' as const)}
+              accessibilityRole="button"
+              accessibilityLabel="Tạo yêu cầu rút tiền mới"
+            >
+              <Ionicons name="add" size={16} color="#FFFFFF" />
+              <Text style={styles.newBtnText}>Rút tiền</Text>
+            </TouchableOpacity>
+          ),
+        }}
+      />
 
-        <TouchableOpacity
-          style={styles.newBtn}
-          onPress={() => router.push('/instructor/withdrawals/new' as const)}
-          accessibilityRole="button"
-          accessibilityLabel="Tạo yêu cầu rút mới"
-        >
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.newBtnText}>Rút tiền</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Main Content */}
       {isLoading ? (
         <Loading message="Đang tải lịch sử rút tiền..." />
       ) : isError ? (
         <ErrorState
+          error={error}
           message={error?.message || 'Không thể tải lịch sử rút tiền.'}
           onRetry={refetch}
         />
@@ -192,13 +192,15 @@ export default function WithdrawalsHistoryScreen() {
           onEndReachedThreshold={0.4}
           ListFooterComponent={
             isFetchingNextPage ? (
-              <ActivityIndicator style={{ paddingVertical: 16 }} color="#0D9488" />
+              <ActivityIndicator style={{ paddingVertical: 16 }} color={semantic.brandPrimary} />
             ) : null
           }
           ListEmptyComponent={
             <EmptyState
               title="Chưa có yêu cầu rút tiền"
               description="Bạn chưa tạo yêu cầu rút tiền nào từ hệ thống."
+              actionTitle="Rút tiền"
+              onAction={() => router.push('/instructor/withdrawals/new' as const)}
             />
           }
         />
@@ -210,40 +212,17 @@ export default function WithdrawalsHistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  backButton: {
-    padding: 4,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    backgroundColor: semantic.surfaceCanvas,
   },
   newBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#0D9488',
+    backgroundColor: semantic.brandPrimary,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingVertical: 7,
+    minHeight: 36,
+    borderRadius: radius.btn,
   },
   newBtnText: {
     color: '#FFFFFF',
@@ -253,14 +232,17 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 32,
+    width: '100%',
+    maxWidth: layout.maxContentWidth,
+    alignSelf: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -270,18 +252,8 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A',
-    fontVariant: ['tabular-nums'],
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  badgeText: {
-    fontSize: 11,
     fontWeight: '700',
+    color: semantic.textPrimary,
   },
   bankRow: {
     flexDirection: 'row',
@@ -291,31 +263,35 @@ const styles = StyleSheet.create({
   },
   bankText: {
     fontSize: 13,
-    color: '#475569',
+    color: semantic.textSecondary,
     fontVariant: ['tabular-nums'],
+    flex: 1,
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   dateText: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontSize: 12,
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   paidInfoBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F0FDF4',
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 6,
+    backgroundColor: semantic.successSoft,
+    borderWidth: 1,
+    borderColor: semantic.successBorder,
+    padding: 10,
+    borderRadius: radius.btn,
+    marginTop: 8,
   },
   paidInfoText: {
     fontSize: 12,
-    color: '#166534',
+    color: semantic.success,
   },
   refText: {
     fontWeight: '700',
@@ -325,27 +301,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF2F2',
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 6,
+    backgroundColor: semantic.dangerSoft,
+    borderWidth: 1,
+    borderColor: semantic.dangerBorder,
+    padding: 10,
+    borderRadius: radius.btn,
+    marginTop: 8,
   },
   rejectedInfoText: {
     fontSize: 12,
-    color: '#991B1B',
+    color: semantic.danger,
     flex: 1,
   },
   actionRow: {
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 10,
+    borderTopColor: semantic.surfaceMuted,
+    paddingTop: 12,
     marginTop: 10,
     alignItems: 'flex-end',
   },
   cancelBtn: {
-    borderColor: '#CBD5E1',
-    minHeight: 36,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    minHeight: 40,
+    paddingHorizontal: 14,
   },
 });

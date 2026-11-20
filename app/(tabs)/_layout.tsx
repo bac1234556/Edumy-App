@@ -17,7 +17,7 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: true,
         headerStyle: {
-          backgroundColor: semantic.surfaceCanvas,
+          backgroundColor: semantic.surfacePage,
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 1,

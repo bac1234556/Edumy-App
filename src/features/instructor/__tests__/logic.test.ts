@@ -9,13 +9,14 @@ import {
   formatNextMaturityLine,
   maskAccountNumber,
   payoutAccountSchema,
+  resolveMonthlyWithdrawalStatus,
   resolveWithdrawalErrorAction,
 } from '../logic';
 
 describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
   describe('validateWithdrawalAmount', () => {
     const availableBalance = 2000000;
-    const minWithdrawal = 100000;
+    const minWithdrawal = 1000000;
 
     it('rejects invalid numbers, zero and negative amounts', () => {
       expect(validateWithdrawalAmount(NaN, availableBalance).valid).toBe(false);
@@ -24,15 +25,15 @@ describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
     });
 
     it('rejects fractional VND amounts (must be integer)', () => {
-      const res = validateWithdrawalAmount(150000.5, availableBalance);
+      const res = validateWithdrawalAmount(1500000.5, availableBalance);
       expect(res.valid).toBe(false);
       expect(res.message).toContain('số nguyên VNĐ');
     });
 
-    it('rejects amount below minWithdrawal', () => {
-      const res = validateWithdrawalAmount(50000, availableBalance, minWithdrawal);
+    it('rejects amount below minWithdrawal (1,000,000 VND)', () => {
+      const res = validateWithdrawalAmount(500000, availableBalance);
       expect(res.valid).toBe(false);
-      expect(res.message).toContain('tối thiểu');
+      expect(res.message).toContain('1.000.000');
     });
 
     it('rejects amount exceeding available balance', () => {
@@ -42,7 +43,7 @@ describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
     });
 
     it('accepts valid withdrawal amount within balance', () => {
-      const res = validateWithdrawalAmount(500000, availableBalance, minWithdrawal);
+      const res = validateWithdrawalAmount(1500000, availableBalance, minWithdrawal);
       expect(res.valid).toBe(true);
       expect(res.message).toBeUndefined();
     });
@@ -195,10 +196,19 @@ describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
 
       const below = resolveWithdrawalErrorAction(
         { code: 'WITHDRAWAL_BELOW_MINIMUM', message: '' },
-        100000
+        1000000
       );
       expect(below.action).toBe('amount_field_error');
-      expect(below.message).toContain('100.000');
+      expect(below.message).toContain('1.000.000');
+    });
+
+    it('routes WITHDRAWAL_MONTHLY_LIMIT_REACHED to banner_error', () => {
+      const res = resolveWithdrawalErrorAction({
+        code: 'WITHDRAWAL_MONTHLY_LIMIT_REACHED',
+        message: '',
+      });
+      expect(res.action).toBe('banner_error');
+      expect(res.message).toContain('1 lần');
     });
 
     it('falls back to banner_error for unknown codes', () => {
@@ -207,6 +217,43 @@ describe('Instructor Logic & Money Mode (Phân hệ 06, Rules 40)', () => {
         message: 'Lỗi hệ thống',
       });
       expect(res).toEqual({ action: 'banner_error', message: 'Lỗi hệ thống' });
+    });
+  });
+
+  describe('resolveMonthlyWithdrawalStatus', () => {
+    it('returns limitReached=true when server summary reports canWithdrawThisMonth=false', () => {
+      const res = resolveMonthlyWithdrawalStatus({
+        canWithdrawThisMonth: false,
+        maxWithdrawalsPerMonth: 1,
+        nextWithdrawalAt: '2026-11-30T17:00:00Z',
+      });
+      expect(res.limitReached).toBe(true);
+      expect(res.maxPerMonth).toBe(1);
+      expect(res.message).toContain('01/12/2026');
+    });
+
+    it('falls back to withdrawals list when server flag is omitted: blocks paid in current month, ignores cancelled/rejected/previous month', () => {
+      const now = new Date('2026-11-20T10:00:00Z');
+
+      const allowed = resolveMonthlyWithdrawalStatus(
+        undefined,
+        [
+          { status: 'paid', createdAt: '2026-10-31T16:59:59Z' }, // Oct 31 23:59 VN
+          { status: 'cancelled', createdAt: '2026-11-05T03:00:00Z' },
+          { status: 'rejected', createdAt: '2026-11-06T03:00:00Z' },
+        ],
+        now
+      );
+      expect(allowed.limitReached).toBe(false);
+      expect(allowed.message).toBeNull();
+
+      const blocked = resolveMonthlyWithdrawalStatus(
+        undefined,
+        [{ status: 'paid', createdAt: '2026-11-01T01:00:00Z' }],
+        now
+      );
+      expect(blocked.limitReached).toBe(true);
+      expect(blocked.message).toContain('tối đa 1 lần');
     });
   });
 });

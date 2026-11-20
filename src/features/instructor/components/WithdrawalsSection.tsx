@@ -4,34 +4,64 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { EarningsSummary, WithdrawalRecord } from '../api';
-import { getWithdrawalStatusInfo, maskAccountNumber } from '../logic';
+import {
+  DEFAULT_MIN_WITHDRAWAL,
+  getWithdrawalStatusInfo,
+  maskAccountNumber,
+  resolveMonthlyWithdrawalStatus,
+} from '../logic';
 import { Text } from '../../../components/ui/Text';
 import { Button } from '../../../components/ui/Button';
+import { Badge, BadgeVariant } from '../../../components/ui/Badge';
+import { Card } from '../../../components/ui/Card';
 import { MoneyText } from '../../../components/ui/MoneyText';
 import { formatDateTime } from '../../../lib/date';
-import { radius, semantic } from '../../../theme/tokens';
+import { microShadow, radius, semantic } from '../../../theme/tokens';
 
 interface WithdrawalsSectionProps {
   summary?: EarningsSummary;
   withdrawals?: WithdrawalRecord[];
 }
 
+function mapWithdrawalVariant(status?: string): BadgeVariant {
+  switch (status?.toLowerCase()) {
+    case 'paid':
+      return 'success';
+    case 'requested':
+      return 'warning';
+    case 'rejected':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
+}
+
 export function WithdrawalsSection({ summary, withdrawals }: WithdrawalsSectionProps) {
   const router = useRouter();
-  const minWithdrawal = summary?.minWithdrawal ?? 100000;
+  const minWithdrawal = summary?.minWithdrawal ?? DEFAULT_MIN_WITHDRAWAL;
+  const monthlyStatus = resolveMonthlyWithdrawalStatus(summary, withdrawals);
 
   return (
     <View style={styles.container}>
-      <View style={styles.summaryCard}>
-        <Text style={styles.label}>SỐ DƯ KHẢ DỤNG</Text>
+      <Card style={styles.summaryCard}>
+        <Text style={styles.label}>Số dư khả dụng</Text>
         <MoneyText amount={summary?.availableBalance ?? 0} style={styles.amount} />
         <Text style={styles.minNote}>
-          Mức rút tối thiểu: {minWithdrawal.toLocaleString('vi-VN')} đ
+          Mức rút tối thiểu: {minWithdrawal.toLocaleString('vi-VN')} đ · Tối đa{' '}
+          {monthlyStatus.maxPerMonth} lần/tháng
         </Text>
+
+        {monthlyStatus.limitReached && monthlyStatus.message && (
+          <View style={styles.limitBanner}>
+            <Ionicons name="calendar-outline" size={16} color={semantic.warning} />
+            <Text style={styles.limitBannerText}>{monthlyStatus.message}</Text>
+          </View>
+        )}
 
         <View style={styles.actionsRow}>
           <Button
-            title="Yêu cầu rút tiền"
+            title={monthlyStatus.limitReached ? 'Đã rút tháng này' : 'Rút tiền'}
+            disabled={monthlyStatus.limitReached}
             onPress={() => router.push('/instructor/withdrawals/new' as const)}
             style={{ flex: 1 }}
           />
@@ -42,17 +72,18 @@ export function WithdrawalsSection({ summary, withdrawals }: WithdrawalsSectionP
             style={{ flex: 1 }}
           />
         </View>
-      </View>
+      </Card>
 
       <TouchableOpacity
-        style={styles.allLink}
+        style={[styles.allLink, microShadow]}
         onPress={() => router.push('/instructor/withdrawals' as const)}
+        accessibilityRole="button"
       >
         <View style={styles.linkLeft}>
           <Ionicons name="time-outline" size={20} color={semantic.brandPrimary} />
           <Text style={styles.linkText}>Quản lý tất cả yêu cầu rút tiền</Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+        <Ionicons name="chevron-forward" size={18} color={semantic.textPlaceholder} />
       </TouchableOpacity>
 
       <View style={styles.recentBlock}>
@@ -61,19 +92,13 @@ export function WithdrawalsSection({ summary, withdrawals }: WithdrawalsSectionP
           withdrawals.slice(0, 5).map((item, idx) => {
             const statusInfo = getWithdrawalStatusInfo(item.status ?? '');
             return (
-              <View key={item.id ?? idx} style={styles.wdCard}>
+              <Card key={item.id ?? idx} style={styles.wdCard}>
                 <View style={styles.wdTop}>
                   <MoneyText amount={item.amount ?? 0} style={styles.wdAmount} />
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: statusInfo.backgroundColor },
-                    ]}
-                  >
-                    <Text style={[styles.statusText, { color: statusInfo.color }]}>
-                      {statusInfo.label}
-                    </Text>
-                  </View>
+                  <Badge
+                    label={statusInfo.label}
+                    variant={mapWithdrawalVariant(item.status)}
+                  />
                 </View>
                 <Text style={styles.wdBank}>
                   {item.bankName} · {maskAccountNumber(item.accountNumberLast4)}
@@ -81,7 +106,7 @@ export function WithdrawalsSection({ summary, withdrawals }: WithdrawalsSectionP
                 <Text style={styles.wdDate}>
                   {formatDateTime(item.createdAt ?? '')}
                 </Text>
-              </View>
+              </Card>
             );
           })
         ) : (
@@ -97,28 +122,43 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   summaryCard: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    padding: 16,
+    borderColor: semantic.brandBorder,
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: semantic.textMuted,
-    letterSpacing: 0.6,
+    color: semantic.textSecondary,
   },
   amount: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
-    color: semantic.brandPrimaryStrong,
+    color: semantic.brandPrimary,
     marginVertical: 6,
   },
   minNote: {
     fontSize: 12,
-    color: semantic.textSecondary,
+    color: semantic.textMuted,
     marginBottom: 14,
+    fontVariant: ['tabular-nums'],
+  },
+  limitBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: semantic.warningSoft,
+    borderWidth: 1,
+    borderColor: semantic.warningBorder,
+    borderRadius: radius.btn,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  limitBannerText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: semantic.warning,
+    fontWeight: '600',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -129,10 +169,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
     padding: 14,
+    minHeight: 52,
   },
   linkLeft: {
     flexDirection: 'row',
@@ -148,11 +189,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   wdCard: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    padding: 13,
+    padding: 14,
     gap: 4,
   },
   wdTop: {
@@ -161,26 +198,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   wdAmount: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: semantic.textPrimary,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
   wdBank: {
-    fontSize: 12,
+    fontSize: 13,
     color: semantic.textSecondary,
+    fontVariant: ['tabular-nums'],
   },
   wdDate: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   emptyText: {
     fontSize: 13,

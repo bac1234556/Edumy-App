@@ -1,12 +1,12 @@
 // src/theme/tokens.ts
-// Three-Layer Design Tokens (Primitive -> Semantic -> Component)
-// Compliant with ui-ux-pro-max, design-system & Anti-AI-Slop Manifesto.
+// Three-Layer Design Tokens — Pure White & Ocean Blue (#2563EB), 100% Light Mode
+// Synced with Edumy Web Frontend (src/styles/tokens.css)
 
 import { Platform, ViewStyle, TextStyle } from 'react-native';
 
 export const primitive = {
-  stone50: '#FAF9F6',   // Warm Editorial Paper
-  stone100: '#F4F2ED',  // Secondary Warm Surface
+  white: '#FFFFFF',
+
   slate50: '#F8FAFC',
   slate100: '#F1F5F9',
   slate200: '#E2E8F0',
@@ -15,81 +15,81 @@ export const primitive = {
   slate500: '#64748B',
   slate600: '#475569',
   slate700: '#334155',
-  slate800: '#1E293B',
   slate900: '#0F172A',
-  cinema950: '#0B0F17', // Modern Dark Cinema
 
-  teal50: '#F0FDFA',
-  teal100: '#CCFBF1',
-  teal200: '#99F6E4',
-  teal500: '#14B8A6',
-  teal600: '#0D9488',   // Brand Primary Deep Teal
-  teal700: '#0F766E',
-
-  cobalt50: '#EFF6FF',
-  cobalt100: '#DBEAFE',
-  cobalt600: '#2563EB',
-  cobalt700: '#1D4ED8', // Crisp Cobalt
+  blue50: '#EFF6FF',
+  blue200: '#BFDBFE',
+  blue600: '#2563EB',
+  blue700: '#1D4ED8',
+  blue800: '#1E40AF',
 
   amber50: '#FFFBEB',
-  amber100: '#FEF3C7',
+  amber200: '#FDE68A',
   amber500: '#F59E0B',
-  amber600: '#D97706',
-  vermilion600: '#EA580C',
+  amber700: '#B45309',
 
-  emerald50: '#ECFDF5',
-  emerald100: '#D1FAE5',
-  emerald500: '#10B981',
-  emerald600: '#059669',
+  green50: '#F0FDF4',
+  green200: '#BBF7D0',
+  green700: '#15803D',
 
-  rose50: '#FEF2F2',
-  rose100: '#FEE2E2',
-  rose500: '#EF4444',
-  rose600: '#DC2626',
-
-  white: '#FFFFFF',
+  red50: '#FEF2F2',
+  red200: '#FECACA',
+  red600: '#DC2626',
 } as const;
 
 export const semantic = {
-  surfaceCanvas: primitive.stone50,
+  // Surfaces (100% Light Mode)
+  surfaceCanvas: primitive.slate50,
+  surfacePage: primitive.white,
   surfaceCard: primitive.white,
-  surfaceElevated: primitive.slate50,
-  surfaceSubtle: primitive.stone100,
-  surfaceCinema: primitive.cinema950,
+  surfaceMuted: primitive.slate100,
+  surfaceSubtle: primitive.slate100,
 
+  // Borders
   borderSubtle: primitive.slate200,
   borderStrong: primitive.slate300,
-  borderDark: primitive.slate800,
 
+  // Typography (WCAG AA >= 4.5:1)
   textPrimary: primitive.slate900,
+  textBody: primitive.slate700,
   textSecondary: primitive.slate600,
   textMuted: primitive.slate500,
   textPlaceholder: primitive.slate400,
-  textInverse: primitive.slate50,
 
-  brandPrimary: primitive.teal600,
-  brandPrimaryStrong: primitive.teal700,
-  brandSoft: primitive.teal50,
-  brandBorder: primitive.teal200,
+  // Brand: Ocean / Royal Blue
+  brandPrimary: primitive.blue600,
+  brandPrimaryHover: primitive.blue700,
+  brandPrimaryStrong: primitive.blue700,
+  brandPrimaryActive: primitive.blue800,
+  brandSoft: primitive.blue50,
+  brandBorder: primitive.blue200,
 
-  accentCobalt: primitive.cobalt700,
-  accentCobaltSoft: primitive.cobalt50,
+  // Rating Star
+  ratingStar: primitive.amber500,
 
-  accentAmber: primitive.amber600,
-  accentAmberSoft: primitive.amber50,
+  // Semantic Status (badges, alert banners)
+  success: primitive.green700,
+  successSoft: primitive.green50,
+  successBorder: primitive.green200,
 
-  success: primitive.emerald600,
-  successSoft: primitive.emerald50,
+  warning: primitive.amber700,
+  warningSoft: primitive.amber50,
+  warningBorder: primitive.amber200,
 
-  danger: primitive.rose600,
-  dangerSoft: primitive.rose50,
+  danger: primitive.red600,
+  dangerSoft: primitive.red50,
+  dangerBorder: primitive.red200,
 } as const;
 
 export const radius = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  pill: 999,
+  btn: 8,
+  input: 8,
+  card: 12,
+  pill: 9999,
+  // Convenience aliases aligned with Web tokens
+  sm: 8,
+  md: 8,
+  lg: 12,
 } as const;
 
 export const space = {
@@ -103,15 +103,26 @@ export const space = {
   10: 40,
 } as const;
 
+export const layout = {
+  maxContentWidth: 840,
+  maxReadingWidth: 760,
+} as const;
+
 export const microShadow: ViewStyle = Platform.select({
   ios: {
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   android: {
     elevation: 1,
+  },
+  web: {
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
   },
   default: {},
 }) as ViewStyle;

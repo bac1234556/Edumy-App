@@ -2,10 +2,11 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Text } from '../../../components/ui/Text';
+import { Badge } from '../../../components/ui/Badge';
 import { MoneyText } from '../../../components/ui/MoneyText';
 import { CourseCard as CourseCardType } from '../api';
-import { Ionicons } from '@expo/vector-icons';
 import { semantic, radius, microShadow } from '../../../theme/tokens';
 
 interface CourseCardProps {
@@ -21,11 +22,13 @@ export function CourseCard({ course }: CourseCardProps) {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.82}
+      activeOpacity={0.84}
       style={[styles.card, microShadow]}
       onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`Xem khóa học ${course.title}`}
     >
-      {/* 16:9 Framed Thumbnail */}
+      {/* 16:9 Clean Thumbnail */}
       <View style={styles.thumbnailContainer}>
         {course.thumbnailUrl ? (
           <Image
@@ -36,35 +39,23 @@ export function CourseCard({ course }: CourseCardProps) {
         ) : (
           <View style={styles.placeholderThumbnail}>
             <View style={styles.placeholderIconBox}>
-              <Ionicons name="layers-outline" size={26} color={semantic.brandPrimary} />
+              <Ionicons name="book-outline" size={24} color={semantic.brandPrimary} />
             </View>
-          </View>
-        )}
-
-        {/* Top-left Category Tag */}
-        {course.categoryName && (
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>
-              {course.categoryName.toUpperCase()}
-            </Text>
-          </View>
-        )}
-
-        {/* Top-right Free Indicator */}
-        {course.isFree && (
-          <View style={styles.freeCornerBadge}>
-            <Text style={styles.freeCornerText}>MIỄN PHÍ</Text>
           </View>
         )}
       </View>
 
-      {/* Editorial Body */}
+      {/* Scannable Card Body */}
       <View style={styles.content}>
+        {Boolean(course.categoryName) && (
+          <Badge label={course.categoryName!} variant="info" style={styles.categoryBadge} />
+        )}
+
         <Text variant="h3" numberOfLines={2} style={styles.title}>
           {course.title}
         </Text>
 
-        {course.instructorName && (
+        {Boolean(course.instructorName) && (
           <View style={styles.instructorRow}>
             <Ionicons name="person-outline" size={13} color={semantic.textMuted} />
             <Text variant="bodySmall" numberOfLines={1} style={styles.instructor}>
@@ -73,10 +64,10 @@ export function CourseCard({ course }: CourseCardProps) {
           </View>
         )}
 
-        {/* Tabular Footer: Rating on left, Price on right */}
+        {/* Footer: Rating on left, Price or Free Pill on right */}
         <View style={styles.footer}>
-          <View style={styles.ratingBadge}>
-            <Ionicons name="star" size={13} color="#D97706" />
+          <View style={styles.ratingRow}>
+            <Ionicons name="star" size={14} color={semantic.ratingStar} />
             <Text style={styles.ratingScore}>
               {course.averageRating ? course.averageRating.toFixed(1) : '5.0'}
             </Text>
@@ -85,10 +76,11 @@ export function CourseCard({ course }: CourseCardProps) {
             </Text>
           </View>
 
-          <MoneyText
-            amount={course.isFree ? 0 : course.price}
-            style={styles.priceText}
-          />
+          {course.isFree ? (
+            <Badge label="Miễn phí" variant="info" />
+          ) : (
+            <MoneyText amount={course.price} style={styles.priceText} />
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -98,7 +90,7 @@ export function CourseCard({ course }: CourseCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
     overflow: 'hidden',
@@ -107,8 +99,7 @@ const styles = StyleSheet.create({
   thumbnailContainer: {
     width: '100%',
     aspectRatio: 16 / 9,
-    backgroundColor: '#F1F5F9',
-    position: 'relative',
+    backgroundColor: semantic.surfaceMuted,
     borderBottomWidth: 1,
     borderBottomColor: semantic.borderSubtle,
   },
@@ -121,52 +112,23 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: semantic.surfaceSubtle,
+    backgroundColor: semantic.surfaceMuted,
   },
   placeholderIconBox: {
     width: 48,
     height: 48,
-    borderRadius: 10,
-    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
+    backgroundColor: semantic.brandSoft,
     borderWidth: 1,
-    borderColor: semantic.borderSubtle,
+    borderColor: semantic.brandBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  categoryBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    backgroundColor: 'rgba(15, 23, 42, 0.88)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  categoryBadgeText: {
-    color: '#F8FAFC',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-  },
-  freeCornerBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: semantic.brandPrimary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  freeCornerText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-  },
   content: {
     padding: 14,
+  },
+  categoryBadge: {
+    marginBottom: 8,
   },
   title: {
     lineHeight: 21,
@@ -178,11 +140,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    marginTop: 7,
+    marginTop: 6,
   },
   instructor: {
     color: semantic.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     flex: 1,
   },
@@ -190,34 +152,29 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: semantic.surfaceMuted,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  ratingBadge: {
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 5,
   },
   ratingScore: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#92400E',
+    color: semantic.textPrimary,
     fontVariant: ['tabular-nums'],
   },
   ratingCount: {
-    fontSize: 11,
-    color: '#B45309',
+    fontSize: 12,
+    color: semantic.textMuted,
     fontVariant: ['tabular-nums'],
   },
   priceText: {
     fontSize: 15,
+    color: semantic.textPrimary,
   },
 });

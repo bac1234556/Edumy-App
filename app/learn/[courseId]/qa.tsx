@@ -4,23 +4,29 @@ import {
   View,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   TextInput,
+  TouchableOpacity,
   Modal,
   RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useCourseQuestions, useCreateQuestion } from '../../../src/features/qa/hooks';
 import { validateQuestionInput } from '../../../src/features/qa/logic';
 import { QuestionSummary } from '../../../src/features/qa/api';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
+import { Badge } from '../../../src/components/ui/Badge';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
+import { ResponsiveContainer } from '../../../src/components/ui/ResponsiveContainer';
 import { formatDate } from '../../../src/lib/date';
 import { AppError } from '../../../src/api/problem';
-import { Ionicons } from '@expo/vector-icons';
+import { layout, microShadow, radius, semantic } from '../../../src/theme/tokens';
 
 export default function CourseQaScreen() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
@@ -56,6 +62,7 @@ export default function CourseQaScreen() {
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Hỏi & Đáp', headerBackTitle: 'Quay lại' }} />
         <ErrorState
+          error={error}
           message={error?.message || 'Không thể tải danh sách hỏi đáp.'}
           onRetry={() => refetch()}
         />
@@ -105,9 +112,11 @@ export default function CourseQaScreen() {
 
   const renderQuestionItem = ({ item }: { item: QuestionSummary }) => (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, microShadow]}
       onPress={() => router.push(`/learn/qa/${item.id}` as const)}
-      activeOpacity={0.7}
+      activeOpacity={0.82}
+      accessibilityRole="button"
+      accessibilityLabel={`Xem câu hỏi ${item.title}`}
     >
       <View style={styles.cardHeader}>
         <View style={styles.askerRow}>
@@ -122,15 +131,17 @@ export default function CourseQaScreen() {
         </View>
 
         {item.isResolved ? (
-          <View style={styles.resolvedBadge}>
-            <Ionicons name="checkmark-circle" size={14} color="#059669" />
-            <Text style={styles.resolvedText}>Đã giải quyết</Text>
-          </View>
+          <Badge
+            variant="success"
+            label="Đã giải quyết"
+            icon={<Ionicons name="checkmark-circle-outline" size={13} color={semantic.success} />}
+          />
         ) : (
-          <View style={styles.pendingBadge}>
-            <Ionicons name="help-circle-outline" size={14} color="#D97706" />
-            <Text style={styles.pendingText}>Đang chờ</Text>
-          </View>
+          <Badge
+            variant="warning"
+            label="Đang chờ"
+            icon={<Ionicons name="help-circle-outline" size={13} color={semantic.warning} />}
+          />
         )}
       </View>
 
@@ -140,15 +151,16 @@ export default function CourseQaScreen() {
 
       <View style={styles.cardFooter}>
         <View style={styles.answersCount}>
-          <Ionicons name="chatbubble-ellipses-outline" size={14} color="#64748B" />
+          <Ionicons name="chatbubble-ellipses-outline" size={14} color={semantic.textMuted} />
           <Text style={styles.footerText}>{item.answerCount ?? 0} câu trả lời</Text>
         </View>
 
         {item.hasInstructorAnswer && (
-          <View style={styles.instructorBadge}>
-            <Ionicons name="shield-checkmark" size={13} color="#0D9488" />
-            <Text style={styles.instructorBadgeText}>Giảng viên đã trả lời</Text>
-          </View>
+          <Badge
+            variant="info"
+            label="Giảng viên đã trả lời"
+            icon={<Ionicons name="shield-checkmark-outline" size={12} color={semantic.brandPrimary} />}
+          />
         )}
       </View>
     </TouchableOpacity>
@@ -160,43 +172,52 @@ export default function CourseQaScreen() {
 
       {/* Filter Tabs & Ask Button */}
       <View style={styles.topControlBar}>
-        <View style={styles.filterTabs}>
-          <TouchableOpacity
-            style={[styles.tabBtn, filter === 'all' && styles.tabBtnActive]}
-            onPress={() => setFilter('all')}
-          >
-            <Text style={[styles.tabText, filter === 'all' && styles.tabTextActive]}>
-              Tất cả
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabBtn, filter === 'unresolved' && styles.tabBtnActive]}
-            onPress={() => setFilter('unresolved')}
-          >
-            <Text style={[styles.tabText, filter === 'unresolved' && styles.tabTextActive]}>
-              Chưa giải quyết
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabBtn, filter === 'resolved' && styles.tabBtnActive]}
-            onPress={() => setFilter('resolved')}
-          >
-            <Text style={[styles.tabText, filter === 'resolved' && styles.tabTextActive]}>
-              Đã xong
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+          <View style={styles.topControlInner}>
+            <View style={styles.filterTabs}>
+              <TouchableOpacity
+                style={[styles.tabBtn, filter === 'all' && styles.tabBtnActive]}
+                onPress={() => setFilter('all')}
+              >
+                <Text style={[styles.tabText, filter === 'all' && styles.tabTextActive]}>
+                  Tất cả
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tabBtn, filter === 'unresolved' && styles.tabBtnActive]}
+                onPress={() => setFilter('unresolved')}
+              >
+                <Text style={[styles.tabText, filter === 'unresolved' && styles.tabTextActive]}>
+                  Đang chờ
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tabBtn, filter === 'resolved' && styles.tabBtnActive]}
+                onPress={() => setFilter('resolved')}
+              >
+                <Text style={[styles.tabText, filter === 'resolved' && styles.tabTextActive]}>
+                  Đã xong
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity style={styles.askBtn} onPress={handleOpenModal}>
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.askBtnText}>Đặt câu hỏi</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.askBtn}
+              onPress={handleOpenModal}
+              accessibilityRole="button"
+              accessibilityLabel="Đặt câu hỏi mới"
+            >
+              <Ionicons name="add" size={18} color="#FFFFFF" />
+              <Text style={styles.askBtnText}>Đặt câu hỏi</Text>
+            </TouchableOpacity>
+          </View>
+        </ResponsiveContainer>
       </View>
 
       {/* Questions List */}
       {questions.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="chatbubbles-outline" size={56} color="#94A3B8" />}
+          icon={<Ionicons name="chatbubbles-outline" size={26} color={semantic.brandPrimary} />}
           title="Chưa có câu hỏi nào"
           description="Hãy đặt câu hỏi đầu tiên để được giảng viên và các bạn học viên trợ giúp."
           actionTitle="Đặt câu hỏi ngay"
@@ -219,68 +240,85 @@ export default function CourseQaScreen() {
       )}
 
       {/* New Question Modal */}
-      <Modal visible={isModalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text variant="h3">Đặt câu hỏi mới</Text>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
-              </TouchableOpacity>
-            </View>
-
-            {validationError && (
-              <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={16} color="#DC2626" />
-                <Text style={styles.errorBannerText}>{validationError}</Text>
+            <ScrollView keyboardShouldPersistTaps="handled">
+              <View style={styles.modalHeader}>
+                <Text variant="h3">Đặt câu hỏi mới</Text>
+                <TouchableOpacity
+                  onPress={() => setIsModalVisible(false)}
+                  style={styles.modalCloseBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Đóng hộp thoại đặt câu hỏi"
+                >
+                  <Ionicons name="close" size={22} color={semantic.textMuted} />
+                </TouchableOpacity>
               </View>
-            )}
 
-            <Text style={styles.inputLabel}>Tiêu đề ngắn gọn (tối đa 200 ký tự)</Text>
-            <TextInput
-              style={styles.titleInput}
-              placeholder="VD: Không hiểu cách tính phần trăm ở phút 03:15..."
-              placeholderTextColor="#94A3B8"
-              value={newTitle}
-              onChangeText={(t) => {
-                setNewTitle(t);
-                setValidationError(null);
-              }}
-              maxLength={200}
-            />
+              {validationError && (
+                <View style={styles.errorBanner}>
+                  <Ionicons name="alert-circle-outline" size={16} color={semantic.danger} />
+                  <Text style={styles.errorBannerText}>{validationError}</Text>
+                </View>
+              )}
 
-            <Text style={styles.inputLabel}>Chi tiết câu hỏi (tối đa 5000 ký tự)</Text>
-            <TextInput
-              style={styles.contentInput}
-              placeholder="Mô tả cụ thể vấn đề bạn gặp phải để nhận trợ giúp nhanh nhất..."
-              placeholderTextColor="#94A3B8"
-              value={newContent}
-              onChangeText={(t) => {
-                setNewContent(t);
-                setValidationError(null);
-              }}
-              multiline
-              numberOfLines={6}
-              textAlignVertical="top"
-              maxLength={5000}
-            />
-
-            <View style={styles.modalActions}>
-              <Button
-                title="Hủy"
-                variant="outline"
-                onPress={() => setIsModalVisible(false)}
-                style={styles.modalCancelBtn}
+              <Text style={styles.inputLabel}>Tiêu đề ngắn gọn (tối đa 200 ký tự)</Text>
+              <TextInput
+                style={styles.titleInput}
+                placeholder="VD: Không hiểu cách tính phần trăm ở phút 03:15..."
+                placeholderTextColor={semantic.textPlaceholder}
+                value={newTitle}
+                onChangeText={(t) => {
+                  setNewTitle(t);
+                  setValidationError(null);
+                }}
+                maxLength={200}
               />
-              <Button
-                title="Gửi câu hỏi"
-                onPress={handlePostQuestion}
-                loading={isCreating}
-                style={styles.modalSubmitBtn}
+
+              <Text style={styles.inputLabel}>Chi tiết câu hỏi (tối đa 5000 ký tự)</Text>
+              <TextInput
+                style={styles.contentInput}
+                placeholder="Mô tả cụ thể vấn đề bạn gặp phải để nhận trợ giúp nhanh nhất..."
+                placeholderTextColor={semantic.textPlaceholder}
+                value={newContent}
+                onChangeText={(t) => {
+                  setNewContent(t);
+                  setValidationError(null);
+                }}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+                maxLength={5000}
               />
-            </View>
+
+              <View style={styles.modalActions}>
+                <Button
+                  title="Hủy"
+                  variant="outline"
+                  onPress={() => setIsModalVisible(false)}
+                  disabled={isCreating}
+                  style={styles.modalActionBtn}
+                />
+                <Button
+                  title="Gửi câu hỏi"
+                  onPress={handlePostQuestion}
+                  loading={isCreating}
+                  disabled={isCreating}
+                  style={styles.modalActionBtn}
+                />
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -289,22 +327,28 @@ export default function CourseQaScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   topControlBar: {
-    padding: 14,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: semantic.surfacePage,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: semantic.borderSubtle,
+  },
+  topControlInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 10,
   },
   filterTabs: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    padding: 2,
+    backgroundColor: semantic.surfaceMuted,
+    borderRadius: radius.btn,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
   },
   tabBtn: {
     paddingHorizontal: 10,
@@ -312,157 +356,124 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   tabBtnActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    backgroundColor: semantic.surfaceCard,
   },
   tabText: {
     fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
+    color: semantic.textMuted,
+    fontWeight: '600',
   },
   tabTextActive: {
-    color: '#0D9488',
+    color: semantic.brandPrimary,
     fontWeight: '700',
   },
   askBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0D9488',
+    backgroundColor: semantic.brandPrimary,
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
+    minHeight: 40,
+    borderRadius: radius.btn,
     gap: 4,
   },
   askBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   listContent: {
     padding: 16,
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: layout.maxContentWidth,
+    alignSelf: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
+    gap: 8,
   },
   askerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flex: 1,
   },
   avatarMini: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#0D9488',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: semantic.brandPrimary,
     fontSize: 11,
     fontWeight: '700',
   },
   askerName: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#334155',
+    color: semantic.textBody,
   },
   dot: {
-    color: '#94A3B8',
+    color: semantic.textPlaceholder,
   },
   dateText: {
     fontSize: 12,
-    color: '#64748B',
-  },
-  resolvedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    gap: 4,
-  },
-  resolvedText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#059669',
-  },
-  pendingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    gap: 4,
-  },
-  pendingText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#D97706',
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   questionTitle: {
-    color: '#0F172A',
-    marginBottom: 10,
-    lineHeight: 20,
+    color: semantic.textPrimary,
+    marginBottom: 12,
+    lineHeight: 21,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F8FAFC',
+    borderTopColor: semantic.surfaceMuted,
   },
   answersCount: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
   footerText: {
     fontSize: 12,
-    color: '#64748B',
-  },
-  instructorBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E6FFFA',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    gap: 4,
-  },
-  instructorBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#0D9488',
+    color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    width: '100%',
+    maxWidth: layout.maxReadingWidth,
+    backgroundColor: semantic.surfaceCard,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
     padding: 20,
     maxHeight: '90%',
   },
@@ -472,46 +483,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  modalCloseBtn: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: semantic.dangerSoft,
+    borderWidth: 1,
+    borderColor: semantic.dangerBorder,
     padding: 10,
-    borderRadius: 8,
+    borderRadius: radius.btn,
     marginBottom: 12,
     gap: 6,
   },
   errorBannerText: {
     fontSize: 13,
-    color: '#DC2626',
+    color: semantic.danger,
     flex: 1,
   },
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#334155',
+    color: semantic.textPrimary,
     marginBottom: 6,
   },
   titleInput: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: semantic.surfaceCanvas,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
+    borderColor: semantic.borderStrong,
+    borderRadius: radius.input,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    minHeight: 44,
     fontSize: 14,
-    color: '#0F172A',
+    color: semantic.textPrimary,
     marginBottom: 14,
   },
   contentInput: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: semantic.surfaceCanvas,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
+    borderColor: semantic.borderStrong,
+    borderRadius: radius.input,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#0F172A',
+    color: semantic.textPrimary,
     minHeight: 120,
     marginBottom: 18,
   },
@@ -519,10 +539,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  modalCancelBtn: {
-    flex: 1,
-  },
-  modalSubmitBtn: {
+  modalActionBtn: {
     flex: 1,
   },
 });

@@ -9,27 +9,33 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { confirm, notify } from '../../../src/lib/dialog';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { confirm, notify } from '../../../src/lib/dialog';
 import {
   useEarningsSummary,
+  useInfiniteWithdrawals,
   usePayoutAccount,
   useRequestWithdrawal,
 } from '../../../src/features/instructor/hooks';
 import {
+  DEFAULT_MIN_WITHDRAWAL,
   formatHoldDaysExplanation,
   formatNextMaturityLine,
   maskAccountNumber,
+  resolveMonthlyWithdrawalStatus,
   resolveWithdrawalErrorAction,
   validateWithdrawalAmount,
 } from '../../../src/features/instructor/logic';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
+import { Card } from '../../../src/components/ui/Card';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { MoneyText } from '../../../src/components/ui/MoneyText';
+import { ResponsiveContainer } from '../../../src/components/ui/ResponsiveContainer';
 import { AppError } from '../../../src/api/problem';
+import { layout, radius, semantic } from '../../../src/theme/tokens';
 
 export default function NewWithdrawalScreen() {
   const router = useRouter();
@@ -50,6 +56,8 @@ export default function NewWithdrawalScreen() {
     refetch: refetchAccount,
   } = usePayoutAccount();
 
+  const { data: withdrawalsData } = useInfiniteWithdrawals();
+
   const { mutate: requestWithdrawal, isPending } = useRequestWithdrawal();
 
   const [rawAmount, setRawAmount] = useState<string>('');
@@ -63,6 +71,7 @@ export default function NewWithdrawalScreen() {
   if (isSummaryError) {
     return (
       <ErrorState
+        error={summaryError}
         message={summaryError?.message || 'Không thể tải thông tin số dư.'}
         onRetry={refetchSummary}
       />
@@ -74,6 +83,7 @@ export default function NewWithdrawalScreen() {
   if (isActualAccountError) {
     return (
       <ErrorState
+        error={accountError}
         message={appErr?.message || 'Không thể tải thông tin tài khoản ngân hàng.'}
         onRetry={refetchAccount}
       />
@@ -81,7 +91,9 @@ export default function NewWithdrawalScreen() {
   }
 
   const availableBalance = summary?.availableBalance ?? 0;
-  const minWithdrawal = summary?.minWithdrawal ?? 100000;
+  const minWithdrawal = summary?.minWithdrawal ?? DEFAULT_MIN_WITHDRAWAL;
+  const recentWithdrawals = withdrawalsData?.pages.flatMap((p) => p.content ?? []) ?? [];
+  const monthlyStatus = resolveMonthlyWithdrawalStatus(summary, recentWithdrawals);
   const holdExplanation = formatHoldDaysExplanation(summary?.holdDays);
   const nextMaturityLine = formatNextMaturityLine(summary?.nextMaturityAt);
   const hasPayoutAccount = Boolean(payoutAccount && payoutAccount.accountNumberLast4);
@@ -164,153 +176,174 @@ export default function NewWithdrawalScreen() {
       style={styles.keyboardView}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {/* Top Header */}
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            accessibilityLabel="Quay lại"
-            accessibilityRole="button"
-          >
-            <Ionicons name="arrow-back" size={24} color="#0F172A" />
-          </TouchableOpacity>
-          <Text variant="h2" style={styles.title}>
-            Yêu cầu rút tiền
-          </Text>
-        </View>
+      <Stack.Screen options={{ title: 'Rút tiền', headerBackTitle: 'Quay lại' }} />
 
-        {serverError && (
-          <View style={styles.errorBanner}>
-            <Ionicons name="alert-circle-outline" size={20} color="#DC2626" />
-            <Text style={styles.errorBannerText}>{serverError}</Text>
-          </View>
-        )}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ResponsiveContainer maxWidth={layout.maxReadingWidth}>
+          {monthlyStatus.limitReached && monthlyStatus.message && (
+            <View style={styles.warningBanner}>
+              <Ionicons name="calendar-outline" size={20} color={semantic.warning} />
+              <Text style={styles.warningBannerText}>{monthlyStatus.message}</Text>
+            </View>
+          )}
 
-        {/* Available Balance Box */}
-        <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>SỐ DƯ KHẢ DỤNG</Text>
-          <MoneyText amount={availableBalance} style={styles.balanceAmount} />
-          <Text style={styles.balanceHint}>
-            Hạn mức rút tối thiểu: {minWithdrawal.toLocaleString('vi-VN')} đ
-          </Text>
-          <Text style={[styles.balanceHint, { marginTop: 4 }]}>{holdExplanation}</Text>
-          {nextMaturityLine && (
-            <Text style={[styles.balanceHint, { marginTop: 2, fontWeight: '700' }]}>
-              {nextMaturityLine}
+          {serverError && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle-outline" size={20} color={semantic.danger} />
+              <Text style={styles.errorBannerText}>{serverError}</Text>
+            </View>
+          )}
+
+          {/* Available Balance Box (Light Pure White & Ocean Blue) */}
+          <Card variant="soft" style={styles.balanceCard}>
+            <Text style={styles.balanceLabel}>Số dư khả dụng</Text>
+            <MoneyText amount={availableBalance} style={styles.balanceAmount} />
+            <Text style={styles.balanceHint}>
+              Hạn mức rút tối thiểu: {minWithdrawal.toLocaleString('vi-VN')} đ · Tối đa{' '}
+              {monthlyStatus.maxPerMonth} lần/tháng
             </Text>
-          )}
-        </View>
+            <Text style={[styles.balanceHint, { marginTop: 4 }]}>{holdExplanation}</Text>
+            {nextMaturityLine && (
+              <Text style={[styles.balanceHint, { marginTop: 2, fontWeight: '700' }]}>
+                {nextMaturityLine}
+              </Text>
+            )}
+          </Card>
 
-        {/* Destination Account Card */}
-        <View style={styles.accountCard}>
-          <Text style={styles.accountCardLabel}>TÀI KHOẢN NHẬN TIỀN</Text>
-          {hasPayoutAccount ? (
-            <View style={styles.accountInfoRow}>
-              <View style={styles.bankIconWrapper}>
-                <Ionicons name="business-outline" size={20} color="#0D9488" />
+          {/* Destination Account Card */}
+          <Card style={styles.accountCard}>
+            <Text style={styles.accountCardLabel}>Tài khoản nhận tiền</Text>
+            {hasPayoutAccount ? (
+              <View style={styles.accountInfoRow}>
+                <View style={styles.bankIconWrapper}>
+                  <Ionicons name="business-outline" size={20} color={semantic.brandPrimary} />
+                </View>
+                <View style={styles.accountMeta}>
+                  <Text style={styles.bankName}>{payoutAccount?.bankName}</Text>
+                  <Text style={styles.accountNumber}>
+                    {maskAccountNumber(payoutAccount?.accountNumberLast4)} ·{' '}
+                    {payoutAccount?.accountHolder}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => router.push('/instructor/payout-account' as const)}
+                  style={styles.changeAccountBtn}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.changeAccountText}>Đổi</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.accountMeta}>
-                <Text style={styles.bankName}>{payoutAccount?.bankName}</Text>
-                <Text style={styles.accountNumber}>
-                  {maskAccountNumber(payoutAccount?.accountNumberLast4)} •{' '}
-                  {payoutAccount?.accountHolder}
-                </Text>
+            ) : (
+              <View style={styles.noAccountBox}>
+                <Ionicons name="warning-outline" size={20} color={semantic.warning} />
+                <Text style={styles.noAccountText}>Chưa có tài khoản ngân hàng nhận tiền</Text>
+                <Button
+                  title="Thiết lập ngay"
+                  variant="outline"
+                  style={styles.setupBtn}
+                  onPress={() => router.push('/instructor/payout-account' as const)}
+                />
               </View>
-              <TouchableOpacity
-                onPress={() => router.push('/instructor/payout-account' as const)}
-                style={styles.changeAccountBtn}
-              >
-                <Text style={styles.changeAccountText}>Đổi</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.noAccountBox}>
-              <Ionicons name="warning-outline" size={20} color="#D97706" />
-              <Text style={styles.noAccountText}>Chưa có tài khoản ngân hàng nhận tiền</Text>
-              <Button
-                title="Thiết lập ngay"
-                variant="outline"
-                style={styles.setupBtn}
-                onPress={() => router.push('/instructor/payout-account' as const)}
-              />
-            </View>
-          )}
-        </View>
+            )}
+          </Card>
 
-        {/* Amount Input Form */}
-        <View style={styles.formCard}>
-          <Text variant="label">Số tiền muốn rút (VNĐ)</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
+          {/* Amount Input Form */}
+          <Card style={styles.formCard}>
+            <Text variant="label">Số tiền muốn rút (VNĐ)</Text>
+            <View
               style={[
-                styles.amountInput,
+                styles.inputContainer,
                 (Boolean(clientError) || Boolean(serverError)) && styles.inputError,
               ]}
-              placeholder="0"
-              placeholderTextColor="#94A3B8"
-              keyboardType="number-pad"
-              value={rawAmount}
-              onChangeText={handleAmountChange}
-              editable={!isPending}
-            />
-            <Text style={styles.currencySuffix}>đ</Text>
-          </View>
-
-          {clientError && <Text style={styles.errorText}>{clientError}</Text>}
-
-          {/* Quick Amount Chips */}
-          <View style={styles.chipsRow}>
-            {[500000, 1000000, 2000000].map((chipAmount) => {
-              const disabled = chipAmount > availableBalance;
-              return (
-                <TouchableOpacity
-                  key={chipAmount}
-                  style={[styles.chip, disabled && styles.chipDisabled]}
-                  disabled={disabled}
-                  onPress={() => handleChipPress(chipAmount)}
-                >
-                  <Text style={[styles.chipText, disabled && styles.chipTextDisabled]}>
-                    {(chipAmount / 1000).toLocaleString('vi-VN')}k
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-            <TouchableOpacity
-              style={[styles.chip, availableBalance < minWithdrawal && styles.chipDisabled]}
-              disabled={availableBalance < minWithdrawal}
-              onPress={() => handleChipPress(availableBalance)}
             >
-              <Text
+              <TextInput
+                style={styles.amountInput}
+                placeholder="0"
+                placeholderTextColor={semantic.textPlaceholder}
+                keyboardType="number-pad"
+                value={rawAmount}
+                onChangeText={handleAmountChange}
+                editable={!isPending && !monthlyStatus.limitReached}
+              />
+              <Text style={styles.currencySuffix}>đ</Text>
+            </View>
+
+            {clientError && <Text style={styles.errorText}>{clientError}</Text>}
+
+            {/* Quick Amount Chips */}
+            <View style={styles.chipsRow}>
+              {[1000000, 2000000, 5000000].map((chipAmount) => {
+                const disabled =
+                  monthlyStatus.limitReached ||
+                  chipAmount < minWithdrawal ||
+                  chipAmount > availableBalance;
+                return (
+                  <TouchableOpacity
+                    key={chipAmount}
+                    style={[styles.chip, disabled && styles.chipDisabled]}
+                    disabled={disabled}
+                    onPress={() => handleChipPress(chipAmount)}
+                  >
+                    <Text style={[styles.chipText, disabled && styles.chipTextDisabled]}>
+                      {chipAmount >= 1000000
+                        ? `${(chipAmount / 1000000).toLocaleString('vi-VN')}tr`
+                        : `${(chipAmount / 1000).toLocaleString('vi-VN')}k`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+              <TouchableOpacity
                 style={[
-                  styles.chipText,
-                  styles.chipAllText,
-                  availableBalance < minWithdrawal && styles.chipTextDisabled,
+                  styles.chip,
+                  (monthlyStatus.limitReached || availableBalance < minWithdrawal) &&
+                    styles.chipDisabled,
                 ]}
+                disabled={monthlyStatus.limitReached || availableBalance < minWithdrawal}
+                onPress={() => handleChipPress(availableBalance)}
               >
-                Tất cả
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.chipText,
+                    styles.chipAllText,
+                    (monthlyStatus.limitReached || availableBalance < minWithdrawal) &&
+                      styles.chipTextDisabled,
+                  ]}
+                >
+                  Tất cả
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Button
+              title={
+                monthlyStatus.limitReached
+                  ? 'Đã đạt giới hạn rút tháng này'
+                  : isPending
+                    ? 'Đang gửi yêu cầu...'
+                    : 'Gửi yêu cầu rút tiền'
+              }
+              onPress={handleSubmit}
+              loading={isPending}
+              disabled={isPending || monthlyStatus.limitReached || !rawAmount}
+              style={styles.submitBtn}
+            />
+          </Card>
+
+          {/* Policy explanation */}
+          <View style={styles.policyNotice}>
+            <Ionicons name="time-outline" size={18} color={semantic.textMuted} />
+            <Text style={styles.policyText}>
+              Mức rút tối thiểu {minWithdrawal.toLocaleString('vi-VN')} đ và tối đa{' '}
+              {monthlyStatus.maxPerMonth} lần mỗi tháng dương lịch. Yêu cầu sau khi gửi sẽ ở trạng
+              thái &quot;Đang chờ duyệt&quot; và được quản trị viên duyệt chuyển khoản. Nếu yêu cầu
+              bị từ chối hoặc bạn tự hủy khi chưa duyệt, lượt rút trong tháng không bị mất.
+            </Text>
           </View>
-
-          {/* Submit Button */}
-          <Button
-            title={isPending ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu rút tiền'}
-            onPress={handleSubmit}
-            loading={isPending}
-            disabled={isPending || !rawAmount}
-            style={styles.submitBtn}
-          />
-        </View>
-
-        {/* Policy explanation */}
-        <View style={styles.policyNotice}>
-          <Ionicons name="time-outline" size={18} color="#64748B" />
-          <Text style={styles.policyText}>
-            Yêu cầu rút tiền sau khi gửi sẽ ở trạng thái &quot;Đang chờ duyệt&quot; và được quản trị viên duyệt
-            chuyển khoản. Bạn có thể hủy yêu cầu khi chưa được duyệt.
-          </Text>
-        </View>
+        </ResponsiveContainer>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -319,7 +352,7 @@ export default function NewWithdrawalScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   container: {
     flex: 1,
@@ -328,74 +361,69 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
-  },
-  backButton: {
-    padding: 4,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: semantic.dangerSoft,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: semantic.dangerBorder,
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    borderRadius: radius.btn,
+    marginBottom: 14,
     gap: 8,
   },
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    color: '#DC2626',
+    color: semantic.danger,
     lineHeight: 18,
   },
+  warningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: semantic.warningSoft,
+    borderWidth: 1,
+    borderColor: semantic.warningBorder,
+    padding: 12,
+    borderRadius: radius.btn,
+    marginBottom: 14,
+    gap: 8,
+  },
+  warningBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: semantic.warning,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
   balanceCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 14,
-    padding: 18,
     marginBottom: 14,
   },
   balanceLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.5,
+    color: semantic.brandPrimaryStrong,
   },
   balanceAmount: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#34D399',
-    marginVertical: 8,
-    fontVariant: ['tabular-nums'],
+    color: semantic.brandPrimary,
+    marginVertical: 6,
   },
   balanceHint: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontSize: 12,
+    color: semantic.textSecondary,
+    fontVariant: ['tabular-nums'],
+    lineHeight: 17,
   },
   accountCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     marginBottom: 14,
   },
   accountCardLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    color: semantic.textMuted,
     marginBottom: 10,
-    letterSpacing: 0.5,
   },
   accountInfoRow: {
     flexDirection: 'row',
@@ -403,10 +431,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   bankIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E6FFFA',
+    width: 40,
+    height: 40,
+    borderRadius: radius.btn,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -416,59 +446,59 @@ const styles = StyleSheet.create({
   bankName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
   accountNumber: {
     fontSize: 12,
-    color: '#64748B',
+    color: semantic.textSecondary,
     marginTop: 2,
     fontVariant: ['tabular-nums'],
   },
   changeAccountBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 12,
+    minHeight: 36,
+    justifyContent: 'center',
+    borderRadius: radius.btn,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
   },
   changeAccountText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#0D9488',
+    fontWeight: '700',
+    color: semantic.brandPrimary,
   },
   noAccountBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: semantic.warningSoft,
+    borderWidth: 1,
+    borderColor: semantic.warningBorder,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: radius.btn,
     flexWrap: 'wrap',
   },
   noAccountText: {
     flex: 1,
     fontSize: 12,
-    color: '#B45309',
+    color: semantic.warning,
   },
   setupBtn: {
-    minHeight: 36,
+    minHeight: 38,
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     marginBottom: 14,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: semantic.surfaceCard,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
+    borderColor: semantic.borderStrong,
+    borderRadius: radius.input,
     marginTop: 6,
     paddingHorizontal: 12,
   },
@@ -477,21 +507,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 22,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
     fontVariant: ['tabular-nums'],
   },
   inputError: {
-    borderColor: '#EF4444',
+    borderColor: semantic.danger,
   },
   currencySuffix: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#64748B',
+    color: semantic.textMuted,
     marginLeft: 6,
   },
   errorText: {
-    fontSize: 11,
-    color: '#EF4444',
+    fontSize: 12,
+    color: semantic.danger,
     marginTop: 6,
   },
   chipsRow: {
@@ -501,46 +531,46 @@ const styles = StyleSheet.create({
   },
   chip: {
     flex: 1,
-    paddingVertical: 8,
+    minHeight: 38,
+    justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    borderRadius: radius.pill,
+    backgroundColor: semantic.surfaceMuted,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   chipDisabled: {
-    opacity: 0.4,
+    opacity: 0.45,
   },
   chipText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#334155',
+    color: semantic.textBody,
     fontVariant: ['tabular-nums'],
   },
   chipTextDisabled: {
-    color: '#94A3B8',
+    color: semantic.textPlaceholder,
   },
   chipAllText: {
-    color: '#0D9488',
+    color: semantic.brandPrimary,
   },
   submitBtn: {
-    backgroundColor: '#0D9488',
-    marginTop: 6,
+    marginTop: 4,
   },
   policyNotice: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
     alignItems: 'center',
   },
   policyText: {
     flex: 1,
     fontSize: 12,
-    color: '#64748B',
+    color: semantic.textSecondary,
     lineHeight: 18,
   },
 });

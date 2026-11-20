@@ -1,8 +1,7 @@
-// app/(auth)/login.tsx — Đăng nhập tài khoản Edumy (Swiss Editorial Auth)
+// app/(auth)/login.tsx — Đăng nhập tài khoản Edumy
 import React, { useState } from 'react';
 import {
   View,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -12,13 +11,17 @@ import {
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Ionicons } from '@expo/vector-icons';
 import { loginSchema, LoginFormData } from '../../src/features/auth/logic';
 import { useLogin } from '../../src/features/auth/hooks';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
+import { Input } from '../../src/components/ui/Input';
+import { Card } from '../../src/components/ui/Card';
+import { Badge } from '../../src/components/ui/Badge';
 import { Screen } from '../../src/components/ui/Screen';
+import { ResponsiveContainer } from '../../src/components/ui/ResponsiveContainer';
 import { AppError } from '../../src/api/problem';
-import { Ionicons } from '@expo/vector-icons';
 import { semantic, radius } from '../../src/theme/tokens';
 
 export default function LoginScreen() {
@@ -53,7 +56,9 @@ export default function LoginScreen() {
         } else if (appErr.code === 'AUTH_ACCOUNT_LOCKED') {
           setServerError('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.');
         } else if (appErr.code === 'AUTH_LOGIN_TEMPORARILY_BLOCKED') {
-          setServerError(`Bạn đã thử đăng nhập sai quá nhiều lần. Vui lòng thử lại sau ${appErr.retryAfterSec || 60} giây.`);
+          setServerError(
+            `Bạn đã thử đăng nhập sai quá nhiều lần. Vui lòng thử lại sau ${appErr.retryAfterSec || 60} giây.`
+          );
         } else {
           setServerError(appErr.message || 'Đăng nhập không thành công.');
         }
@@ -77,116 +82,116 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity
-            style={styles.backToCatalog}
-            onPress={() => router.replace('/(tabs)')}
-          >
-            <Ionicons name="arrow-back" size={18} color={semantic.textSecondary} />
-            <Text style={styles.backToCatalogText}>Khám phá khóa học</Text>
-          </TouchableOpacity>
+          <ResponsiveContainer maxWidth={480}>
+            <TouchableOpacity
+              style={styles.backToCatalog}
+              onPress={() => router.replace('/(tabs)')}
+              accessibilityRole="button"
+              accessibilityLabel="Quay lại khám phá khóa học"
+            >
+              <Ionicons name="arrow-back" size={18} color={semantic.textSecondary} />
+              <Text style={styles.backToCatalogText}>Khám phá khóa học</Text>
+            </TouchableOpacity>
 
-          <View style={styles.authCard}>
-            <View style={styles.brandBadge}>
-              <View style={styles.brandDot} />
-              <Text style={styles.brandBadgeText}>EDUMY IDENTITY // MOBILE AUTH</Text>
-            </View>
+            <Card style={styles.authCard}>
+              <Badge
+                variant="info"
+                label="Tài khoản Edumy"
+                icon={<Ionicons name="school-outline" size={13} color={semantic.brandPrimary} />}
+                style={styles.brandBadge}
+              />
 
-            <Text variant="h1" style={styles.title}>
-              Đăng nhập hệ thống
-            </Text>
-            <Text variant="bodySmall" style={styles.subtitle}>
-              Sử dụng tài khoản Edumy chung trên cả ứng dụng di động và website.
-            </Text>
+              <Text variant="h1" style={styles.title}>
+                Đăng nhập
+              </Text>
+              <Text variant="bodySmall" style={styles.subtitle}>
+                Sử dụng tài khoản Edumy chung trên cả ứng dụng di động và website.
+              </Text>
 
-            {serverError && (
-              <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle-outline" size={18} color={semantic.danger} />
-                <Text style={styles.errorBannerText}>{serverError}</Text>
-              </View>
-            )}
+              {serverError && (
+                <View style={styles.errorBanner}>
+                  <Ionicons name="alert-circle-outline" size={18} color={semantic.danger} />
+                  <Text style={styles.errorBannerText}>{serverError}</Text>
+                </View>
+              )}
 
-            <View style={styles.form}>
-              {/* Email field */}
-              <View style={styles.fieldGroup}>
-                <Text variant="label">Địa chỉ Email</Text>
+              <View style={styles.form}>
                 <Controller
                   control={control}
                   name="email"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={[styles.input, Boolean(errors.email) && styles.inputError]}
+                    <Input
+                      label="Địa chỉ Email"
                       placeholder="name@edumy.com"
-                      placeholderTextColor="#94A3B8"
                       keyboardType="email-address"
                       autoCapitalize="none"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
+                      error={errors.email?.message}
                     />
                   )}
                 />
-                {errors.email && (
-                  <Text style={styles.fieldError}>{errors.email.message}</Text>
-                )}
-              </View>
 
-              {/* Password field */}
-              <View style={styles.fieldGroup}>
-                <View style={styles.labelRow}>
-                  <Text variant="label">Mật khẩu</Text>
-                  <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-                    <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.passwordWrapper}>
-                  <Controller
-                    control={control}
-                    name="password"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        style={[styles.input, styles.passwordInput, Boolean(errors.password) && styles.inputError]}
-                        placeholder="Nhập mật khẩu của bạn"
-                        placeholderTextColor="#94A3B8"
-                        secureTextEntry={!showPassword}
-                        autoCapitalize="none"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                      />
-                    )}
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    <Ionicons
-                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                      size={20}
-                      color={semantic.textMuted}
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Mật khẩu"
+                      labelRight={
+                        <TouchableOpacity
+                          onPress={() => router.push('/(auth)/forgot-password')}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
+                        </TouchableOpacity>
+                      }
+                      placeholder="Nhập mật khẩu của bạn"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      error={errors.password?.message}
+                      rightAdornment={
+                        <TouchableOpacity
+                          style={styles.eyeButton}
+                          onPress={() => setShowPassword(!showPassword)}
+                          accessibilityRole="button"
+                          accessibilityLabel={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                        >
+                          <Ionicons
+                            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                            size={20}
+                            color={semantic.textMuted}
+                          />
+                        </TouchableOpacity>
+                      }
                     />
+                  )}
+                />
+
+                <Button
+                  title="Đăng nhập"
+                  onPress={handleSubmit(onSubmit)}
+                  loading={isPending}
+                  disabled={isPending}
+                  style={styles.submitButton}
+                />
+
+                <View style={styles.switchRow}>
+                  <Text variant="bodySmall">Chưa có tài khoản Edumy?</Text>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(auth)/register')}
+                    hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.switchLink}>Tạo tài khoản</Text>
                   </TouchableOpacity>
                 </View>
-                {errors.password && (
-                  <Text style={styles.fieldError}>{errors.password.message}</Text>
-                )}
               </View>
-
-              <Button
-                title="Đăng nhập"
-                onPress={handleSubmit(onSubmit)}
-                loading={isPending}
-                style={styles.submitButton}
-              />
-
-              <View style={styles.switchRow}>
-                <Text variant="bodySmall">Chưa có tài khoản Edumy?</Text>
-                <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                  <Text style={styles.switchLink}>Tạo tài khoản</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
+            </Card>
+          </ResponsiveContainer>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -207,8 +212,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     alignSelf: 'flex-start',
-    marginBottom: 16,
-    paddingVertical: 6,
+    marginBottom: 14,
+    minHeight: 44,
+    paddingVertical: 8,
   },
   backToCatalogText: {
     fontSize: 13,
@@ -216,36 +222,10 @@ const styles = StyleSheet.create({
     color: semantic.textSecondary,
   },
   authCard: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    padding: 22,
+    padding: 24,
   },
   brandBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    backgroundColor: semantic.brandSoft,
-    borderWidth: 1,
-    borderColor: semantic.brandBorder,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 4,
     marginBottom: 14,
-  },
-  brandDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: semantic.brandPrimary,
-  },
-  brandBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
-    letterSpacing: 0.7,
   },
   title: {
     fontSize: 23,
@@ -261,8 +241,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: semantic.dangerSoft,
     borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: radius.sm,
+    borderColor: semantic.dangerBorder,
+    borderRadius: radius.btn,
     padding: 12,
     marginBottom: 16,
     gap: 8,
@@ -276,43 +256,11 @@ const styles = StyleSheet.create({
   form: {
     gap: 16,
   },
-  fieldGroup: {
-    gap: 6,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  input: {
-    height: 46,
-    backgroundColor: semantic.surfaceCanvas,
-    borderWidth: 1,
-    borderColor: semantic.borderStrong,
-    borderRadius: radius.md,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: semantic.textPrimary,
-  },
-  inputError: {
-    borderColor: semantic.danger,
-  },
-  passwordWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  passwordInput: {
-    paddingRight: 44,
-  },
   eyeButton: {
-    position: 'absolute',
-    right: 12,
-    padding: 4,
-  },
-  fieldError: {
-    color: semantic.danger,
-    fontSize: 12,
-    marginTop: 2,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   forgotPasswordText: {
     color: semantic.brandPrimary,
@@ -327,10 +275,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
-    marginTop: 10,
+    marginTop: 8,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: semantic.surfaceMuted,
   },
   switchLink: {
     color: semantic.brandPrimary,

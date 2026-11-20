@@ -7250,6 +7250,13 @@ export interface components {
             holdDays?: number;
             /** Format: date-time */
             nextMaturityAt?: string;
+            /** Format: int32 */
+            maxWithdrawalsPerMonth?: number;
+            /** Format: int32 */
+            withdrawalsUsedThisMonth?: number;
+            canWithdrawThisMonth?: boolean;
+            /** Format: date-time */
+            nextWithdrawalAt?: string;
         };
         MonthlyEarningDto: {
             month?: string;

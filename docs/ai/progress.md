@@ -29,4 +29,4 @@ Resume from the first unit that is not `done`. Never redo a committed unit. One 
 | P2-5 instructor channel | done | 69e3287 | tsc: pass · lint: pass · test: 106/106 pass | 5-section instructor channel (Overview + 30d bar chart, Courses + student roster + invitations, Q&A, Earnings BR-PAY-HOLD, Withdrawals) |
 | P2-6 withdrawals & payout | done | e927e80 | tsc: pass · lint: pass · test: 110/110 pass | Infinite withdrawals list, BR-PAY-HOLD & double-submit guard on new withdrawal, error code routing tests, payout-account password clear |
 | P2-7 OpenAPI DTO alignment & cleanup | done | pending | tsc: pass · lint: pass · test: 110/110 pass | Typed Q&A, Reviews, Co-instructor Invitations & Auth responses in backend OpenAPI, regenerated schema.d.ts, removed hand-written response types & leftover cart.tsx |
-| Ads | blocked | | | Q-M01 |
+| Ads | done | pending | tsc: pass · lint: pass · test: 123/123 pass | Q-M01 resolved: Hybrid Ads (react-native-google-mobile-ads Banner + Interstitial + auto-scrolling Edumy Ad Campaign Banner, 3-course Spotlight Modal & Inline Sponsored Ad) |

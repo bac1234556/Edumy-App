@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useCourseReviews } from '../../../src/features/catalog/hooks';
 import { CourseReviewItem } from '../../../src/features/catalog/api';
 import { Text } from '../../../src/components/ui/Text';
@@ -9,7 +10,7 @@ import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
 import { formatDate } from '../../../src/lib/date';
-import { Ionicons } from '@expo/vector-icons';
+import { layout, microShadow, radius, semantic } from '../../../src/theme/tokens';
 
 export default function CourseReviewsScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -29,34 +30,33 @@ export default function CourseReviewsScreen() {
   if (isError) {
     return (
       <ErrorState
+        error={error}
         message={error?.message || 'Không thể tải đánh giá khóa học'}
         onRetry={() => refetch()}
       />
     );
   }
 
-  const renderStars = (rating: number) => {
-    return (
-      <View style={styles.starsRow}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Ionicons
-            key={star}
-            name={star <= Math.round(rating) ? 'star' : 'star-outline'}
-            size={16}
-            color={star <= Math.round(rating) ? '#F59E0B' : '#CBD5E1'}
-            style={styles.starIcon}
-          />
-        ))}
-      </View>
-    );
-  };
+  const renderStars = (rating: number) => (
+    <View style={styles.starsRow}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Ionicons
+          key={star}
+          name={star <= Math.round(rating) ? 'star' : 'star-outline'}
+          size={15}
+          color={star <= Math.round(rating) ? semantic.ratingStar : semantic.borderStrong}
+          style={styles.starIcon}
+        />
+      ))}
+    </View>
+  );
 
   const renderReviewItem = ({ item }: { item: CourseReviewItem }) => (
-    <View style={styles.reviewCard}>
+    <View style={[styles.reviewCard, microShadow]}>
       <View style={styles.reviewHeader}>
         <View style={styles.avatarPlaceholder}>
           <Text style={styles.avatarText}>
-            {(item.reviewerName || 'Học viên').charAt(0).toUpperCase()}
+            {(item.reviewerName || 'H').charAt(0).toUpperCase()}
           </Text>
         </View>
         <View style={styles.reviewerInfo}>
@@ -80,7 +80,7 @@ export default function CourseReviewsScreen() {
 
       {reviews.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="chatbubbles-outline" size={48} color="#94A3B8" />}
+          icon={<Ionicons name="chatbubbles-outline" size={26} color={semantic.brandPrimary} />}
           title="Chưa có đánh giá nào"
           description="Khóa học này chưa có học viên nào gửi nhận xét."
           actionTitle="Tải lại"
@@ -108,19 +108,22 @@ export default function CourseReviewsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   listContent: {
     padding: 16,
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: layout.maxContentWidth,
+    alignSelf: 'center',
   },
   reviewCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -131,28 +134,31 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#0D9488',
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: semantic.brandPrimary,
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 15,
   },
   reviewerInfo: {
     flex: 1,
   },
   reviewerName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontSize: 14,
+    fontWeight: '700',
+    color: semantic.textPrimary,
   },
   reviewDate: {
     fontSize: 12,
-    color: '#64748B',
+    color: semantic.textMuted,
     marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
   starsRow: {
     flexDirection: 'row',
@@ -163,12 +169,12 @@ const styles = StyleSheet.create({
   },
   reviewComment: {
     fontSize: 14,
-    lineHeight: 22,
-    color: '#334155',
+    lineHeight: 21,
+    color: semantic.textBody,
   },
   emptyComment: {
     fontSize: 13,
     fontStyle: 'italic',
-    color: '#94A3B8',
+    color: semantic.textPlaceholder,
   },
 });

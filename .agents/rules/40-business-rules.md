@@ -40,8 +40,19 @@ Hidden courses return 404 to non-owners/non-instructors → "Không tìm thấy 
   - `holdDays > 0`: *"Mỗi khoản thu nhập khả dụng sau {holdDays} ngày kể từ khi đơn hàng được thanh toán"*
   - If `nextMaturityAt` is present: *"Khoản tiếp theo khả dụng lúc {dd/MM/yyyy HH:mm}"*
 - **Payout account:** `PUT /me/payout-account` requires `currentPassword`; clear password field after submit; display only last 4 digits; never log account numbers.
-- **Withdrawals:** client checks (`>= minWithdrawal`, `<= availableBalance`, integer) are UX only — server decides. Disable submit while `isPending` (no double submit). Cancel allowed only while `status === 'requested'`, confirmed via `confirm`.
-  Statuses: `requested` "Đang chờ duyệt" · `paid` "Đã chuyển khoản" (with `transferReference`) · `rejected` "Bị từ chối" (with `rejectReason`) · `cancelled` "Đã hủy".
+- **Withdrawals:**
+  - Minimum withdrawal is `1,000,000` VNĐ (`edumy.payout.min-withdrawal: 1000000`).
+  - Frequency limit: maximum **1 withdrawal per calendar month** per instructor (`Asia/Ho_Chi_Minh`, `edumy.payout.max-withdrawals-per-month: 1`), counting `requested` and `paid` requests (`rejected` and `cancelled` do not consume the monthly quota). Server enforces under `PayoutAccount` `FOR UPDATE` lock and returns `409 WITHDRAWAL_MONTHLY_LIMIT_REACHED`.
+  - Client checks (`>= minWithdrawal`, `<= availableBalance`, integer, monthly quota UX) are UX only — server decides. Disable submit while `isPending` (no double submit). Cancel allowed only while `status === 'requested'`, confirmed via `confirm`.
+  - Statuses: `requested` "Đang chờ duyệt" · `paid` "Đã chuyển khoản" (with `transferReference`) · `rejected` "Bị từ chối" (with `rejectReason`) · `cancelled` "Đã hủy".
 
-## Ads
-BLOCKED until Q-M01 is decided. Do not implement anything about ads.
+## Ads (Q-M01 resolved — Hybrid Ads)
+- **Two-layer strategy:**
+  1. **Edumy Internal Promoted Courses (House Ads):** surface hot / best-value paid courses from `GET /catalog/courses` on **Khám phá** (`PromotedCoursesBanner` + once-per-session `CoursePromoModal`), excluding courses already owned by the logged-in user. Clicking opens `/courses/{slug}` (purchasing remains Web-Handoff per `BR-MOBILE-SCOPE`).
+  2. **Google AdMob (`react-native-google-mobile-ads`):**
+     - **BannerAd (`src/components/ui/AdBanner.tsx`):** placed at the bottom of **Khám phá** (`app/(tabs)/index.tsx`) and **Chi tiết khóa học** (`app/courses/[slug]/index.tsx`).
+     - **InterstitialAd (`useInterstitialAd`):** triggered when opening a preview lesson (`Học thử`) on **Chi tiết khóa học** with cooldown (`shouldShowInterstitial`), always calling the navigation callback even if the ad fails or is not loaded yet.
+- **Hard guardrails:**
+  - Never display ads inside learning/video screens (`app/learn/**`).
+  - Native AdMob modules must be wrapped in platform-safe adapters (`src/lib/ads.ts` / `src/lib/ads.web.ts`) so Web (`expo start --web`), Expo Go, and Jest never crash.
+  - Default to official Google `TestIds` unless production IDs are explicitly configured via `EXPO_PUBLIC_ADMOB_*`.

@@ -57,4 +57,36 @@ jest.mock('expo-web-browser', () => ({
   openBrowserAsync: jest.fn(async () => ({ type: 'opened' })),
 }));
 
+jest.mock('react-native-google-mobile-ads', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: () => ({
+      initialize: jest.fn(async () => []),
+    }),
+    TestIds: {
+      BANNER: 'ca-app-pub-3940256099942544/6300978111',
+      INTERSTITIAL: 'ca-app-pub-3940256099942544/1033173712',
+    },
+    BannerAdSize: {
+      BANNER: 'BANNER',
+      ANCHORED_ADAPTIVE_BANNER: 'ANCHORED_ADAPTIVE_BANNER',
+    },
+    AdEventType: {
+      LOADED: 'loaded',
+      CLOSED: 'closed',
+      ERROR: 'error',
+    },
+    BannerAd: (props) => React.createElement(View, { testID: 'admob-banner', ...props }),
+    InterstitialAd: {
+      createForAdRequest: jest.fn(() => ({
+        addAdEventListener: jest.fn(() => jest.fn()),
+        load: jest.fn(),
+        show: jest.fn(async () => {}),
+      })),
+    },
+  };
+});
+
 

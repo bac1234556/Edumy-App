@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -10,11 +9,11 @@ import {
   ScrollView,
   RefreshControl,
 } from 'react-native';
-import { notify } from '../../src/lib/dialog';
-import { useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Ionicons } from '@expo/vector-icons';
+import { notify } from '../../src/lib/dialog';
 import {
   usePayoutAccount,
   useUpdatePayoutAccount,
@@ -26,13 +25,16 @@ import {
 } from '../../src/features/instructor/logic';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
+import { Input } from '../../src/components/ui/Input';
+import { Card } from '../../src/components/ui/Card';
 import { Loading } from '../../src/components/ui/Loading';
 import { ErrorState } from '../../src/components/ui/ErrorState';
+import { ResponsiveContainer } from '../../src/components/ui/ResponsiveContainer';
 import { AppError, applyFieldErrors } from '../../src/api/problem';
 import { formatDateTime } from '../../src/lib/date';
+import { layout, monoFontFamily, radius, semantic } from '../../src/theme/tokens';
 
 export default function PayoutAccountScreen() {
-  const router = useRouter();
   const { data: account, isLoading, isError, error, refetch, isRefetching } = usePayoutAccount();
   const { mutate: updateAccount, isPending } = useUpdatePayoutAccount();
 
@@ -79,7 +81,6 @@ export default function PayoutAccountScreen() {
       },
       {
         onSuccess: () => {
-          // Never keep bank number or password in state after submit
           reset({
             bankName: '',
             accountNumber: '',
@@ -120,6 +121,7 @@ export default function PayoutAccountScreen() {
   if (isActualError) {
     return (
       <ErrorState
+        error={error}
         message={appErr?.message || 'Không thể tải thông tin tài khoản nhận tiền.'}
         onRetry={refetch}
       />
@@ -134,223 +136,186 @@ export default function PayoutAccountScreen() {
       style={styles.keyboardView}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <Stack.Screen options={{ title: 'Tài khoản nhận tiền', headerBackTitle: 'Quay lại' }} />
+
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       >
-        {/* Top Header */}
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            accessibilityLabel="Quay lại"
-            accessibilityRole="button"
-          >
-            <Ionicons name="arrow-back" size={24} color="#0F172A" />
-          </TouchableOpacity>
-          <Text variant="h2" style={styles.title}>
-            Tài khoản nhận tiền
-          </Text>
-        </View>
-
-        {serverError && (
-          <View style={styles.errorBanner}>
-            <Ionicons name="alert-circle-outline" size={20} color="#DC2626" />
-            <Text style={styles.errorBannerText}>{serverError}</Text>
-          </View>
-        )}
-
-        {/* Existing Account Card */}
-        {hasExistingAccount && account && !isEditing && (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.bankIconWrapper}>
-                <Ionicons name="business-outline" size={24} color="#0D9488" />
-              </View>
-              <View style={styles.cardHeaderMeta}>
-                <Text style={styles.bankName}>{account.bankName}</Text>
-                <Text style={styles.accountHolder}>{account.accountHolder}</Text>
-              </View>
+        <ResponsiveContainer maxWidth={layout.maxReadingWidth}>
+          {serverError && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle-outline" size={20} color={semantic.danger} />
+              <Text style={styles.errorBannerText}>{serverError}</Text>
             </View>
+          )}
 
-            <View style={styles.accountNumberRow}>
-              <Text style={styles.maskedNumberLabel}>Số tài khoản</Text>
-              <Text style={styles.maskedNumber}>
-                {maskAccountNumber(account.accountNumberLast4)}
-              </Text>
-            </View>
+          {/* Existing Account Card */}
+          {hasExistingAccount && account && !isEditing && (
+            <Card style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.bankIconWrapper}>
+                  <Ionicons name="business-outline" size={22} color={semantic.brandPrimary} />
+                </View>
+                <View style={styles.cardHeaderMeta}>
+                  <Text style={styles.bankName}>{account.bankName}</Text>
+                  <Text style={styles.accountHolder}>{account.accountHolder}</Text>
+                </View>
+              </View>
 
-            {account.updatedAt && (
-              <Text style={styles.updatedAtText}>
-                Cập nhật lần cuối: {formatDateTime(account.updatedAt)}
-              </Text>
-            )}
+              <View style={styles.accountNumberRow}>
+                <Text style={styles.maskedNumberLabel}>Số tài khoản</Text>
+                <Text style={styles.maskedNumber}>
+                  {maskAccountNumber(account.accountNumberLast4)}
+                </Text>
+              </View>
 
-            <View style={styles.actionRow}>
+              {Boolean(account.updatedAt) && (
+                <Text style={styles.updatedAtText}>
+                  Cập nhật lần cuối: {formatDateTime(account.updatedAt)}
+                </Text>
+              )}
+
               <Button
                 title="Thay đổi tài khoản"
                 variant="outline"
                 onPress={handleStartEdit}
-                style={styles.editBtn}
               />
-            </View>
-          </View>
-        )}
+            </Card>
+          )}
 
-        {/* Form View (For creating new or editing) */}
-        {showForm && (
-          <View style={styles.formCard}>
-            <View style={styles.formHeader}>
-              <Ionicons name="shield-checkmark-outline" size={22} color="#0D9488" />
-              <Text style={styles.formTitle}>
-                {hasExistingAccount ? 'Cập nhật tài khoản nhận tiền' : 'Thiết lập tài khoản nhận tiền'}
+          {/* Form View (For creating new or editing) */}
+          {showForm && (
+            <Card style={styles.formCard}>
+              <View style={styles.formHeader}>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={20}
+                  color={semantic.brandPrimary}
+                />
+                <Text style={styles.formTitle}>
+                  {hasExistingAccount
+                    ? 'Cập nhật tài khoản nhận tiền'
+                    : 'Thiết lập tài khoản nhận tiền'}
+                </Text>
+              </View>
+
+              <Text style={styles.securityNotice}>
+                Để đảm bảo an toàn doanh thu, mọi thay đổi tài khoản ngân hàng đều yêu cầu xác thực
+                bằng mật khẩu hiện tại của bạn.
               </Text>
-            </View>
 
-            <Text style={styles.securityNotice}>
-              Để đảm bảo an toàn doanh thu, mọi thay đổi tài khoản ngân hàng đều yêu cầu xác thực bằng
-              mật khẩu hiện tại của bạn.
-            </Text>
+              <View style={styles.formFields}>
+                <Controller
+                  control={control}
+                  name="bankName"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Tên ngân hàng"
+                      placeholder="Ví dụ: Vietcombank, Techcombank, MB..."
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors.bankName?.message}
+                    />
+                  )}
+                />
 
-            {/* Bank Name */}
-            <View style={styles.fieldGroup}>
-              <Text variant="label">Tên ngân hàng</Text>
-              <Controller
-                control={control}
-                name="bankName"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.bankName && styles.inputError]}
-                    placeholder="Ví dụ: Vietcombank, Techcombank, MB..."
-                    placeholderTextColor="#94A3B8"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
-                )}
-              />
-              {errors.bankName && (
-                <Text style={styles.fieldError}>{errors.bankName.message}</Text>
-              )}
-            </View>
+                <Controller
+                  control={control}
+                  name="accountNumber"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Số tài khoản ngân hàng"
+                      placeholder="Nhập số tài khoản ngân hàng"
+                      keyboardType="number-pad"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors.accountNumber?.message}
+                    />
+                  )}
+                />
 
-            {/* Account Number */}
-            <View style={styles.fieldGroup}>
-              <Text variant="label">Số tài khoản ngân hàng</Text>
-              <Controller
-                control={control}
-                name="accountNumber"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.accountNumber && styles.inputError]}
-                    placeholder="Nhập số tài khoản ngân hàng"
-                    placeholderTextColor="#94A3B8"
-                    keyboardType="number-pad"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
-                )}
-              />
-              {errors.accountNumber && (
-                <Text style={styles.fieldError}>{errors.accountNumber.message}</Text>
-              )}
-            </View>
+                <Controller
+                  control={control}
+                  name="accountHolder"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Tên chủ tài khoản (viết hoa không dấu)"
+                      placeholder="Ví dụ: NGUYEN VAN A"
+                      autoCapitalize="characters"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors.accountHolder?.message}
+                    />
+                  )}
+                />
 
-            {/* Account Holder */}
-            <View style={styles.fieldGroup}>
-              <Text variant="label">Tên chủ tài khoản (viết hoa không dấu)</Text>
-              <Controller
-                control={control}
-                name="accountHolder"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.accountHolder && styles.inputError]}
-                    placeholder="Ví dụ: NGUYEN VAN A"
-                    placeholderTextColor="#94A3B8"
-                    autoCapitalize="characters"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
-                )}
-              />
-              {errors.accountHolder && (
-                <Text style={styles.fieldError}>{errors.accountHolder.message}</Text>
-              )}
-            </View>
-
-            {/* Current Password Verification */}
-            <View style={styles.fieldGroup}>
-              <Text variant="label">Mật khẩu hiện tại (để xác thực)</Text>
-              <View style={styles.passwordWrapper}>
                 <Controller
                   control={control}
                   name="currentPassword"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={[
-                        styles.passwordInput,
-                        errors.currentPassword && styles.inputError,
-                      ]}
+                    <Input
+                      label="Mật khẩu hiện tại (để xác thực)"
                       placeholder="Nhập mật khẩu hiện tại"
-                      placeholderTextColor="#94A3B8"
                       secureTextEntry={!showPassword}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
+                      error={errors.currentPassword?.message}
+                      rightAdornment={
+                        <TouchableOpacity
+                          style={styles.eyeButton}
+                          onPress={() => setShowPassword(!showPassword)}
+                          accessibilityRole="button"
+                          accessibilityLabel={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                        >
+                          <Ionicons
+                            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                            size={20}
+                            color={semantic.textMuted}
+                          />
+                        </TouchableOpacity>
+                      }
                     />
                   )}
                 />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Ẩn hoặc hiện mật khẩu"
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color="#64748B"
+
+                <View style={styles.buttonRow}>
+                  {hasExistingAccount && (
+                    <Button
+                      title="Hủy"
+                      variant="outline"
+                      onPress={() => setIsEditing(false)}
+                      disabled={isPending}
+                      style={styles.cancelBtn}
+                    />
+                  )}
+                  <Button
+                    title={isPending ? 'Đang lưu...' : 'Lưu tài khoản'}
+                    onPress={handleSubmit(onSubmit)}
+                    loading={isPending}
+                    disabled={isPending}
+                    style={styles.submitBtn}
                   />
-                </TouchableOpacity>
+                </View>
               </View>
-              {errors.currentPassword && (
-                <Text style={styles.fieldError}>{errors.currentPassword.message}</Text>
-              )}
-            </View>
+            </Card>
+          )}
 
-            {/* Buttons */}
-            <View style={styles.buttonRow}>
-              {hasExistingAccount && (
-                <Button
-                  title="Hủy"
-                  variant="outline"
-                  onPress={() => setIsEditing(false)}
-                  disabled={isPending}
-                  style={styles.cancelBtn}
-                />
-              )}
-              <Button
-                title={isPending ? 'Đang lưu...' : 'Lưu tài khoản'}
-                onPress={handleSubmit(onSubmit)}
-                loading={isPending}
-                disabled={isPending}
-                style={styles.submitBtn}
-              />
-            </View>
+          {/* Security Advice Notice */}
+          <View style={styles.policyNotice}>
+            <Ionicons name="information-circle-outline" size={18} color={semantic.textMuted} />
+            <Text style={styles.policyText}>
+              Hệ thống chỉ lưu trữ và hiển thị 4 chữ số cuối của tài khoản ngân hàng để bảo đảm
+              tuyệt đối quyền riêng tư và an toàn tài chính của giảng viên.
+            </Text>
           </View>
-        )}
-
-        {/* Security Advice Notice */}
-        <View style={styles.policyNotice}>
-          <Ionicons name="information-circle-outline" size={18} color="#64748B" />
-          <Text style={styles.policyText}>
-            Hệ thống chỉ lưu trữ và hiển thị 4 chữ số cuối của tài khoản ngân hàng để bảo đảm tuyệt
-            đối quyền riêng tư và an toàn tài chính của giảng viên.
-          </Text>
-        </View>
+        </ResponsiveContainer>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -359,7 +324,7 @@ export default function PayoutAccountScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   container: {
     flex: 1,
@@ -368,56 +333,39 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
-  },
-  backButton: {
-    padding: 4,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: semantic.dangerSoft,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: semantic.dangerBorder,
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    borderRadius: radius.btn,
+    marginBottom: 14,
     gap: 8,
   },
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    color: '#DC2626',
+    color: semantic.danger,
     lineHeight: 18,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   bankIconWrapper: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: '#E6FFFA',
+    borderRadius: radius.card,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -427,138 +375,92 @@ const styles = StyleSheet.create({
   bankName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
   accountHolder: {
     fontSize: 13,
-    color: '#64748B',
+    color: semantic.textSecondary,
     marginTop: 2,
   },
   accountNumberRow: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
+    backgroundColor: semantic.surfaceCanvas,
+    borderRadius: radius.btn,
     padding: 14,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   maskedNumberLabel: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: semantic.textMuted,
     marginBottom: 4,
   },
   maskedNumber: {
+    fontFamily: monoFontFamily,
     fontSize: 18,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
     fontVariant: ['tabular-nums'],
     letterSpacing: 1.5,
   },
   updatedAtText: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontSize: 12,
+    color: semantic.textMuted,
     marginBottom: 14,
-  },
-  actionRow: {
-    marginTop: 4,
-  },
-  editBtn: {
-    borderColor: '#CBD5E1',
+    fontVariant: ['tabular-nums'],
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   formHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   formTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
   securityNotice: {
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 18,
+    fontSize: 13,
+    color: semantic.textSecondary,
+    lineHeight: 19,
     marginBottom: 16,
   },
-  fieldGroup: {
-    marginBottom: 14,
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#0F172A',
-    marginTop: 6,
-  },
-  inputError: {
-    borderColor: '#EF4444',
-  },
-  passwordWrapper: {
-    position: 'relative',
-    marginTop: 6,
-  },
-  passwordInput: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
-    paddingLeft: 12,
-    paddingRight: 40,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#0F172A',
+  formFields: {
+    gap: 14,
   },
   eyeButton: {
-    position: 'absolute',
-    right: 12,
-    top: 10,
-  },
-  fieldError: {
-    fontSize: 11,
-    color: '#EF4444',
-    marginTop: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 10,
+    marginTop: 6,
   },
   cancelBtn: {
     flex: 1,
-    borderColor: '#CBD5E1',
   },
   submitBtn: {
     flex: 2,
-    backgroundColor: '#0D9488',
   },
   policyNotice: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: semantic.borderSubtle,
     alignItems: 'center',
   },
   policyText: {
     flex: 1,
     fontSize: 12,
-    color: '#64748B',
+    color: semantic.textSecondary,
     lineHeight: 18,
   },
 });

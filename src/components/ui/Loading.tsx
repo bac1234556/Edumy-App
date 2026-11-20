@@ -1,7 +1,7 @@
 // src/components/ui/Loading.tsx
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { semantic } from '../../theme/tokens';
+import { radius, semantic } from '../../theme/tokens';
 
 interface LoadingProps {
   message?: string;
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 18,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: radius.card,
     backgroundColor: semantic.surfaceCard,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,

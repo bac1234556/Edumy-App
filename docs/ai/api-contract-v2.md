@@ -42,7 +42,7 @@
 - `403`: không có quyền (`FORBIDDEN`, `AUTH_ACCOUNT_LOCKED`, `LESSON_NOT_PREVIEWABLE`, `NOT_ENROLLED`)
 - `404`: không tìm thấy (`NOT_FOUND`, `COURSE_NOT_FOUND`)
 - `405`: sai method (`METHOD_NOT_ALLOWED`)
-- `409`: xung đột trạng thái (`CONFLICT`, `AUTH_EMAIL_TAKEN`, `WITHDRAWAL_ALREADY_OPEN`, `CANNOT_CANCEL`, `ALREADY_PROCESSED`)
+- `409`: xung đột trạng thái (`CONFLICT`, `AUTH_EMAIL_TAKEN`, `WITHDRAWAL_ALREADY_OPEN`, `WITHDRAWAL_MONTHLY_LIMIT_REACHED`, `CANNOT_CANCEL`, `ALREADY_PROCESSED`)
 - `422`: vi phạm quy tắc nghiệp vụ (`COURSE_NOT_FREE`, `OWN_COURSE`, `CURRENT_PASSWORD_INCORRECT`, `PAYOUT_ACCOUNT_REQUIRED`, `WITHDRAWAL_BELOW_MINIMUM`, `WITHDRAWAL_EXCEEDS_BALANCE`)
 - `429`: gửi quá nhanh (`EMAIL_RESEND_TOO_SOON`, `RATE_LIMITED`, kèm header `Retry-After` tính bằng giây)
 - `500`: lỗi hệ thống (`INTERNAL_ERROR`)
@@ -140,12 +140,12 @@
 | `GET` | `/instructor/invitations` | Instructor/Admin | - | `CoInstructorInvitation[]` | `UNAUTHORIZED`, `FORBIDDEN` |
 | `POST` | `/instructor/invitations/{id}/accept` | Instructor/Admin | - | `{invitation, message}` | `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND` |
 | `POST` | `/instructor/invitations/{id}/decline` | Instructor/Admin | - | `{invitation, message}` | `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND` |
-| `GET` | `/me/earnings/summary` | Bearer | - | `{hasEarnings, totalEarned, pendingBalance, inWithdrawal, withdrawn, availableBalance, minWithdrawal, holdDays, nextMaturityAt|null}` | `UNAUTHORIZED` |
+| `GET` | `/me/earnings/summary` | Bearer | - | `{hasEarnings, totalEarned, pendingBalance, inWithdrawal, withdrawn, availableBalance, minWithdrawal, holdDays, nextMaturityAt|null, maxWithdrawalsPerMonth, withdrawalsUsedThisMonth, canWithdrawThisMonth, nextWithdrawalAt|null}` | `UNAUTHORIZED` |
 | `GET` | `/me/earnings/monthly` | Bearer | `year?` | `[{month, amount, matured}]` | `UNAUTHORIZED` |
 | `GET` | `/me/earnings/courses` | Bearer | - | `[{courseId, courseTitle, role, amount}]` | `UNAUTHORIZED` |
 | `GET` | `/me/earnings/entries` | Bearer | `courseId?, month?, page, size` | `Page<{id, orderCode, courseId, courseTitle, role, unitPrice, platformFeeBps, shareBps, amount, earnedAt, maturesAt, matured}>` | `UNAUTHORIZED` |
 | `GET` | `/me/payout-account` | Bearer | - | `PayoutAccountDto` (chỉ hiện 4 số cuối) | `UNAUTHORIZED` |
 | `PUT` | `/me/payout-account` | Bearer | `{bankName, accountNumber, accountHolder, currentPassword}` | `PayoutAccountDto` | `UNAUTHORIZED`, `VALIDATION_ERROR`, `CURRENT_PASSWORD_INCORRECT` |
 | `GET` | `/me/withdrawals` | Bearer | `page, size` | `Page<WithdrawalResponseDto>` | `UNAUTHORIZED` |
-| `POST` | `/me/withdrawals` | Bearer | `{amount}` | `WithdrawalResponseDto` | `PAYOUT_ACCOUNT_REQUIRED`, `WITHDRAWAL_BELOW_MINIMUM`, `WITHDRAWAL_EXCEEDS_BALANCE`, `WITHDRAWAL_ALREADY_OPEN` (409) |
+| `POST` | `/me/withdrawals` | Bearer | `{amount}` | `WithdrawalResponseDto` | `PAYOUT_ACCOUNT_REQUIRED`, `WITHDRAWAL_BELOW_MINIMUM`, `WITHDRAWAL_EXCEEDS_BALANCE`, `WITHDRAWAL_ALREADY_OPEN` (409), `WITHDRAWAL_MONTHLY_LIMIT_REACHED` (409) |
 | `POST` | `/me/withdrawals/{id}/cancel` | Bearer | - | `204 No Content` | `NOT_FOUND`, `CANNOT_CANCEL` (409) |

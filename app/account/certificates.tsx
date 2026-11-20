@@ -18,12 +18,13 @@ import { useRefetchOnScreenFocus } from '../../src/hooks/useRefetchOnScreenFocus
 import { CertificateItem } from '../../src/features/certificates/logic';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
+import { Badge } from '../../src/components/ui/Badge';
 import { Loading } from '../../src/components/ui/Loading';
 import { ErrorState } from '../../src/components/ui/ErrorState';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { formatDate } from '../../src/lib/date';
 import { notify } from '../../src/lib/dialog';
-import { monoFontFamily, microShadow, radius, semantic } from '../../src/theme/tokens';
+import { layout, monoFontFamily, microShadow, radius, semantic } from '../../src/theme/tokens';
 
 export default function CertificatesScreen() {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function CertificatesScreen() {
   if (isError) {
     return (
       <ErrorState
+        error={error}
         message={error?.message || 'Không thể tải danh sách chứng chỉ.'}
         onRetry={() => refetch()}
       />
@@ -88,10 +90,11 @@ export default function CertificatesScreen() {
   const renderCertCard = ({ item }: { item: CertificateItem }) => (
     <View style={[styles.card, microShadow]}>
       <View style={styles.cardHeader}>
-        <View style={styles.badge}>
-          <Ionicons name="ribbon-outline" size={14} color={semantic.brandPrimaryStrong} />
-          <Text style={styles.badgeText}>CHỨNG CHỈ HOÀN THÀNH</Text>
-        </View>
+        <Badge
+          variant="info"
+          label="Chứng chỉ hoàn thành"
+          icon={<Ionicons name="ribbon-outline" size={13} color={semantic.brandPrimary} />}
+        />
         <View style={styles.codePill}>
           <Text style={styles.certCode}>#{item.code}</Text>
         </View>
@@ -101,12 +104,10 @@ export default function CertificatesScreen() {
         {item.courseTitle}
       </Text>
 
-      <View style={styles.metaGrid}>
-        <View style={styles.infoRow}>
-          <Ionicons name="calendar-outline" size={14} color={semantic.textMuted} />
-          <Text style={styles.infoLabel}>Ngày cấp:</Text>
-          <Text style={styles.infoValueTabular}>{formatDate(item.issuedAt ?? '')}</Text>
-        </View>
+      <View style={styles.metaRow}>
+        <Ionicons name="calendar-outline" size={14} color={semantic.textMuted} />
+        <Text style={styles.infoLabel}>Ngày cấp:</Text>
+        <Text style={styles.infoValueTabular}>{formatDate(item.issuedAt ?? '')}</Text>
       </View>
 
       <View style={styles.actionButtons}>
@@ -114,21 +115,22 @@ export default function CertificatesScreen() {
           title={Platform.OS === 'web' ? 'Mở xác thực' : 'Tải PDF'}
           onPress={() => item.code && handleDownload(item.code, item.verifyUrl)}
           loading={isDownloading}
+          disabled={isDownloading}
           icon={
             <Ionicons
-              name={Platform.OS === 'web' ? 'open-outline' : 'share-outline'}
+              name={Platform.OS === 'web' ? 'open-outline' : 'download-outline'}
               size={16}
               color="#FFFFFF"
             />
           }
-          style={styles.downloadBtn}
+          style={styles.actionBtn}
         />
 
         <Button
           title="Sao chép link xác thực"
           variant="outline"
           onPress={() => item.code && handleCopy(item.code, item.verifyUrl)}
-          style={styles.copyBtn}
+          style={styles.actionBtn}
         />
       </View>
     </View>
@@ -178,14 +180,19 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: layout.maxContentWidth,
+    alignSelf: 'center',
   },
   card: {
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
+    borderLeftWidth: 4,
+    borderLeftColor: semantic.brandPrimary,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -193,31 +200,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     gap: 8,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: semantic.brandSoft,
-    borderWidth: 1,
-    borderColor: semantic.brandBorder,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 5,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
-    letterSpacing: 0.6,
+    flexWrap: 'wrap',
   },
   codePill: {
-    backgroundColor: semantic.surfaceSubtle,
+    backgroundColor: semantic.surfaceMuted,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
   },
   certCode: {
     fontFamily: monoFontFamily,
@@ -230,29 +221,24 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 23,
     color: semantic.textPrimary,
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  metaGrid: {
-    backgroundColor: semantic.surfaceCanvas,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    padding: 10,
-    gap: 7,
-    marginBottom: 14,
-  },
-  infoRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.surfaceMuted,
+    marginBottom: 14,
   },
   infoLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: semantic.textMuted,
   },
   infoValueTabular: {
     fontFamily: monoFontFamily,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: semantic.textPrimary,
     fontVariant: ['tabular-nums'],
@@ -260,11 +246,10 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: 10,
+    flexWrap: 'wrap',
   },
-  downloadBtn: {
+  actionBtn: {
     flex: 1,
-  },
-  copyBtn: {
-    flex: 1,
+    minWidth: 140,
   },
 });

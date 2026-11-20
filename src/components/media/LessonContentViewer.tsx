@@ -1,15 +1,17 @@
 // src/components/media/LessonContentViewer.tsx
-// Modern Dark Cinema (#0B0F17) viewer for lesson content (video with expo-video / WebView fallback, article text)
+// Light-mode Pure White & Ocean Blue viewer for lesson content (video with expo-video / WebView fallback, article text)
 // Shared between M04 preview and M06 learning room.
 
 import React from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { WebView } from 'react-native-webview';
+import { Ionicons } from '@expo/vector-icons';
 import { Text } from '../ui/Text';
 import { Button } from '../ui/Button';
-import { Ionicons } from '@expo/vector-icons';
-import { semantic } from '../../theme/tokens';
+import { Badge } from '../ui/Badge';
+import { ResponsiveContainer } from '../ui/ResponsiveContainer';
+import { microShadow, radius, semantic } from '../../theme/tokens';
 
 interface LessonContentViewerProps {
   contentType: 'video' | 'article';
@@ -39,184 +41,182 @@ export function LessonContentViewer({
   });
 
   if (contentType === 'video') {
-    if (!videoUrl) {
-      return (
-        <View style={styles.emptyVideoContainer}>
-          <View style={styles.emptyVideoBadge}>
-            <Ionicons name="videocam-off-outline" size={28} color="#94A3B8" />
-          </View>
-          <Text style={styles.emptyVideoTitle}>LUỒNG VIDEO ĐANG XỬ LÝ</Text>
-          <Text style={styles.emptyVideoSub}>
-            Tệp bài giảng đang được đồng bộ hoặc chưa khả dụng.
-          </Text>
-        </View>
-      );
-    }
-
     return (
-      <View style={styles.cinemaWrapper}>
-        <View style={styles.cinemaTopStrip}>
-          <View style={styles.cinemaDotRow}>
-            <View style={styles.cinemaLiveDot} />
-            <Text style={styles.cinemaStripLabel}>
-              {isNative ? 'EDUMY STREAM // HLS-MP4' : 'EDUMY STREAM // EMBED PLAYER'}
-            </Text>
-          </View>
-          <Text style={styles.cinemaAspectLabel}>16:9 HD</Text>
-        </View>
-
-        <View style={styles.mediaContainer}>
-          {isNative ? (
-            <VideoView
-              player={player}
-              style={styles.nativeVideo}
-              allowsFullscreen
-              allowsPictureInPicture
-            />
-          ) : (
-            <View style={styles.webViewContainer}>
-              <WebView
-                source={{ uri: videoUrl }}
-                style={styles.webView}
-                allowsFullscreenVideo
-                javaScriptEnabled
-                domStorageEnabled
+      <View style={styles.videoSection}>
+        <ResponsiveContainer>
+          <View style={[styles.videoCard, microShadow]}>
+            <View style={styles.videoCardHeader}>
+              <Badge
+                variant="info"
+                label={isNative ? 'Video bài giảng' : 'Trình phát nhúng'}
+                icon={<Ionicons name="play-circle-outline" size={14} color={semantic.brandPrimary} />}
               />
+              <Text variant="caption" tabular style={styles.aspectLabel}>
+                16:9 HD
+              </Text>
             </View>
-          )}
-        </View>
+
+            {!videoUrl ? (
+              <View style={styles.emptyVideoContainer}>
+                <View style={styles.emptyVideoIconBox}>
+                  <Ionicons name="videocam-off-outline" size={26} color={semantic.brandPrimary} />
+                </View>
+                <Text variant="h3" style={styles.emptyVideoTitle}>
+                  Video đang được xử lý
+                </Text>
+                <Text variant="bodySmall" style={styles.emptyVideoSub}>
+                  Tệp bài giảng đang được đồng bộ hoặc chưa khả dụng trên thiết bị này.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.mediaFrame}>
+                {isNative ? (
+                  <VideoView
+                    player={player}
+                    style={styles.nativeVideo}
+                    allowsFullscreen
+                    allowsPictureInPicture
+                  />
+                ) : (
+                  <WebView
+                    source={{ uri: videoUrl }}
+                    style={styles.webView}
+                    allowsFullscreenVideo
+                    javaScriptEnabled
+                    domStorageEnabled
+                  />
+                )}
+              </View>
+            )}
+          </View>
+        </ResponsiveContainer>
       </View>
     );
   }
 
-  // Editorial Article Reader
   return (
-    <ScrollView style={styles.articleScroll} contentContainerStyle={styles.articleContentContainer}>
-      <View style={styles.articleCard}>
-        <View style={styles.articleHeaderBar}>
-          <Ionicons name="document-text-outline" size={14} color={semantic.brandPrimary} />
-          <Text style={styles.articleKicker}>TÀI LIỆU BÀI ĐỌC CHUYÊN MÔN</Text>
-        </View>
-        {title && (
-          <Text variant="h2" style={styles.articleTitle}>
-            {title}
-          </Text>
-        )}
-        {articleContent ? (
-          <Text variant="body" style={styles.articleBody}>
-            {articleContent}
-          </Text>
-        ) : (
-          <View style={styles.emptyArticleBox}>
-            <Ionicons name="globe-outline" size={32} color={semantic.brandPrimary} />
-            <Text variant="bodySmall" style={styles.emptyArticleText}>
-              Nội dung bài đọc có trên website
-            </Text>
-            {onOpenWebsite && (
-              <Button
-                title="Mở trên website"
-                variant="outline"
-                onPress={onOpenWebsite}
-                style={{ marginTop: 8 }}
-              />
-            )}
+    <ScrollView
+      style={styles.articleScroll}
+      contentContainerStyle={styles.articleContentContainer}
+    >
+      <ResponsiveContainer>
+        <View style={[styles.articleCard, microShadow]}>
+          <View style={styles.articleHeaderBar}>
+            <Badge
+              variant="info"
+              label="Tài liệu bài đọc"
+              icon={
+                <Ionicons
+                  name="document-text-outline"
+                  size={14}
+                  color={semantic.brandPrimary}
+                />
+              }
+            />
           </View>
-        )}
-      </View>
+          {Boolean(title) && (
+            <Text variant="h2" style={styles.articleTitle}>
+              {title}
+            </Text>
+          )}
+          {articleContent ? (
+            <Text variant="body" style={styles.articleBody}>
+              {articleContent}
+            </Text>
+          ) : (
+            <View style={styles.emptyArticleBox}>
+              <View style={styles.emptyArticleIconBox}>
+                <Ionicons name="globe-outline" size={26} color={semantic.brandPrimary} />
+              </View>
+              <Text variant="bodySmall" style={styles.emptyArticleText}>
+                Nội dung bài đọc chi tiết được trình bày đầy đủ trên website Edumy.
+              </Text>
+              {onOpenWebsite && (
+                <Button
+                  title="Mở trên website"
+                  variant="secondary"
+                  onPress={onOpenWebsite}
+                  style={styles.openWebButton}
+                />
+              )}
+            </View>
+          )}
+        </View>
+      </ResponsiveContainer>
     </ScrollView>
   );
 }
 
-const screenWidth = Dimensions.get('window').width;
-const videoHeight = (screenWidth * 9) / 16;
-
 const styles = StyleSheet.create({
-  cinemaWrapper: {
-    backgroundColor: '#0B0F17',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+  videoSection: {
+    backgroundColor: semantic.surfaceCanvas,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
-  cinemaTopStrip: {
+  videoCard: {
+    backgroundColor: semantic.surfaceCard,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    padding: 12,
+  },
+  videoCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    backgroundColor: '#070A10',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    marginBottom: 10,
   },
-  cinemaDotRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  aspectLabel: {
+    color: semantic.textMuted,
+    fontWeight: '600',
   },
-  cinemaLiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#14B8A6',
-  },
-  cinemaStripLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.8,
-  },
-  cinemaAspectLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#64748B',
-    fontVariant: ['tabular-nums'],
-  },
-  mediaContainer: {
+  mediaFrame: {
     width: '100%',
-    height: videoHeight,
-    backgroundColor: '#0B0F17',
+    aspectRatio: 16 / 9,
+    borderRadius: radius.card,
+    overflow: 'hidden',
+    backgroundColor: semantic.surfaceMuted,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
   },
   nativeVideo: {
     width: '100%',
     height: '100%',
   },
-  webViewContainer: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#0B0F17',
-  },
   webView: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: semantic.surfaceMuted,
   },
   emptyVideoContainer: {
-    height: 210,
+    width: '100%',
+    aspectRatio: 16 / 9,
+    borderRadius: radius.card,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#0B0F17',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    padding: 20,
+    backgroundColor: semantic.surfaceMuted,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
   },
-  emptyVideoBadge: {
+  emptyVideoIconBox: {
     width: 48,
     height: 48,
-    borderRadius: 10,
-    backgroundColor: '#111827',
+    borderRadius: radius.card,
+    backgroundColor: semantic.brandSoft,
     borderWidth: 1,
-    borderColor: '#1E293B',
+    borderColor: semantic.brandBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
   },
   emptyVideoTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#E2E8F0',
-    letterSpacing: 0.8,
+    color: semantic.textPrimary,
+    textAlign: 'center',
   },
   emptyVideoSub: {
     marginTop: 4,
-    fontSize: 12,
-    color: '#94A3B8',
+    color: semantic.textMuted,
     textAlign: 'center',
   },
   articleScroll: {
@@ -225,29 +225,20 @@ const styles = StyleSheet.create({
   },
   articleContentContainer: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   articleCard: {
     backgroundColor: semantic.surfaceCard,
-    borderRadius: 12,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
     padding: 18,
   },
   articleHeaderBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-    paddingBottom: 10,
+    marginBottom: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  articleKicker: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: semantic.brandPrimary,
-    letterSpacing: 0.8,
+    borderBottomColor: semantic.surfaceMuted,
   },
   articleTitle: {
     marginBottom: 12,
@@ -255,16 +246,29 @@ const styles = StyleSheet.create({
   },
   articleBody: {
     fontSize: 15,
-    lineHeight: 25,
-    color: '#334155',
+    lineHeight: 24,
+    color: semantic.textBody,
   },
   emptyArticleBox: {
-    paddingVertical: 28,
+    paddingVertical: 24,
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+  },
+  emptyArticleIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.card,
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyArticleText: {
-    color: semantic.textMuted,
+    color: semantic.textSecondary,
     textAlign: 'center',
+  },
+  openWebButton: {
+    marginTop: 4,
   },
 });

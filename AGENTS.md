@@ -31,13 +31,14 @@ openapi-typescript (types generated from `docs/ai/openapi.json`) · jest-expo + 
   Paid courses → button **"Mua trên website"** opening `${WEB_BASE_URL}/courses/{id}` via `expo-web-browser`.
 - **No course authoring.** No curriculum builder, video/media upload, lesson reordering, or revenue-share editing in the app.
   The Instructor tab ("Giảng viên") supports view + light actions only (overview, courses, student roster, Q&A replies, co-instructor invitations, earnings, payout account, withdrawals).
-- No offline video download, no In-App Purchase, no push notifications, no ads (Q-M01 blocked).
+- No offline video download, no In-App Purchase, no push notifications.
+- **Hybrid Ads (Q-M01 resolved):** `react-native-google-mobile-ads` (Banner + Interstitial with Google Test IDs in dev/demo) + internal Edumy Featured Course Ads (Hot / Value courses from `/catalog/courses`). Never place ads inside video learning screens (`app/learn/**`). All native ad code must degrade gracefully on Web (`expo start --web`), Expo Go, and Jest.
 - Never use cookie-based web auth endpoints (`/auth/login`, `/auth/register`, `/auth/refresh`, `/auth/logout`). Use `/auth/mobile/*` only.
 
 ## 5. Architecture rules (details: `.agents/rules/10-architecture.md`)
 - `app/` = Expo Router routes only: thin screens that compose feature hooks and UI components.
 - `src/features/<feature>/` = `api.ts` (typed fetchers using generated types + `unwrap`), `hooks.ts` (TanStack Query), `logic.ts` (pure functions),
-  `components/`, tests next to the code. Features: `auth`, `profile`, `catalog`, `learning`, `qa`, `reviews`, `certificates`, `instructor`.
+  `components/`, tests next to the code. Features: `auth`, `profile`, `catalog`, `learning`, `qa`, `reviews`, `certificates`, `instructor`, `ads`.
 - `src/api/` = `client.ts` (single axios instance + epoch-guarded refresh), `envelope.ts` (`unwrap`, `Page<T>`), `problem.ts` (v2 error envelope), `query-keys.ts`, `tokens.ts`, generated `schema.d.ts`.
 - `src/lib/dialog.ts` = cross-platform `confirm` & `notify`. Direct `Alert.alert` calls are **forbidden** anywhere else (enforced by ESLint).
 - Components never call axios/fetch directly; they use feature hooks. No business logic in screens.

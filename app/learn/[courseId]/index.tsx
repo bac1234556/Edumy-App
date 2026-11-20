@@ -1,4 +1,4 @@
-// app/learn/[courseId]/index.tsx — Phòng học & Đề cương kỹ thuật (Technical Curriculum)
+// app/learn/[courseId]/index.tsx — Phòng học & Đề cương khóa học
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -9,17 +9,20 @@ import {
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useCourseLearnRoom } from '../../../src/features/learning/hooks';
 import { useRefetchOnScreenFocus } from '../../../src/hooks/useRefetchOnScreenFocus';
 import { resolveFirstOrUncompletedLesson } from '../../../src/features/learning/logic';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
+import { Badge } from '../../../src/components/ui/Badge';
+import { Card } from '../../../src/components/ui/Card';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
+import { ResponsiveContainer } from '../../../src/components/ui/ResponsiveContainer';
 import { AppError } from '../../../src/api/problem';
 import { webLinks } from '../../../src/lib/web-links';
-import { Ionicons } from '@expo/vector-icons';
-import { semantic, radius, monoFontFamily } from '../../../src/theme/tokens';
+import { semantic, radius, monoFontFamily, layout } from '../../../src/theme/tokens';
 
 export default function CourseLearnRoomScreen() {
   const { courseId, resume } = useLocalSearchParams<{ courseId: string; resume?: string }>();
@@ -50,17 +53,19 @@ export default function CourseLearnRoomScreen() {
   if (isError || !room) {
     const appErr = error as unknown as AppError | null;
     const errorMsg = appErr?.message || 'Không thể tải thông tin phòng học.';
-    const isForbidden = appErr?.status === 403;
+    const isForbidden = appErr?.status === 403 || appErr?.code === 'NOT_ENROLLED';
 
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Phòng học', headerBackTitle: 'Quay lại' }} />
         <ErrorState
+          error={error}
           message={
             isForbidden
               ? 'Bạn cần đăng ký hoặc sở hữu khóa học này để vào phòng học.'
               : errorMsg
           }
+          retryLabel={isForbidden ? 'Quay lại' : 'Thử lại'}
           onRetry={() => (isForbidden ? router.back() : refetch())}
         />
       </View>
@@ -69,6 +74,7 @@ export default function CourseLearnRoomScreen() {
 
   const isInstructorMode = room.progress === null;
   const nextLessonId = resolveFirstOrUncompletedLesson(room);
+  const progressPercent = room.progress?.percent ?? 0;
 
   return (
     <View style={styles.container}>
@@ -83,163 +89,180 @@ export default function CourseLearnRoomScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       >
-        {/* Dark Slate Editorial Header Card */}
-        <View style={styles.headerCard}>
-          <Text style={styles.headerOverline}>EDUMY LEARNING ROOM // ĐỒNG BỘ TIẾN ĐỘ</Text>
-          <Text variant="h2" style={styles.courseTitle}>
-            {room.title}
-          </Text>
+        <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+          {/* Light Mode Editorial Header Card */}
+          <Card style={styles.headerCard}>
+            <Badge
+              variant="info"
+              label="Phòng học khóa học"
+              icon={<Ionicons name="school-outline" size={13} color={semantic.brandPrimary} />}
+              style={styles.headerBadge}
+            />
+            <Text variant="h2" style={styles.courseTitle}>
+              {room.title}
+            </Text>
 
-          {isInstructorMode ? (
-            <View style={styles.instructorModeBanner}>
-              <Ionicons name="shield-checkmark-outline" size={16} color="#2DD4BF" />
-              <Text style={styles.instructorModeText}>
-                Chế độ giảng viên: Xem trước toàn bộ bài giảng (không ghi nhận tiến độ học viên).
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.progressBox}>
-              <View style={styles.progressRow}>
-                <Text style={styles.progressPercent}>
-                  {room.progress?.percent || 0}% HOÀN THÀNH
-                </Text>
-                <Text style={styles.progressCount}>
-                  {room.progress?.completedItems || 0}/{room.progress?.totalItems || 0} MỤC HỌC
+            {isInstructorMode ? (
+              <View style={styles.instructorModeBanner}>
+                <Ionicons name="shield-checkmark-outline" size={18} color={semantic.brandPrimary} />
+                <Text style={styles.instructorModeText}>
+                  Chế độ giảng viên: Xem trước toàn bộ bài giảng (không ghi nhận tiến độ học viên).
                 </Text>
               </View>
+            ) : (
+              <View style={styles.progressBox}>
+                <View style={styles.progressRow}>
+                  <Text style={styles.progressPercent}>
+                    {progressPercent}% hoàn thành
+                  </Text>
+                  <Text style={styles.progressCount}>
+                    {room.progress?.completedItems || 0}/{room.progress?.totalItems || 0} mục học
+                  </Text>
+                </View>
 
-              <View style={styles.progressBarTrack}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${Math.min(100, room.progress?.percent || 0)}%` },
-                  ]}
-                />
+                <View style={styles.progressBarTrack}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      progressPercent >= 100 && styles.progressBarDone,
+                      { width: `${Math.min(100, progressPercent)}%` },
+                    ]}
+                  />
+                </View>
               </View>
-            </View>
-          )}
-
-          <View style={styles.headerActions}>
-            {nextLessonId && (
-              <Button
-                title="Tiếp tục bài đang học"
-                onPress={() => router.push(`/learn/lesson/${nextLessonId}` as const)}
-                style={styles.continueButton}
-              />
             )}
 
-            <Button
-              title="Diễn đàn Hỏi & Đáp (Q&A)"
-              variant="outline"
-              onPress={() => router.push(`/learn/${room.courseId}/qa` as const)}
-              style={styles.qaButton}
-            />
-          </View>
-        </View>
+            <View style={styles.headerActions}>
+              {nextLessonId && (
+                <Button
+                  title="Học tiếp"
+                  onPress={() => router.push(`/learn/lesson/${nextLessonId}` as const)}
+                />
+              )}
 
-        {/* Technical Boxed Chapters & Lessons */}
-        <View style={styles.curriculumSection}>
-          <Text style={styles.sectionOverline}>DANH MỤC CHƯƠNG TRÌNH</Text>
-          <Text variant="h3" style={styles.sectionTitle}>
-            Đề cương chi tiết
-          </Text>
-
-          {room.chapters?.map((chapter, chapterIndex) => (
-            <View key={chapter.id} style={styles.chapterCard}>
-              <View style={styles.chapterHeader}>
-                <Text style={styles.chapterIndex}>
-                  CHƯƠNG {String(chapterIndex + 1).padStart(2, '0')}
-                </Text>
-                <Text style={styles.chapterTitle}>{chapter.title}</Text>
-              </View>
-
-              <View style={styles.lessonsList}>
-                {chapter.lessons?.map((lesson, lessonIndex) => (
-                  <TouchableOpacity
-                    key={lesson.id}
-                    style={styles.lessonItem}
-                    onPress={() => router.push(`/learn/lesson/${lesson.id}` as const)}
-                    activeOpacity={0.75}
-                  >
-                    <View style={styles.lessonStatusIcon}>
-                      {lesson.completed ? (
-                        <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
-                      ) : (
-                        <Ionicons name="ellipse-outline" size={20} color="#CBD5E1" />
-                      )}
-                    </View>
-
-                    <View style={styles.lessonInfo}>
-                      <Text style={styles.lessonTitle}>
-                        <Text style={styles.lessonNumber}>
-                          {String(chapterIndex + 1).padStart(2, '0')}.{String(lessonIndex + 1).padStart(2, '0')}{' '}
-                        </Text>
-                        {lesson.title}
-                      </Text>
-
-                      <View style={styles.lessonMetaRow}>
-                        <Ionicons
-                          name={
-                            lesson.contentType === 'video'
-                              ? 'videocam-outline'
-                              : 'document-text-outline'
-                          }
-                          size={13}
-                          color={semantic.textMuted}
-                        />
-                        <Text style={styles.lessonMetaText}>
-                          {lesson.contentType === 'video' ? 'Video' : 'Bài đọc'}
-                        </Text>
-
-                        {Boolean(lesson.durationSeconds) && (
-                          <Text style={styles.lessonMetaText}>
-                            • {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-
-                    <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-                  </TouchableOpacity>
-                ))}
-
-                {chapter.quizzes?.map((quiz) => (
-                  <TouchableOpacity
-                    key={`quiz-${quiz.id}`}
-                    style={styles.lessonItem}
-                    onPress={() => WebBrowser.openBrowserAsync(webLinks.course(numericCourseId))}
-                    activeOpacity={0.75}
-                  >
-                    <View style={styles.lessonStatusIcon}>
-                      {quiz.passed ? (
-                        <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
-                      ) : (
-                        <Ionicons name="help-circle-outline" size={20} color={semantic.brandPrimary} />
-                      )}
-                    </View>
-
-                    <View style={styles.lessonInfo}>
-                      <Text style={styles.lessonTitle}>{quiz.title}</Text>
-                      <View style={styles.lessonMetaRow}>
-                        <Ionicons name="globe-outline" size={13} color={semantic.brandPrimary} />
-                        <Text style={[styles.lessonMetaText, { color: semantic.brandPrimary }]}>
-                          Bài kiểm tra — làm trên website
-                        </Text>
-                        {quiz.passed && (
-                          <Text style={[styles.lessonMetaText, { color: semantic.success }]}>
-                            • Đã đạt
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-
-                    <Ionicons name="open-outline" size={16} color={semantic.brandPrimary} />
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <Button
+                title="Diễn đàn Hỏi & Đáp (Q&A)"
+                variant="secondary"
+                onPress={() => router.push(`/learn/${room.courseId}/qa` as const)}
+              />
             </View>
-          ))}
-        </View>
+          </Card>
+
+          {/* Curriculum */}
+          <View style={styles.curriculumSection}>
+            <Text variant="overline" style={styles.sectionOverline}>
+              Chương trình học
+            </Text>
+            <Text variant="h3" style={styles.sectionTitle}>
+              Đề cương chi tiết
+            </Text>
+
+            {room.chapters?.map((chapter, chapterIndex) => (
+              <Card key={chapter.id} padded={false} style={styles.chapterCard}>
+                <View style={styles.chapterHeader}>
+                  <Text style={styles.chapterIndex}>
+                    Chương {String(chapterIndex + 1).padStart(2, '0')}
+                  </Text>
+                  <Text style={styles.chapterTitle}>{chapter.title}</Text>
+                </View>
+
+                <View style={styles.lessonsList}>
+                  {chapter.lessons?.map((lesson, lessonIndex) => (
+                    <TouchableOpacity
+                      key={lesson.id}
+                      style={styles.lessonItem}
+                      onPress={() => router.push(`/learn/lesson/${lesson.id}` as const)}
+                      activeOpacity={0.75}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Mở bài học ${lesson.title}`}
+                    >
+                      <View style={styles.lessonStatusIcon}>
+                        {lesson.completed ? (
+                          <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
+                        ) : (
+                          <Ionicons name="ellipse-outline" size={20} color={semantic.borderStrong} />
+                        )}
+                      </View>
+
+                      <View style={styles.lessonInfo}>
+                        <Text style={styles.lessonTitle}>
+                          <Text style={styles.lessonNumber}>
+                            {String(chapterIndex + 1).padStart(2, '0')}.
+                            {String(lessonIndex + 1).padStart(2, '0')}{' '}
+                          </Text>
+                          {lesson.title}
+                        </Text>
+
+                        <View style={styles.lessonMetaRow}>
+                          <Ionicons
+                            name={
+                              lesson.contentType === 'video'
+                                ? 'videocam-outline'
+                                : 'document-text-outline'
+                            }
+                            size={13}
+                            color={semantic.textMuted}
+                          />
+                          <Text style={styles.lessonMetaText}>
+                            {lesson.contentType === 'video' ? 'Video' : 'Bài đọc'}
+                          </Text>
+
+                          {Boolean(lesson.durationSeconds) && (
+                            <Text style={styles.lessonMetaText}>
+                              · {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+
+                      <Ionicons name="chevron-forward" size={16} color={semantic.textPlaceholder} />
+                    </TouchableOpacity>
+                  ))}
+
+                  {chapter.quizzes?.map((quiz) => (
+                    <TouchableOpacity
+                      key={`quiz-${quiz.id}`}
+                      style={styles.lessonItem}
+                      onPress={() => WebBrowser.openBrowserAsync(webLinks.course(numericCourseId))}
+                      activeOpacity={0.75}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Làm bài kiểm tra ${quiz.title} trên website`}
+                    >
+                      <View style={styles.lessonStatusIcon}>
+                        {quiz.passed ? (
+                          <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
+                        ) : (
+                          <Ionicons
+                            name="help-circle-outline"
+                            size={20}
+                            color={semantic.brandPrimary}
+                          />
+                        )}
+                      </View>
+
+                      <View style={styles.lessonInfo}>
+                        <Text style={styles.lessonTitle}>{quiz.title}</Text>
+                        <View style={styles.lessonMetaRow}>
+                          <Ionicons name="globe-outline" size={13} color={semantic.brandPrimary} />
+                          <Text style={[styles.lessonMetaText, { color: semantic.brandPrimary }]}>
+                            Bài kiểm tra — làm trên website
+                          </Text>
+                          {quiz.passed && (
+                            <Text style={[styles.lessonMetaText, { color: semantic.success }]}>
+                              · Đã đạt
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+
+                      <Ionicons name="open-outline" size={16} color={semantic.brandPrimary} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </Card>
+            ))}
+          </View>
+        </ResponsiveContainer>
       </ScrollView>
     </View>
   );
@@ -255,45 +278,39 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: radius.lg,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#1E293B',
+    borderColor: semantic.brandBorder,
     marginBottom: 18,
   },
-  headerOverline: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#2DD4BF',
-    letterSpacing: 0.8,
-    marginBottom: 6,
+  headerBadge: {
+    marginBottom: 10,
   },
   courseTitle: {
     fontSize: 19,
-    lineHeight: 25,
-    color: '#F8FAFC',
+    lineHeight: 26,
+    color: semantic.textPrimary,
     marginBottom: 14,
   },
   instructorModeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#1E293B',
+    backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     padding: 12,
-    borderRadius: radius.sm,
+    borderRadius: radius.btn,
     marginBottom: 14,
   },
   instructorModeText: {
     flex: 1,
-    fontSize: 12,
-    color: '#E2E8F0',
-    lineHeight: 18,
+    fontSize: 13,
+    color: semantic.brandPrimaryHover,
+    lineHeight: 19,
   },
   progressBox: {
-    backgroundColor: '#1E293B',
+    backgroundColor: semantic.surfaceCanvas,
     padding: 12,
-    borderRadius: radius.md,
+    borderRadius: radius.btn,
     marginBottom: 14,
   },
   progressRow: {
@@ -305,44 +322,37 @@ const styles = StyleSheet.create({
     fontFamily: monoFontFamily,
     fontSize: 12,
     fontWeight: '700',
-    color: '#2DD4BF',
+    color: semantic.brandPrimary,
     fontVariant: ['tabular-nums'],
   },
   progressCount: {
     fontFamily: monoFontFamily,
-    fontSize: 11,
-    color: '#94A3B8',
+    fontSize: 12,
+    color: semantic.textMuted,
     fontVariant: ['tabular-nums'],
   },
   progressBarTrack: {
-    height: 6,
-    backgroundColor: '#0F172A',
-    borderRadius: 3,
+    height: 7,
+    backgroundColor: semantic.borderSubtle,
+    borderRadius: radius.pill,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#14B8A6',
-    borderRadius: 3,
+    backgroundColor: semantic.brandPrimary,
+    borderRadius: radius.pill,
+  },
+  progressBarDone: {
+    backgroundColor: semantic.success,
   },
   headerActions: {
-    gap: 8,
-  },
-  continueButton: {
-    minHeight: 44,
-  },
-  qaButton: {
-    minHeight: 42,
-    backgroundColor: '#FFFFFF',
+    gap: 10,
   },
   curriculumSection: {
     marginTop: 2,
   },
   sectionOverline: {
-    fontSize: 10,
-    fontWeight: '700',
     color: semantic.brandPrimary,
-    letterSpacing: 0.8,
     marginBottom: 2,
   },
   sectionTitle: {
@@ -350,10 +360,6 @@ const styles = StyleSheet.create({
     color: semantic.textPrimary,
   },
   chapterCard: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
     marginBottom: 12,
     overflow: 'hidden',
   },
@@ -366,10 +372,9 @@ const styles = StyleSheet.create({
   },
   chapterIndex: {
     fontFamily: monoFontFamily,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     color: semantic.brandPrimary,
-    letterSpacing: 0.7,
     marginBottom: 2,
   },
   chapterTitle: {
@@ -384,8 +389,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
+    minHeight: 52,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: semantic.surfaceMuted,
     gap: 10,
   },
   lessonStatusIcon: {

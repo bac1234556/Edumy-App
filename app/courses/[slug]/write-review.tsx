@@ -6,18 +6,23 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { notify } from '../../../src/lib/dialog';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { notify } from '../../../src/lib/dialog';
 import { useCourseDetail } from '../../../src/features/catalog/hooks';
 import { useSubmitReview } from '../../../src/features/reviews/hooks';
 import { validateReviewInput } from '../../../src/features/reviews/logic';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
+import { Card } from '../../../src/components/ui/Card';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
+import { ResponsiveContainer } from '../../../src/components/ui/ResponsiveContainer';
 import { AppError } from '../../../src/api/problem';
-import { Ionicons } from '@expo/vector-icons';
+import { layout, radius, semantic } from '../../../src/theme/tokens';
 
 export default function WriteReviewScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -39,6 +44,7 @@ export default function WriteReviewScreen() {
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Đánh giá khóa học', headerBackTitle: 'Quay lại' }} />
         <ErrorState
+          error={error}
           message={error?.message || 'Không tìm thấy thông tin khóa học.'}
           onRetry={() => refetch()}
         />
@@ -80,7 +86,10 @@ export default function WriteReviewScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <Stack.Screen
         options={{
           title: 'Đánh giá khóa học',
@@ -88,163 +97,160 @@ export default function WriteReviewScreen() {
         }}
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.courseHeader}>
-          <Text variant="caption" style={styles.courseHeaderLabel}>
-            Khóa học
-          </Text>
-          <Text variant="h2" style={styles.courseTitle}>
-            {course.title}
-          </Text>
-        </View>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ResponsiveContainer maxWidth={layout.maxReadingWidth}>
+          <Card style={styles.courseHeader}>
+            <Text variant="overline" style={styles.courseHeaderLabel}>
+              Khóa học
+            </Text>
+            <Text variant="h2" style={styles.courseTitle}>
+              {course.title}
+            </Text>
+          </Card>
 
-        {errorMessage && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={18} color="#DC2626" />
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
-        )}
+          {errorMessage && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle-outline" size={18} color={semantic.danger} />
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
 
-        {/* Rating Stars Selection */}
-        <View style={styles.ratingSection}>
-          <Text style={styles.ratingLabel}>Mức độ hài lòng của bạn</Text>
-          <View style={styles.starsRow}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity
-                key={star}
-                onPress={() => {
-                  setRating(star);
-                  setErrorMessage(null);
-                }}
-                style={styles.starTouch}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={star <= rating ? 'star' : 'star-outline'}
-                  size={36}
-                  color={star <= rating ? '#F59E0B' : '#CBD5E1'}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-          <Text style={styles.ratingDesc}>
-            {rating === 5 && 'Tuyệt vời — Rất đáng học'}
-            {rating === 4 && 'Tốt — Hài lòng với nội dung'}
-            {rating === 3 && 'Bình thường — Cần cải thiện'}
-            {rating === 2 && 'Chưa tốt — Thiếu nhiều nội dung'}
-            {rating === 1 && 'Rất tệ — Thất vọng'}
-          </Text>
-        </View>
+          {/* Rating Stars Selection */}
+          <Card style={styles.ratingSection}>
+            <Text style={styles.ratingLabel}>Mức độ hài lòng của bạn</Text>
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => {
+                    setRating(star);
+                    setErrorMessage(null);
+                  }}
+                  style={styles.starTouch}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Đánh giá ${star} sao`}
+                >
+                  <Ionicons
+                    name={star <= rating ? 'star' : 'star-outline'}
+                    size={36}
+                    color={star <= rating ? semantic.ratingStar : semantic.borderStrong}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.ratingDesc}>
+              {rating === 5 && 'Tuyệt vời — Rất đáng học'}
+              {rating === 4 && 'Tốt — Hài lòng với nội dung'}
+              {rating === 3 && 'Bình thường — Cần cải thiện'}
+              {rating === 2 && 'Chưa tốt — Thiếu nhiều nội dung'}
+              {rating === 1 && 'Rất tệ — Không hài lòng'}
+            </Text>
+          </Card>
 
-        {/* Comment Input */}
-        <View style={styles.commentSection}>
-          <View style={styles.commentHeader}>
-            <Text style={styles.commentLabel}>Lời bình / Góp ý (tùy chọn)</Text>
-            <Text style={styles.counterText}>{comment.length}/2000</Text>
-          </View>
+          {/* Comment Input */}
+          <Card style={styles.commentSection}>
+            <View style={styles.commentHeader}>
+              <Text style={styles.commentLabel}>Lời bình / Góp ý (tùy chọn)</Text>
+              <Text style={styles.counterText}>{comment.length}/2000</Text>
+            </View>
 
-          <TextInput
-            style={styles.commentInput}
-            placeholder="Chia sẻ trải nghiệm học tập, sự tận tâm của giảng viên hoặc chất lượng bài tập..."
-            placeholderTextColor="#94A3B8"
-            value={comment}
-            onChangeText={(t) => {
-              setComment(t);
-              setErrorMessage(null);
-            }}
-            multiline
-            numberOfLines={6}
-            textAlignVertical="top"
-            maxLength={2000}
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Chia sẻ trải nghiệm học tập, chất lượng bài giảng..."
+              placeholderTextColor={semantic.textPlaceholder}
+              value={comment}
+              onChangeText={(t) => {
+                setComment(t);
+                setErrorMessage(null);
+              }}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+              maxLength={2000}
+            />
+          </Card>
+
+          <Button
+            title="Gửi đánh giá"
+            onPress={handleSubmit}
+            loading={isSubmitting}
+            disabled={isSubmitting}
           />
-        </View>
-
-        <Button
-          title="Gửi đánh giá"
-          onPress={handleSubmit}
-          loading={isSubmitting}
-          style={styles.submitBtn}
-        />
+        </ResponsiveContainer>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   content: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
   },
   courseHeader: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   courseHeaderLabel: {
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: semantic.brandPrimary,
   },
   courseTitle: {
-    color: '#0F172A',
+    color: semantic.textPrimary,
     marginTop: 4,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: semantic.dangerSoft,
+    borderWidth: 1,
+    borderColor: semantic.dangerBorder,
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    borderRadius: radius.btn,
+    marginBottom: 14,
     gap: 8,
   },
   errorText: {
     fontSize: 13,
-    color: '#DC2626',
+    color: semantic.danger,
     flex: 1,
+    lineHeight: 18,
   },
   ratingSection: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
+    paddingVertical: 20,
   },
   ratingLabel: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontWeight: '700',
+    color: semantic.textPrimary,
     marginBottom: 14,
   },
   starsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     marginBottom: 10,
   },
   starTouch: {
-    padding: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ratingDesc: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#0D9488',
+    fontWeight: '600',
+    color: semantic.brandPrimary,
   },
   commentSection: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 20,
+    marginBottom: 18,
   },
   commentHeader: {
     flexDirection: 'row',
@@ -255,24 +261,21 @@ const styles = StyleSheet.create({
   commentLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0F172A',
+    color: semantic.textPrimary,
   },
   counterText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: semantic.textMuted,
     fontVariant: ['tabular-nums'],
   },
   commentInput: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: semantic.surfaceCanvas,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
+    borderColor: semantic.borderStrong,
+    borderRadius: radius.input,
     padding: 12,
     fontSize: 14,
-    color: '#0F172A',
+    color: semantic.textPrimary,
     minHeight: 120,
-  },
-  submitBtn: {
-    backgroundColor: '#0D9488',
   },
 });

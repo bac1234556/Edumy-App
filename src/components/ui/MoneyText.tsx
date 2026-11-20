@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   free: {
-    color: semantic.brandPrimaryStrong,
+    color: semantic.brandPrimary,
     fontSize: 14,
   },
 });

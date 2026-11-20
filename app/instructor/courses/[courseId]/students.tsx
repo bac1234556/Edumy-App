@@ -13,11 +13,12 @@ import { useInfiniteInstructorCourseStudents } from '../../../../src/features/in
 import { StudentRosterItem } from '../../../../src/features/instructor/api';
 import { useRefetchOnScreenFocus } from '../../../../src/hooks/useRefetchOnScreenFocus';
 import { Text } from '../../../../src/components/ui/Text';
+import { Badge } from '../../../../src/components/ui/Badge';
 import { Loading } from '../../../../src/components/ui/Loading';
 import { ErrorState } from '../../../../src/components/ui/ErrorState';
 import { EmptyState } from '../../../../src/components/ui/EmptyState';
 import { formatDate } from '../../../../src/lib/date';
-import { monoFontFamily, radius, semantic } from '../../../../src/theme/tokens';
+import { layout, microShadow, radius, semantic } from '../../../../src/theme/tokens';
 
 export default function CourseStudentsScreen() {
   const { courseId, title } = useLocalSearchParams<{ courseId: string; title?: string }>();
@@ -49,6 +50,7 @@ export default function CourseStudentsScreen() {
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Học viên khóa học', headerBackTitle: 'Quay lại' }} />
         <ErrorState
+          error={error}
           message={error?.message || 'Không thể tải danh sách học viên.'}
           onRetry={() => refetch()}
         />
@@ -59,7 +61,7 @@ export default function CourseStudentsScreen() {
   const renderStudent = ({ item }: { item: StudentRosterItem }) => {
     const pct = Math.min(100, Math.max(0, item.progressPercentage ?? 0));
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, microShadow]}>
         <View style={styles.cardTop}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -73,13 +75,17 @@ export default function CourseStudentsScreen() {
               Ghi danh: {formatDate(item.enrolledAt ?? '')}
             </Text>
           </View>
-          <View style={styles.pctBadge}>
-            <Text style={styles.pctText}>{pct}%</Text>
-          </View>
+          <Badge variant={pct >= 100 ? 'success' : 'info'} label={`${pct}%`} />
         </View>
 
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${pct}%` }]} />
+          <View
+            style={[
+              styles.progressFill,
+              pct >= 100 && styles.progressFillDone,
+              { width: `${pct}%` },
+            ]}
+          />
         </View>
       </View>
     );
@@ -96,7 +102,7 @@ export default function CourseStudentsScreen() {
 
       {students.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="people-outline" size={32} color={semantic.textMuted} />}
+          icon={<Ionicons name="people-outline" size={26} color={semantic.brandPrimary} />}
           title="Chưa có học viên nào"
           description="Khóa học này chưa có học viên ghi danh."
           actionTitle="Tải lại"
@@ -139,16 +145,20 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: layout.maxContentWidth,
+    alignSelf: 'center',
   },
   headerCount: {
     fontSize: 13,
     fontWeight: '700',
     color: semantic.textSecondary,
     marginBottom: 12,
+    fontVariant: ['tabular-nums'],
   },
   card: {
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
     padding: 14,
@@ -161,16 +171,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
+    color: semantic.brandPrimary,
     fontSize: 15,
   },
   meta: {
@@ -187,31 +199,23 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   enrolledText: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textMuted,
     marginTop: 2,
-  },
-  pctBadge: {
-    backgroundColor: semantic.brandSoft,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  pctText: {
-    fontFamily: monoFontFamily,
-    fontSize: 12,
-    fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
+    fontVariant: ['tabular-nums'],
   },
   progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#E2E8F0',
+    height: 7,
+    borderRadius: radius.pill,
+    backgroundColor: semantic.borderSubtle,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: semantic.brandPrimary,
-    borderRadius: 3,
+    borderRadius: radius.pill,
+  },
+  progressFillDone: {
+    backgroundColor: semantic.success,
   },
 });

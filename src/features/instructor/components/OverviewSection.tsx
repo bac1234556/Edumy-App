@@ -4,6 +4,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { InstructorOverview } from '../api';
 import { Text } from '../../../components/ui/Text';
+import { Card } from '../../../components/ui/Card';
 import { MoneyText } from '../../../components/ui/MoneyText';
 import { Loading } from '../../../components/ui/Loading';
 import { ErrorState } from '../../../components/ui/ErrorState';
@@ -16,6 +17,7 @@ interface OverviewSectionProps {
   overview?: InstructorOverview;
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   errorMessage?: string;
   onRetry: () => void;
   onNavigateTab: (tab: InstructorTabKey) => void;
@@ -25,6 +27,7 @@ export function OverviewSection({
   overview,
   isLoading,
   isError,
+  error,
   errorMessage,
   onRetry,
   onNavigateTab,
@@ -38,6 +41,7 @@ export function OverviewSection({
   if (isError || !overview) {
     return (
       <ErrorState
+        error={error}
         message={errorMessage || 'Không thể tải tổng quan giảng viên.'}
         onRetry={onRetry}
       />
@@ -61,84 +65,94 @@ export function OverviewSection({
         <TouchableOpacity
           style={styles.actionBadge}
           onPress={() => onNavigateTab('qa')}
-          activeOpacity={0.75}
+          activeOpacity={0.78}
+          accessibilityRole="button"
         >
-          <Ionicons name="help-circle-outline" size={16} color="#B45309" />
+          <Ionicons name="help-circle-outline" size={16} color={semantic.warning} />
           <Text style={styles.actionBadgeText}>
             {overview.unansweredQuestions ?? 0} câu hỏi chờ trả lời
           </Text>
-          <Ionicons name="chevron-forward" size={14} color="#B45309" />
+          <Ionicons name="chevron-forward" size={14} color={semantic.warning} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.actionBadge, styles.inviteBadge]}
           onPress={() => onNavigateTab('courses')}
-          activeOpacity={0.75}
+          activeOpacity={0.78}
+          accessibilityRole="button"
         >
-          <Ionicons name="mail-unread-outline" size={16} color={semantic.brandPrimaryStrong} />
+          <Ionicons name="mail-unread-outline" size={16} color={semantic.brandPrimary} />
           <Text style={[styles.actionBadgeText, { color: semantic.brandPrimaryStrong }]}>
             {overview.pendingInvitations ?? 0} lời mời
           </Text>
-          <Ionicons name="chevron-forward" size={14} color={semantic.brandPrimaryStrong} />
+          <Ionicons name="chevron-forward" size={14} color={semantic.brandPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* KPI Cards Grid */}
-      <View style={styles.kpiGrid}>
-        <View style={styles.kpiCard}>
-          <Text style={styles.kpiLabel}>Khóa học</Text>
-          <Text style={styles.kpiValue}>
-            {totals?.publishedCourses ?? 0} / {totals?.courses ?? 0}
+      {/* Primary Financial Hero Card (Light Pure White & Ocean Blue) */}
+      <Card style={styles.financeHeroCard}>
+        <View style={styles.heroAccentStrip}>
+          <Text style={styles.heroOverline}>Thu nhập thực nhận</Text>
+          <MoneyText amount={money?.netEarnings ?? 0} style={styles.heroPrimaryMoney} />
+          <Text style={styles.heroNote}>
+            Đã trừ 30% phí nền tảng và phần chia đồng giảng viên
           </Text>
-          <Text style={styles.kpiSub}>Đã xuất bản / Tổng</Text>
         </View>
 
-        <View style={styles.kpiCard}>
-          <Text style={styles.kpiLabel}>Học viên</Text>
-          <Text style={styles.kpiValue}>{totals?.students ?? 0}</Text>
-          <Text style={styles.kpiSub}>Đang theo học</Text>
+        <View style={styles.financeSubRow}>
+          <View style={styles.financeSubCell}>
+            <Text style={styles.financeSubLabel}>Số dư khả dụng</Text>
+            <MoneyText amount={money?.availableBalance ?? 0} style={styles.availValue} />
+          </View>
+          <View style={styles.verticalDivider} />
+          <View style={styles.financeSubCell}>
+            <Text style={styles.financeSubLabel}>Đang chờ</Text>
+            <MoneyText amount={money?.pendingBalance ?? 0} style={styles.pendingValue} />
+          </View>
+          <View style={styles.verticalDivider} />
+          <View style={styles.financeSubCell}>
+            <Text style={styles.financeSubLabel}>Doanh số bán</Text>
+            <MoneyText amount={money?.grossSales ?? 0} style={styles.grossValue} />
+          </View>
         </View>
+      </Card>
 
-        <View style={styles.kpiCard}>
-          <Text style={styles.kpiLabel}>Đánh giá TB</Text>
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={15} color="#D97706" />
-            <Text style={styles.kpiValue}>
-              {totals?.averageRating ? totals.averageRating.toFixed(1) : '—'}
+      {/* Supporting Teaching Metrics Strip */}
+      <Card style={styles.teachingStripCard}>
+        <View style={styles.teachingStrip}>
+          <View style={styles.teachingCell}>
+            <Text style={styles.teachingLabel}>Khóa học</Text>
+            <Text style={styles.teachingValue}>
+              {totals?.publishedCourses ?? 0}/{totals?.courses ?? 0}
             </Text>
+            <Text style={styles.teachingSub}>Đã xuất bản</Text>
           </View>
-          <Text style={styles.kpiSub}>{totals?.ratingCount ?? 0} lượt đánh giá</Text>
-        </View>
 
-        <View style={styles.kpiCard}>
-          <Text style={styles.kpiLabel}>Doanh số bán</Text>
-          <MoneyText amount={money?.grossSales ?? 0} style={styles.kpiMoney} />
-          <Text style={styles.kpiSub}>Tổng giá trị đơn hàng</Text>
-        </View>
+          <View style={styles.verticalDivider} />
 
-        <View style={[styles.kpiCard, styles.kpiCardFull]}>
-          <View style={styles.netHeaderRow}>
-            <Text style={styles.kpiLabel}>Thu nhập thực nhận</Text>
-            <MoneyText amount={money?.netEarnings ?? 0} style={styles.netMoney} />
+          <View style={styles.teachingCell}>
+            <Text style={styles.teachingLabel}>Học viên</Text>
+            <Text style={styles.teachingValue}>{totals?.students ?? 0}</Text>
+            <Text style={styles.teachingSub}>Đang theo học</Text>
           </View>
-          <Text style={styles.netNote}>
-            đã trừ 30% phí nền tảng và phần chia đồng giảng viên
-          </Text>
-          <View style={styles.balanceStrip}>
-            <View style={styles.balancePair}>
-              <Text style={styles.balanceLabel}>Khả dụng:</Text>
-              <MoneyText amount={money?.availableBalance ?? 0} style={styles.balanceAvail} />
+
+          <View style={styles.verticalDivider} />
+
+          <View style={styles.teachingCell}>
+            <Text style={styles.teachingLabel}>Đánh giá TB</Text>
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={15} color={semantic.ratingStar} />
+              <Text style={styles.teachingValue}>
+                {totals?.averageRating ? totals.averageRating.toFixed(1) : '—'}
+              </Text>
             </View>
-            <View style={styles.balancePair}>
-              <Text style={styles.balanceLabel}>Đang chờ:</Text>
-              <MoneyText amount={money?.pendingBalance ?? 0} style={styles.balancePending} />
-            </View>
+            <Text style={styles.teachingSub}>{totals?.ratingCount ?? 0} lượt</Text>
           </View>
         </View>
-      </View>
+      </Card>
 
-      {/* 30-Day Bar Chart (View-only, zero extra chart dependencies) */}
-      <View style={styles.sectionCard}>
+      {/* 30-Day Bar Chart */}
+      <Card>
         <View style={styles.chartHeader}>
           <Text variant="h3">Biểu đồ 30 ngày</Text>
           <View style={styles.chartToggle}>
@@ -196,7 +210,7 @@ export function OverviewSection({
                         {
                           height: `${heightPct}%`,
                           backgroundColor:
-                            value > 0 ? semantic.brandPrimary : '#E2E8F0',
+                            value > 0 ? semantic.brandPrimary : semantic.borderSubtle,
                         },
                       ]}
                     />
@@ -212,10 +226,10 @@ export function OverviewSection({
             </View>
           </View>
         )}
-      </View>
+      </Card>
 
       {/* 5 Recent Reviews */}
-      <View style={styles.sectionCard}>
+      <Card>
         <Text variant="h3" style={{ marginBottom: 10 }}>
           5 đánh giá mới nhất
         </Text>
@@ -236,7 +250,7 @@ export function OverviewSection({
                   {rev.courseTitle}
                 </Text>
                 <View style={styles.reviewStars}>
-                  <Ionicons name="star" size={13} color="#D97706" />
+                  <Ionicons name="star" size={13} color={semantic.ratingStar} />
                   <Text style={styles.reviewRating}>{rev.rating ?? 0}</Text>
                 </View>
               </View>
@@ -253,7 +267,7 @@ export function OverviewSection({
         ) : (
           <Text style={styles.emptyText}>Chưa có đánh giá nào gần đây.</Text>
         )}
-      </View>
+      </Card>
     </View>
   );
 }
@@ -271,12 +285,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: semantic.warningSoft,
     borderWidth: 1,
-    borderColor: '#FDE68A',
-    paddingHorizontal: 10,
+    borderColor: semantic.warningBorder,
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    minHeight: 40,
+    borderRadius: radius.pill,
   },
   inviteBadge: {
     backgroundColor: semantic.brandSoft,
@@ -285,122 +300,130 @@ const styles = StyleSheet.create({
   actionBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#B45309',
+    color: semantic.warning,
+    fontVariant: ['tabular-nums'],
   },
-  kpiGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+  financeHeroCard: {
+    padding: 0,
+    overflow: 'hidden',
+    borderColor: semantic.brandBorder,
   },
-  kpiCard: {
-    width: '48%',
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    padding: 13,
+  heroAccentStrip: {
+    backgroundColor: semantic.brandSoft,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.brandBorder,
   },
-  kpiCardFull: {
-    width: '100%',
-  },
-  kpiLabel: {
+  heroOverline: {
     fontSize: 12,
-    fontWeight: '600',
-    color: semantic.textMuted,
+    fontWeight: '700',
+    color: semantic.brandPrimaryStrong,
     marginBottom: 4,
   },
-  kpiValue: {
+  heroPrimaryMoney: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: semantic.brandPrimary,
+    marginBottom: 4,
+  },
+  heroNote: {
+    fontSize: 12,
+    color: semantic.textSecondary,
+  },
+  financeSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    backgroundColor: semantic.surfaceCard,
+  },
+  financeSubCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
+  },
+  financeSubLabel: {
+    fontSize: 11,
+    color: semantic.textMuted,
+    fontWeight: '600',
+  },
+  availValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: semantic.success,
+  },
+  pendingValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: semantic.warning,
+  },
+  grossValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: semantic.textPrimary,
+  },
+  verticalDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: semantic.borderSubtle,
+  },
+  teachingStripCard: {
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+  },
+  teachingStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  teachingCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  teachingLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: semantic.textMuted,
+    marginBottom: 3,
+  },
+  teachingValue: {
     fontFamily: monoFontFamily,
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '700',
     color: semantic.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
-  kpiMoney: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: semantic.textPrimary,
-  },
-  kpiSub: {
+  teachingSub: {
     fontSize: 11,
     color: semantic.textSecondary,
-    marginTop: 3,
+    marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  netHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  netMoney: {
-    fontSize: 19,
-    fontWeight: '800',
-    color: semantic.brandPrimaryStrong,
-  },
-  netNote: {
-    fontSize: 11,
-    color: semantic.textMuted,
-    fontStyle: 'italic',
-    marginTop: 2,
-    marginBottom: 10,
-  },
-  balanceStrip: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: semantic.borderSubtle,
-    paddingTop: 8,
-  },
-  balancePair: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  balanceLabel: {
-    fontSize: 12,
-    color: semantic.textSecondary,
-  },
-  balanceAvail: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: semantic.success,
-  },
-  balancePending: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#D97706',
-  },
-  sectionCard: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    padding: 14,
-  },
   chartHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   chartToggle: {
     flexDirection: 'row',
     gap: 6,
   },
   toggleChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: semantic.surfaceSubtle,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: semantic.surfaceMuted,
   },
   toggleChipActive: {
     backgroundColor: semantic.brandPrimary,
   },
   toggleChipText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: semantic.textSecondary,
   },
@@ -413,7 +436,7 @@ const styles = StyleSheet.create({
   barsRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    height: 92,
+    height: 96,
     gap: 2,
     borderBottomWidth: 1,
     borderBottomColor: semantic.borderSubtle,
@@ -435,8 +458,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   axisText: {
-    fontSize: 10,
+    fontSize: 11,
     color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   emptyText: {
     fontSize: 13,
@@ -447,7 +471,7 @@ const styles = StyleSheet.create({
   reviewItem: {
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: semantic.borderSubtle,
+    borderBottomColor: semantic.surfaceMuted,
   },
   reviewTop: {
     flexDirection: 'row',
@@ -469,17 +493,19 @@ const styles = StyleSheet.create({
   reviewRating: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#B45309',
+    color: semantic.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   reviewMeta: {
     fontSize: 11,
     color: semantic.textMuted,
     marginTop: 2,
+    fontVariant: ['tabular-nums'],
   },
   reviewComment: {
-    fontSize: 12,
-    color: semantic.textSecondary,
+    fontSize: 13,
+    color: semantic.textBody,
     marginTop: 4,
-    lineHeight: 17,
+    lineHeight: 18,
   },
 });

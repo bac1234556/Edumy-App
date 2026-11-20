@@ -6,11 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useInstructorQuestions } from '../hooks';
 import { Text } from '../../../components/ui/Text';
 import { Button } from '../../../components/ui/Button';
+import { Badge } from '../../../components/ui/Badge';
 import { Loading } from '../../../components/ui/Loading';
 import { ErrorState } from '../../../components/ui/ErrorState';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { formatDate } from '../../../lib/date';
-import { radius, semantic } from '../../../theme/tokens';
+import { microShadow, radius, semantic } from '../../../theme/tokens';
 
 export function QuestionsSection() {
   const router = useRouter();
@@ -61,12 +62,13 @@ export function QuestionsSection() {
         <Loading message="Đang tải câu hỏi học viên..." />
       ) : isError ? (
         <ErrorState
+          error={error}
           message={error?.message || 'Không thể tải danh sách câu hỏi.'}
           onRetry={() => refetch()}
         />
       ) : questions.length === 0 ? (
         <EmptyState
-          icon={<Ionicons name="chatbubbles-outline" size={32} color={semantic.textMuted} />}
+          icon={<Ionicons name="chatbubbles-outline" size={26} color={semantic.brandPrimary} />}
           title={
             statusFilter === 'unanswered'
               ? 'Không có câu hỏi chờ trả lời'
@@ -81,23 +83,21 @@ export function QuestionsSection() {
             return (
               <TouchableOpacity
                 key={String(qId)}
-                style={styles.card}
+                style={[styles.card, microShadow]}
                 onPress={() => qId && router.push(`/learn/qa/${qId}` as const)}
-                activeOpacity={0.78}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={`Trả lời câu hỏi ${q.title ?? ''}`}
               >
                 <View style={styles.cardTop}>
                   <Text style={styles.courseLabel} numberOfLines={1}>
                     {q.courseTitle}
                   </Text>
-                  <View
-                    style={q.isResolved ? styles.resolvedBadge : styles.pendingBadge}
-                  >
-                    <Text
-                      style={q.isResolved ? styles.resolvedText : styles.pendingText}
-                    >
-                      {q.isResolved ? 'Đã giải quyết' : 'Chờ xử lý'}
-                    </Text>
-                  </View>
+                  {q.isResolved ? (
+                    <Badge variant="success" label="Đã giải quyết" />
+                  ) : (
+                    <Badge variant="warning" label="Đang chờ" />
+                  )}
                 </View>
 
                 <Text style={styles.title} numberOfLines={2}>
@@ -144,8 +144,10 @@ const styles = StyleSheet.create({
   },
   pill: {
     paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 18,
+    paddingVertical: 8,
+    minHeight: 38,
+    justifyContent: 'center',
+    borderRadius: radius.pill,
     backgroundColor: semantic.surfaceCard,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
     padding: 14,
@@ -177,35 +179,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   courseLabel: {
     flex: 1,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
-  },
-  resolvedBadge: {
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  resolvedText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  pendingBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  pendingText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#D97706',
+    color: semantic.brandPrimary,
   },
   title: {
     fontSize: 14,
@@ -214,20 +194,21 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   snippet: {
-    fontSize: 12,
-    color: semantic.textSecondary,
-    lineHeight: 17,
-    marginBottom: 8,
+    fontSize: 13,
+    color: semantic.textBody,
+    lineHeight: 18,
+    marginBottom: 10,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: semantic.borderSubtle,
+    borderTopColor: semantic.surfaceMuted,
     paddingTop: 8,
   },
   metaText: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textMuted,
+    fontVariant: ['tabular-nums'],
   },
 });

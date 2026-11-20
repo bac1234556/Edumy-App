@@ -27,7 +27,8 @@ import { QuestionsSection } from '../../src/features/instructor/components/Quest
 import { EarningsSection } from '../../src/features/instructor/components/EarningsSection';
 import { WithdrawalsSection } from '../../src/features/instructor/components/WithdrawalsSection';
 import { Text } from '../../src/components/ui/Text';
-import { radius, semantic } from '../../src/theme/tokens';
+import { ResponsiveContainer } from '../../src/components/ui/ResponsiveContainer';
+import { layout, radius, semantic } from '../../src/theme/tokens';
 
 const SEGMENTS: { key: InstructorTabKey; label: string }[] = [
   { key: 'overview', label: 'Tổng quan' },
@@ -87,89 +88,97 @@ export default function InstructorTabScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Segmented Control */}
+      {/* Segmented Control Tab Bar */}
       <View style={styles.segmentWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.segmentRow}
-        >
-          {SEGMENTS.map((seg) => {
-            const active = activeTab === seg.key;
-            return (
-              <TouchableOpacity
-                key={seg.key}
-                style={[styles.segmentBtn, active && styles.segmentBtnActive]}
-                onPress={() => setActiveTab(seg.key)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-              >
-                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
-                  {seg.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.segmentRow}
+          >
+            {SEGMENTS.map((seg) => {
+              const active = activeTab === seg.key;
+              return (
+                <TouchableOpacity
+                  key={seg.key}
+                  style={[styles.segmentBtn, active && styles.segmentBtnActive]}
+                  onPress={() => setActiveTab(seg.key)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
+                    {seg.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </ResponsiveContainer>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} />}
       >
-        {activeTab === 'overview' &&
-          (isInstructorRole ? (
-            <OverviewSection
-              overview={overviewQuery.data}
-              isLoading={overviewQuery.isLoading}
-              isError={overviewQuery.isError}
-              errorMessage={overviewQuery.error?.message}
-              onRetry={() => overviewQuery.refetch()}
-              onNavigateTab={setActiveTab}
+        <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+          {activeTab === 'overview' &&
+            (isInstructorRole ? (
+              <OverviewSection
+                overview={overviewQuery.data}
+                isLoading={overviewQuery.isLoading}
+                isError={overviewQuery.isError}
+                error={overviewQuery.error}
+                errorMessage={overviewQuery.error?.message}
+                onRetry={() => overviewQuery.refetch()}
+                onNavigateTab={setActiveTab}
+              />
+            ) : (
+              <EarningsSection
+                summary={summaryQuery.data}
+                courses={courseEarningsQuery.data}
+                monthly={monthlyQuery.data}
+                isLoading={summaryQuery.isLoading}
+                isError={summaryQuery.isError}
+                error={summaryQuery.error}
+                errorMessage={summaryQuery.error?.message}
+                onRetry={handleRefresh}
+              />
+            ))}
+
+          {activeTab === 'courses' && (
+            <CoursesSection
+              courses={coursesQuery.data}
+              invitations={invitationsQuery.data}
+              isLoading={coursesQuery.isLoading || invitationsQuery.isLoading}
+              isError={coursesQuery.isError}
+              error={coursesQuery.error}
+              errorMessage={coursesQuery.error?.message}
+              onRetry={handleRefresh}
             />
-          ) : (
+          )}
+
+          {activeTab === 'qa' && <QuestionsSection />}
+
+          {activeTab === 'earnings' && (
             <EarningsSection
               summary={summaryQuery.data}
               courses={courseEarningsQuery.data}
               monthly={monthlyQuery.data}
               isLoading={summaryQuery.isLoading}
               isError={summaryQuery.isError}
+              error={summaryQuery.error}
               errorMessage={summaryQuery.error?.message}
               onRetry={handleRefresh}
             />
-          ))}
+          )}
 
-        {activeTab === 'courses' && (
-          <CoursesSection
-            courses={coursesQuery.data}
-            invitations={invitationsQuery.data}
-            isLoading={coursesQuery.isLoading || invitationsQuery.isLoading}
-            isError={coursesQuery.isError}
-            errorMessage={coursesQuery.error?.message}
-            onRetry={handleRefresh}
-          />
-        )}
-
-        {activeTab === 'qa' && <QuestionsSection />}
-
-        {activeTab === 'earnings' && (
-          <EarningsSection
-            summary={summaryQuery.data}
-            courses={courseEarningsQuery.data}
-            monthly={monthlyQuery.data}
-            isLoading={summaryQuery.isLoading}
-            isError={summaryQuery.isError}
-            errorMessage={summaryQuery.error?.message}
-            onRetry={handleRefresh}
-          />
-        )}
-
-        {activeTab === 'withdrawals' && (
-          <WithdrawalsSection
-            summary={summaryQuery.data}
-            withdrawals={withdrawalsQuery.data?.content}
-          />
-        )}
+          {activeTab === 'withdrawals' && (
+            <WithdrawalsSection
+              summary={summaryQuery.data}
+              withdrawals={withdrawalsQuery.data?.content}
+            />
+          )}
+        </ResponsiveContainer>
       </ScrollView>
     </View>
   );
@@ -181,25 +190,28 @@ const styles = StyleSheet.create({
     backgroundColor: semantic.surfaceCanvas,
   },
   segmentWrapper: {
-    backgroundColor: semantic.surfaceCard,
+    backgroundColor: semantic.surfacePage,
     borderBottomWidth: 1,
     borderBottomColor: semantic.borderSubtle,
     paddingVertical: 10,
   },
   segmentRow: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     gap: 8,
   },
   segmentBtn: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.md,
-    backgroundColor: semantic.surfaceSubtle,
-    minHeight: 36,
+    borderRadius: radius.pill,
+    backgroundColor: semantic.surfaceMuted,
+    borderWidth: 1,
+    borderColor: semantic.borderSubtle,
+    minHeight: 40,
     justifyContent: 'center',
   },
   segmentBtnActive: {
     backgroundColor: semantic.brandPrimary,
+    borderColor: semantic.brandPrimary,
   },
   segmentText: {
     fontSize: 13,

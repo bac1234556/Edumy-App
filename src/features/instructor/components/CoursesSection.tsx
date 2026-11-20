@@ -8,21 +8,39 @@ import { useAcceptInvitation, useDeclineInvitation } from '../hooks';
 import { getCourseStatusInfo } from '../logic';
 import { Text } from '../../../components/ui/Text';
 import { Button } from '../../../components/ui/Button';
+import { Badge, BadgeVariant } from '../../../components/ui/Badge';
+import { Card } from '../../../components/ui/Card';
 import { MoneyText } from '../../../components/ui/MoneyText';
 import { Loading } from '../../../components/ui/Loading';
 import { ErrorState } from '../../../components/ui/ErrorState';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { confirm, notify } from '../../../lib/dialog';
 import { AppError } from '../../../api/problem';
-import { radius, semantic } from '../../../theme/tokens';
+import { microShadow, radius, semantic } from '../../../theme/tokens';
 
 interface CoursesSectionProps {
   courses?: InstructorCourse[];
   invitations?: CoInstructorInvitation[];
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   errorMessage?: string;
   onRetry: () => void;
+}
+
+function mapCourseStatusVariant(status?: string): BadgeVariant {
+  switch (status?.toLowerCase()) {
+    case 'published':
+      return 'success';
+    case 'pendingapproval':
+    case 'pending_approval':
+    case 'pending':
+      return 'warning';
+    case 'rejected':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
 }
 
 export function CoursesSection({
@@ -30,6 +48,7 @@ export function CoursesSection({
   invitations,
   isLoading,
   isError,
+  error,
   errorMessage,
   onRetry,
 }: CoursesSectionProps) {
@@ -44,6 +63,7 @@ export function CoursesSection({
   if (isError) {
     return (
       <ErrorState
+        error={error}
         message={errorMessage || 'Không thể tải danh sách khóa học giảng viên.'}
         onRetry={onRetry}
       />
@@ -111,7 +131,7 @@ export function CoursesSection({
           {pendingInvitations.map((inv) => {
             const sharePct = ((inv.shareBps ?? 0) / 100).toFixed(0);
             return (
-              <View key={inv.id} style={styles.inviteCard}>
+              <Card key={inv.id} style={styles.inviteCard}>
                 <Text style={styles.inviteTitle}>{inv.courseTitle}</Text>
                 <Text style={styles.inviteShare}>Tỷ lệ chia thu nhập: {sharePct}%</Text>
                 <View style={styles.inviteActions}>
@@ -131,7 +151,7 @@ export function CoursesSection({
                     style={{ flex: 1 }}
                   />
                 </View>
-              </View>
+              </Card>
             );
           })}
         </View>
@@ -145,7 +165,7 @@ export function CoursesSection({
 
         {!courses || courses.length === 0 ? (
           <EmptyState
-            icon={<Ionicons name="library-outline" size={32} color={semantic.textMuted} />}
+            icon={<Ionicons name="library-outline" size={26} color={semantic.brandPrimary} />}
             title="Chưa có khóa học nào"
             description="Bạn chưa tạo hoặc cộng tác khóa học nào trên Edumy."
           />
@@ -158,17 +178,21 @@ export function CoursesSection({
             return (
               <TouchableOpacity
                 key={c.courseId}
-                style={styles.courseCard}
+                style={[styles.courseCard, microShadow]}
                 onPress={() => {
                   if (c.courseId) {
-                    router.push(
-                      `/instructor/courses/${c.courseId}/students?title=${encodeURIComponent(
-                        c.title ?? ''
-                      )}` as const
-                    );
+                    router.push({
+                      pathname: '/instructor/courses/[courseId]/students',
+                      params: {
+                        courseId: String(c.courseId),
+                        title: c.title ?? '',
+                      },
+                    });
                   }
                 }}
-                activeOpacity={0.78}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={`Xem học viên khóa ${c.title ?? ''}`}
               >
                 <View style={styles.courseRow}>
                   {c.thumbnailUrl ? (
@@ -181,16 +205,10 @@ export function CoursesSection({
 
                   <View style={styles.courseBody}>
                     <View style={styles.badgeLine}>
-                      <View
-                        style={[
-                          styles.statusBadge,
-                          { backgroundColor: statusInfo.backgroundColor },
-                        ]}
-                      >
-                        <Text style={[styles.statusText, { color: statusInfo.color }]}>
-                          {statusInfo.label}
-                        </Text>
-                      </View>
+                      <Badge
+                        label={statusInfo.label}
+                        variant={mapCourseStatusVariant(c.status)}
+                      />
                       <Text style={styles.roleText}>
                         {isMain ? 'Chính' : 'Đồng GV'} · {sharePct}%
                       </Text>
@@ -203,7 +221,7 @@ export function CoursesSection({
                     <View style={styles.metricsRow}>
                       <Text style={styles.metricText}>{c.students ?? 0} học viên</Text>
                       <Text style={styles.metricDot}>·</Text>
-                      <Ionicons name="star" size={12} color="#D97706" />
+                      <Ionicons name="star" size={12} color={semantic.ratingStar} />
                       <Text style={styles.metricText}>
                         {c.averageRating ? c.averageRating.toFixed(1) : '—'} ({c.ratingCount ?? 0})
                       </Text>
@@ -215,7 +233,7 @@ export function CoursesSection({
                     </View>
                   </View>
 
-                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                  <Ionicons name="chevron-forward" size={18} color={semantic.textPlaceholder} />
                 </View>
               </TouchableOpacity>
             );
@@ -237,11 +255,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   inviteCard: {
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    borderRadius: radius.md,
-    padding: 14,
+    backgroundColor: semantic.warningSoft,
+    borderColor: semantic.warningBorder,
   },
   inviteTitle: {
     fontSize: 14,
@@ -251,8 +266,9 @@ const styles = StyleSheet.create({
   },
   inviteShare: {
     fontSize: 12,
-    color: '#92400E',
+    color: semantic.warning,
     marginBottom: 12,
+    fontVariant: ['tabular-nums'],
   },
   inviteActions: {
     flexDirection: 'row',
@@ -260,10 +276,10 @@ const styles = StyleSheet.create({
   },
   courseCard: {
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
-    padding: 12,
+    padding: 14,
   },
   courseRow: {
     flexDirection: 'row',
@@ -271,16 +287,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   thumb: {
-    width: 72,
-    height: 54,
-    borderRadius: 6,
-    backgroundColor: '#E2E8F0',
+    width: 76,
+    height: 56,
+    borderRadius: radius.btn,
+    backgroundColor: semantic.surfaceMuted,
   },
   thumbPlaceholder: {
-    width: 72,
-    height: 54,
-    borderRadius: 6,
+    width: 76,
+    height: 56,
+    borderRadius: radius.btn,
     backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -291,21 +309,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
-  },
-  statusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '700',
+    marginBottom: 5,
+    flexWrap: 'wrap',
   },
   roleText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: semantic.textSecondary,
+    fontVariant: ['tabular-nums'],
   },
   courseTitle: {
     fontSize: 14,
@@ -320,11 +331,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metricText: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textSecondary,
+    fontVariant: ['tabular-nums'],
   },
   metricDot: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textMuted,
   },
   earningRow: {
@@ -333,12 +345,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   earningLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textMuted,
   },
   earningVal: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
+    color: semantic.brandPrimary,
   },
 });

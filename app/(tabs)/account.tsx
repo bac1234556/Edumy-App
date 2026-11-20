@@ -1,16 +1,19 @@
-// app/(tabs)/account.tsx — Tài khoản & Bảo mật (Swiss Editorial Console)
+// app/(tabs)/account.tsx — Tài khoản & Bảo mật
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { confirm } from '../../src/lib/dialog';
 import { Text } from '../../src/components/ui/Text';
 import { Button } from '../../src/components/ui/Button';
+import { Badge } from '../../src/components/ui/Badge';
+import { Card } from '../../src/components/ui/Card';
+import { ResponsiveContainer } from '../../src/components/ui/ResponsiveContainer';
 import { useSessionStore } from '../../src/store/session';
 import { useLogout, useMe } from '../../src/features/auth/hooks';
 import { useResendVerificationEmail } from '../../src/features/profile/hooks';
 import { AppError } from '../../src/api/problem';
-import { Ionicons } from '@expo/vector-icons';
-import { semantic, radius, monoFontFamily } from '../../src/theme/tokens';
+import { semantic, radius, monoFontFamily, layout } from '../../src/theme/tokens';
 
 export default function AccountScreen() {
   const router = useRouter();
@@ -23,6 +26,7 @@ export default function AccountScreen() {
   const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   const isLoggedIn = status === 'authenticated' && me !== null;
+  const initialLetter = (me?.fullName || me?.email || 'U').trim().charAt(0).toUpperCase();
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -66,156 +70,190 @@ export default function AccountScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Editorial Profile Identity Card */}
-      <View style={styles.profileHeader}>
-        <View style={styles.avatar}>
-          <Ionicons name="person-outline" size={28} color={semantic.brandPrimaryStrong} />
-        </View>
-        <View style={styles.profileInfo}>
-          <Text style={styles.identityOverline}>
-            {isLoggedIn ? `ID TÀI KHOẢN // #${me?.id}` : 'CHẾ ĐỘ KHÁCH // ANONYMOUS'}
-          </Text>
-          <Text variant="h2" style={styles.fullNameText}>
-            {isLoggedIn ? me?.fullName : 'Khách vãng lai'}
-          </Text>
-          <Text variant="bodySmall" style={styles.emailText}>
-            {isLoggedIn ? me?.email : 'Đăng nhập để đồng bộ tiến độ học và chứng chỉ'}
-          </Text>
-          {isLoggedIn && me?.roles && (
-            <View style={styles.rolesContainer}>
-              {me.roles.map((role) => (
-                <View key={role} style={styles.roleBadge}>
-                  <Text style={styles.roleText}>{role.toUpperCase()}</Text>
-                </View>
-              ))}
-              {me.emailVerified && (
-                <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={12} color={semantic.success} />
-                  <Text style={styles.verifiedBadgeText}>ĐÃ XÁC THỰC EMAIL</Text>
+      <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+        {/* Profile Identity Card */}
+        <Card style={styles.profileHeaderCard}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              {isLoggedIn ? (
+                <Text style={styles.avatarLetter}>{initialLetter}</Text>
+              ) : (
+                <Ionicons name="person-outline" size={26} color={semantic.brandPrimary} />
+              )}
+            </View>
+
+            <View style={styles.profileInfo}>
+              {isLoggedIn && (
+                <Text style={styles.identityOverline}>ID #{me?.id}</Text>
+              )}
+              <Text variant="h2" style={styles.fullNameText}>
+                {isLoggedIn ? me?.fullName : 'Khách vãng lai'}
+              </Text>
+              <Text variant="bodySmall" style={styles.emailText}>
+                {isLoggedIn ? me?.email : 'Đăng nhập để đồng bộ tiến độ học và chứng chỉ'}
+              </Text>
+              {isLoggedIn && me?.roles && (
+                <View style={styles.rolesContainer}>
+                  {me.roles.map((role) => (
+                    <Badge key={role} variant="info" label={role.toUpperCase()} />
+                  ))}
+                  {me.emailVerified && (
+                    <Badge
+                      variant="success"
+                      label="Đã xác thực email"
+                      icon={
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={13}
+                          color={semantic.success}
+                        />
+                      }
+                    />
+                  )}
                 </View>
               )}
             </View>
-          )}
-        </View>
-      </View>
-
-      {/* Email Verification Banner */}
-      {isLoggedIn && me?.emailVerified === false && (
-        <View style={styles.unverifiedBanner}>
-          <View style={styles.bannerRow}>
-            <Ionicons name="alert-circle-outline" size={18} color="#B45309" />
-            <Text style={styles.bannerTitle}>ĐỊA CHỈ EMAIL CHƯA XÁC THỰC</Text>
           </View>
-          <Text style={styles.bannerDesc}>
-            Vui lòng mở liên kết trong email để kích hoạt đầy đủ quyền bảo mật và nhận chứng chỉ tốt nghiệp.
-          </Text>
-          {resendMessage && (
-            <Text style={styles.resendNotice}>{resendMessage}</Text>
-          )}
-          <Button
-            title={
-              resendCooldown > 0
-                ? `Gửi lại sau (${resendCooldown}s)`
-                : 'Gửi lại thư xác thực'
-            }
-            variant="outline"
-            disabled={resendCooldown > 0 || isResending}
-            loading={isResending}
-            onPress={handleResendVerification}
-            style={styles.resendBtn}
-            textStyle={styles.resendBtnText}
-          />
-        </View>
-      )}
+        </Card>
 
-      {/* Action / Menu Items */}
-      {!isLoggedIn ? (
-        <View style={styles.authBox}>
-          <Button
-            title="Đăng nhập tài khoản"
-            onPress={() => router.push('/(auth)/login')}
-          />
-          <Button
-            title="Đăng ký tài khoản mới"
-            variant="outline"
-            onPress={() => router.push('/(auth)/register')}
-          />
-        </View>
-      ) : (
-        <>
-          <Text style={styles.groupLabel}>QUẢN LÝ HỌC VỤ</Text>
-          <View style={styles.menuSection}>
-            <TouchableOpacity
-              style={[styles.menuItem, styles.menuItemLast]}
-              onPress={() => router.push('/account/certificates' as const)}
-            >
-              <View style={styles.menuItemLeft}>
-                <View style={styles.menuIconWrap}>
-                  <Ionicons name="ribbon-outline" size={18} color={semantic.brandPrimary} />
-                </View>
-                <View>
-                  <Text style={styles.menuItemText}>Chứng chỉ tốt nghiệp</Text>
-                  <Text style={styles.menuItemSub}>Tải tệp PDF &amp; sao chép liên kết xác thực</Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.groupLabel}>BẢO MẬT &amp; ĐỒNG BỘ</Text>
-          <View style={styles.menuSection}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => router.push('/account/profile')}
-            >
-              <View style={styles.menuItemLeft}>
-                <View style={styles.menuIconWrap}>
-                  <Ionicons name="person-circle-outline" size={18} color={semantic.textSecondary} />
-                </View>
-                <Text style={styles.menuItemText}>Cập nhật hồ sơ cá nhân</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => router.push('/account/change-password')}
-            >
-              <View style={styles.menuItemLeft}>
-                <View style={styles.menuIconWrap}>
-                  <Ionicons name="lock-closed-outline" size={18} color={semantic.textSecondary} />
-                </View>
-                <Text style={styles.menuItemText}>Đổi mật khẩu bảo mật</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.menuItem, styles.menuItemLast]}
-              onPress={() => refetch()}
-            >
-              <View style={styles.menuItemLeft}>
-                <View style={styles.menuIconWrap}>
-                  <Ionicons name="refresh-outline" size={18} color={semantic.textSecondary} />
-                </View>
-                <Text style={styles.menuItemText}>Đồng bộ lại dữ liệu tài khoản</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.logoutWrapper}>
+        {/* Email Verification Banner */}
+        {isLoggedIn && me?.emailVerified === false && (
+          <View style={styles.unverifiedBanner}>
+            <View style={styles.bannerRow}>
+              <Ionicons name="alert-circle-outline" size={18} color={semantic.warning} />
+              <Text style={styles.bannerTitle}>Địa chỉ email chưa xác thực</Text>
+            </View>
+            <Text style={styles.bannerDesc}>
+              Vui lòng mở liên kết trong email để kích hoạt đầy đủ quyền bảo mật và nhận chứng chỉ
+              tốt nghiệp.
+            </Text>
+            {resendMessage && (
+              <Text style={styles.resendNotice}>{resendMessage}</Text>
+            )}
             <Button
-              title="Đăng xuất khỏi thiết bị này"
+              title={
+                resendCooldown > 0
+                  ? `Gửi lại sau (${resendCooldown}s)`
+                  : 'Gửi lại thư xác thực'
+              }
               variant="outline"
-              loading={isLoggingOut}
-              onPress={handleLogout}
-              style={styles.logoutBtn}
-              textStyle={styles.logoutBtnText}
+              disabled={resendCooldown > 0 || isResending}
+              loading={isResending}
+              onPress={handleResendVerification}
+              style={styles.resendBtn}
+              textStyle={styles.resendBtnText}
             />
           </View>
-        </>
-      )}
+        )}
+
+        {/* Action / Menu Items */}
+        {!isLoggedIn ? (
+          <View style={styles.authBox}>
+            <Button
+              title="Đăng nhập tài khoản"
+              onPress={() => router.push('/(auth)/login')}
+            />
+            <Button
+              title="Đăng ký tài khoản mới"
+              variant="outline"
+              onPress={() => router.push('/(auth)/register')}
+            />
+          </View>
+        ) : (
+          <>
+            <Text variant="overline" style={styles.groupLabel}>
+              Học vụ
+            </Text>
+            <Card padded={false} style={styles.menuSection}>
+              <TouchableOpacity
+                style={[styles.menuItem, styles.menuItemLast]}
+                onPress={() => router.push('/account/certificates' as const)}
+                accessibilityRole="button"
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.menuIconWrap}>
+                    <Ionicons name="ribbon-outline" size={18} color={semantic.brandPrimary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.menuItemText}>Chứng chỉ tốt nghiệp</Text>
+                    <Text style={styles.menuItemSub}>
+                      Tải tệp PDF &amp; sao chép liên kết xác thực
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={semantic.textPlaceholder} />
+              </TouchableOpacity>
+            </Card>
+
+            <Text variant="overline" style={styles.groupLabel}>
+              Bảo mật &amp; Đồng bộ
+            </Text>
+            <Card padded={false} style={styles.menuSection}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => router.push('/account/profile')}
+                accessibilityRole="button"
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.menuIconWrap}>
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={18}
+                      color={semantic.textSecondary}
+                    />
+                  </View>
+                  <Text style={styles.menuItemText}>Cập nhật hồ sơ cá nhân</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={semantic.textPlaceholder} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => router.push('/account/change-password')}
+                accessibilityRole="button"
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.menuIconWrap}>
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={18}
+                      color={semantic.textSecondary}
+                    />
+                  </View>
+                  <Text style={styles.menuItemText}>Đổi mật khẩu bảo mật</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={semantic.textPlaceholder} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.menuItem, styles.menuItemLast]}
+                onPress={() => refetch()}
+                accessibilityRole="button"
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.menuIconWrap}>
+                    <Ionicons name="refresh-outline" size={18} color={semantic.textSecondary} />
+                  </View>
+                  <Text style={styles.menuItemText}>Đồng bộ lại dữ liệu tài khoản</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={semantic.textPlaceholder} />
+              </TouchableOpacity>
+            </Card>
+
+            <View style={styles.logoutWrapper}>
+              <Button
+                title="Đăng xuất khỏi thiết bị này"
+                variant="outline"
+                loading={isLoggingOut}
+                disabled={isLoggingOut}
+                onPress={handleLogout}
+                style={styles.logoutBtn}
+                textStyle={styles.logoutBtnText}
+              />
+            </View>
+          </>
+        )}
+      </ResponsiveContainer>
     </ScrollView>
   );
 }
@@ -229,24 +267,27 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
+  profileHeaderCard: {
+    padding: 18,
+  },
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: semantic.surfaceCard,
-    padding: 18,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
   },
   avatar: {
     width: 56,
     height: 56,
-    borderRadius: 12,
+    borderRadius: 28,
     backgroundColor: semantic.brandSoft,
     borderWidth: 1,
     borderColor: semantic.brandBorder,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarLetter: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: semantic.brandPrimary,
   },
   profileInfo: {
     marginLeft: 14,
@@ -254,16 +295,15 @@ const styles = StyleSheet.create({
   },
   identityOverline: {
     fontFamily: monoFontFamily,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     color: semantic.textMuted,
-    letterSpacing: 0.7,
     fontVariant: ['tabular-nums'],
     marginBottom: 2,
   },
   fullNameText: {
     fontSize: 18,
-    lineHeight: 23,
+    lineHeight: 24,
   },
   emailText: {
     marginTop: 2,
@@ -275,43 +315,11 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 10,
   },
-  roleBadge: {
-    backgroundColor: semantic.surfaceCanvas,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-  },
-  roleText: {
-    fontFamily: monoFontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
-    letterSpacing: 0.6,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: semantic.successSoft,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  verifiedBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: semantic.success,
-    letterSpacing: 0.5,
-  },
   unverifiedBanner: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: semantic.warningSoft,
     borderWidth: 1,
-    borderColor: '#FDE68A',
-    borderRadius: radius.md,
+    borderColor: semantic.warningBorder,
+    borderRadius: radius.card,
     padding: 14,
     marginTop: 14,
   },
@@ -321,14 +329,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   bannerTitle: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#B45309',
-    letterSpacing: 0.6,
+    color: semantic.warning,
   },
   bannerDesc: {
     fontSize: 12,
-    color: '#92400E',
+    color: semantic.warning,
     marginTop: 4,
     lineHeight: 18,
   },
@@ -340,11 +347,11 @@ const styles = StyleSheet.create({
   },
   resendBtn: {
     marginTop: 10,
-    minHeight: 38,
-    borderColor: '#F59E0B',
+    minHeight: 40,
+    borderColor: semantic.warningBorder,
   },
   resendBtnText: {
-    color: '#B45309',
+    color: semantic.warning,
     fontSize: 12,
     fontVariant: ['tabular-nums'],
   },
@@ -353,29 +360,22 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   groupLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: semantic.textMuted,
-    letterSpacing: 0.8,
     marginTop: 20,
     marginBottom: 8,
     marginLeft: 2,
   },
   menuSection: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
     overflow: 'hidden',
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 13,
+    paddingVertical: 14,
     paddingHorizontal: 14,
+    minHeight: 56,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: semantic.surfaceMuted,
   },
   menuItemLast: {
     borderBottomWidth: 0,
@@ -387,9 +387,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: radius.btn,
     backgroundColor: semantic.surfaceCanvas,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     color: semantic.textPrimary,
   },
   menuItemSub: {
-    fontSize: 11,
+    fontSize: 12,
     color: semantic.textMuted,
     marginTop: 2,
   },
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   logoutBtn: {
-    borderColor: '#FECACA',
+    borderColor: semantic.dangerBorder,
     backgroundColor: semantic.dangerSoft,
   },
   logoutBtnText: {

@@ -1,11 +1,6 @@
 // app/learn/lesson/[lessonId].tsx — Trình học bài giảng (Prev/Next, Visit, Completion & Certificate)
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,12 +12,15 @@ import {
 import { LessonContentViewer } from '../../../src/components/media/LessonContentViewer';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
+import { Badge } from '../../../src/components/ui/Badge';
+import { Card } from '../../../src/components/ui/Card';
 import { Loading } from '../../../src/components/ui/Loading';
 import { ErrorState } from '../../../src/components/ui/ErrorState';
+import { ResponsiveContainer } from '../../../src/components/ui/ResponsiveContainer';
 import { AppError } from '../../../src/api/problem';
 import { notify } from '../../../src/lib/dialog';
 import { webLinks } from '../../../src/lib/web-links';
-import { monoFontFamily, radius, semantic } from '../../../src/theme/tokens';
+import { layout, monoFontFamily, radius, semantic } from '../../../src/theme/tokens';
 
 export default function LessonLearnScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
@@ -70,12 +68,25 @@ export default function LessonLearnScreen() {
   }
 
   if (isError || !lesson) {
+    const appErr = error as unknown as AppError | null;
+    const isForbidden = appErr?.status === 403 || appErr?.code === 'NOT_ENROLLED';
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Bài giảng', headerBackTitle: 'Quay lại' }} />
         <ErrorState
-          message={error?.message || 'Không thể tải nội dung bài học.'}
-          onRetry={() => refetch()}
+          error={error}
+          icon={
+            isForbidden ? (
+              <Ionicons name="lock-closed-outline" size={26} color={semantic.warning} />
+            ) : undefined
+          }
+          message={
+            isForbidden
+              ? appErr?.message || 'Bạn cần ghi danh khóa học để truy cập bài học này.'
+              : error?.message || 'Không thể tải nội dung bài học.'
+          }
+          retryLabel={isForbidden ? 'Quay lại' : 'Thử lại'}
+          onRetry={() => (isForbidden ? router.back() : refetch())}
         />
       </View>
     );
@@ -118,7 +129,7 @@ export default function LessonLearnScreen() {
         }}
       />
 
-      {/* Modern Dark Cinema Media/Article Viewer */}
+      {/* Light-Mode Media/Article Viewer */}
       <LessonContentViewer
         contentType={lesson.contentType === 'video' ? 'video' : 'article'}
         videoUrl={lesson.videoUrl}
@@ -135,102 +146,102 @@ export default function LessonLearnScreen() {
 
       {/* Editorial Control, Prev/Next & Completion Panel */}
       <ScrollView contentContainerStyle={styles.infoScroll}>
-        <View style={styles.headerCard}>
-          <View style={styles.metaRow}>
-            <View style={styles.typeBadge}>
-              <Ionicons
-                name={
-                  lesson.contentType === 'video'
-                    ? 'videocam-outline'
-                    : 'document-text-outline'
+        <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+          <Card style={styles.headerCard}>
+            <View style={styles.metaRow}>
+              <Badge
+                variant="info"
+                label={lesson.contentType === 'video' ? 'Video bài giảng' : 'Tài liệu bài đọc'}
+                icon={
+                  <Ionicons
+                    name={
+                      lesson.contentType === 'video'
+                        ? 'videocam-outline'
+                        : 'document-text-outline'
+                    }
+                    size={13}
+                    color={semantic.brandPrimary}
+                  />
                 }
-                size={13}
-                color={semantic.brandPrimaryStrong}
               />
-              <Text style={styles.typeBadgeText}>
-                {lesson.contentType === 'video' ? 'VIDEO BÀI GIẢNG' : 'TÀI LIỆU BÀI ĐỌC'}
-              </Text>
+
+              {Boolean(lesson.durationSeconds) && (
+                <Text variant="caption" tabular style={styles.durationText}>
+                  {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
+                </Text>
+              )}
             </View>
 
-            {Boolean(lesson.durationSeconds) && (
-              <Text style={styles.durationText}>
-                {Math.ceil((lesson.durationSeconds || 0) / 60)} PHÚT
-              </Text>
-            )}
-          </View>
+            <Text variant="h2" style={styles.lessonTitle}>
+              {lesson.title}
+            </Text>
+          </Card>
 
-          <Text variant="h2" style={styles.lessonTitle}>
-            {lesson.title}
-          </Text>
-        </View>
-
-        {/* Prev / Next Navigation */}
-        {(lesson.prevLessonId || lesson.nextLessonId) && (
-          <View style={styles.navRow}>
-            <Button
-              title="← Bài trước"
-              variant="outline"
-              disabled={!lesson.prevLessonId}
-              onPress={() => {
-                if (lesson.prevLessonId) {
-                  router.replace(`/learn/lesson/${lesson.prevLessonId}` as const);
-                }
-              }}
-              style={styles.navButton}
-            />
-            <Button
-              title="Bài sau →"
-              variant="outline"
-              disabled={!lesson.nextLessonId}
-              onPress={() => {
-                if (lesson.nextLessonId) {
-                  router.replace(`/learn/lesson/${lesson.nextLessonId}` as const);
-                }
-              }}
-              style={styles.navButton}
-            />
-          </View>
-        )}
-
-        {/* Completion Action Box (Rule D-33 Manual Toggle) */}
-        <View style={[styles.completionBox, isCompleted && styles.completionBoxActive]}>
-          <View style={styles.completionHeader}>
-            <View
-              style={[
-                styles.statusIconWrap,
-                isCompleted ? styles.statusIconDone : styles.statusIconPending,
-              ]}
-            >
-              <Ionicons
-                name={isCompleted ? 'checkmark-outline' : 'hourglass-outline'}
-                size={20}
-                color={isCompleted ? semantic.success : semantic.accentAmber}
+          {/* Prev / Next Navigation */}
+          {(lesson.prevLessonId || lesson.nextLessonId) && (
+            <View style={styles.navRow}>
+              <Button
+                title="← Bài trước"
+                variant="outline"
+                disabled={!lesson.prevLessonId}
+                onPress={() => {
+                  if (lesson.prevLessonId) {
+                    router.replace(`/learn/lesson/${lesson.prevLessonId}` as const);
+                  }
+                }}
+                style={styles.navButton}
+              />
+              <Button
+                title="Bài tiếp theo →"
+                variant="outline"
+                disabled={!lesson.nextLessonId}
+                onPress={() => {
+                  if (lesson.nextLessonId) {
+                    router.replace(`/learn/lesson/${lesson.nextLessonId}` as const);
+                  }
+                }}
+                style={styles.navButton}
               />
             </View>
-            <View style={styles.completionHeaderText}>
-              <Text style={styles.completionOverline}>
-                TRẠNG THÁI GHI NHẬN // QUY TẮC D-33
-              </Text>
-              <Text style={styles.completionStatusTitle}>
-                {isCompleted ? 'Đã hoàn thành bài học này' : 'Chưa đánh dấu hoàn thành'}
-              </Text>
-              <Text style={styles.completionStatusDesc}>
-                {isCompleted
-                  ? 'Tiến độ bài giảng đã được đồng bộ lên máy chủ và tính vào điều kiện cấp chứng chỉ.'
-                  : 'Xác nhận hoàn thành thủ công sau khi bạn đã nắm vững nội dung bài giảng.'}
-              </Text>
-            </View>
-          </View>
+          )}
 
-          <Button
-            title={isCompleted ? 'Bỏ đánh dấu hoàn thành' : 'Xác nhận hoàn thành bài học'}
-            variant={isCompleted ? 'outline' : 'primary'}
-            onPress={handleToggleCompletion}
-            loading={isUpdatingCompletion}
-            disabled={isUpdatingCompletion}
-            style={styles.toggleButton}
-          />
-        </View>
+          {/* Completion Action Card */}
+          <Card style={[styles.completionBox, isCompleted && styles.completionBoxActive]}>
+            <View style={styles.completionHeader}>
+              <View
+                style={[
+                  styles.statusIconWrap,
+                  isCompleted ? styles.statusIconDone : styles.statusIconPending,
+                ]}
+              >
+                <Ionicons
+                  name={isCompleted ? 'checkmark-circle-outline' : 'hourglass-outline'}
+                  size={20}
+                  color={isCompleted ? semantic.success : semantic.warning}
+                />
+              </View>
+              <View style={styles.completionHeaderText}>
+                <Text style={styles.completionStatusTitle}>
+                  {isCompleted ? 'Đã hoàn thành bài học này' : 'Chưa đánh dấu hoàn thành'}
+                </Text>
+                <Text style={styles.completionStatusDesc}>
+                  {isCompleted
+                    ? 'Tiến độ bài giảng đã được đồng bộ lên máy chủ và tính vào điều kiện cấp chứng chỉ.'
+                    : 'Đánh dấu hoàn thành sau khi bạn đã nắm vững nội dung bài giảng.'}
+                </Text>
+              </View>
+            </View>
+
+            <Button
+              title={isCompleted ? 'Bỏ đánh dấu hoàn thành' : 'Đánh dấu hoàn thành'}
+              variant={isCompleted ? 'outline' : 'primary'}
+              onPress={handleToggleCompletion}
+              loading={isUpdatingCompletion}
+              disabled={isUpdatingCompletion}
+              style={styles.toggleButton}
+            />
+          </Card>
+        </ResponsiveContainer>
       </ScrollView>
 
       {/* Certificate Congratulation Modal */}
@@ -241,9 +252,9 @@ export default function LessonLearnScreen() {
         onRequestClose={() => setIssuedCertCode(null)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+          <Card style={styles.modalCard}>
             <View style={styles.certIconWrap}>
-              <Ionicons name="ribbon" size={36} color={semantic.brandPrimaryStrong} />
+              <Ionicons name="ribbon-outline" size={34} color={semantic.brandPrimary} />
             </View>
             <Text variant="h2" style={styles.modalTitle}>
               Hoàn thành khóa học!
@@ -273,7 +284,7 @@ export default function LessonLearnScreen() {
                 style={styles.modalActionBtn}
               />
             </View>
-          </View>
+          </Card>
         </View>
       </Modal>
     </View>
@@ -290,11 +301,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerCard: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    padding: 16,
     marginBottom: 14,
   },
   metaRow: {
@@ -303,29 +309,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  typeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: semantic.brandSoft,
-    borderWidth: 1,
-    borderColor: semantic.brandBorder,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  typeBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
-    letterSpacing: 0.6,
-  },
   durationText: {
-    fontFamily: monoFontFamily,
-    fontSize: 11,
-    fontWeight: '700',
     color: semantic.textMuted,
-    fontVariant: ['tabular-nums'],
+    fontWeight: '600',
   },
   lessonTitle: {
     fontSize: 19,
@@ -341,15 +327,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   completionBox: {
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.md,
-    padding: 16,
-    borderWidth: 1,
     borderColor: semantic.borderSubtle,
   },
   completionBoxActive: {
-    borderColor: '#A7F3D0',
-    backgroundColor: '#F0FDF4',
+    borderColor: semantic.successBorder,
+    backgroundColor: semantic.successSoft,
   },
   completionHeader: {
     flexDirection: 'row',
@@ -360,28 +342,21 @@ const styles = StyleSheet.create({
   statusIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 8,
+    borderRadius: radius.btn,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
   statusIconDone: {
-    backgroundColor: '#DCFCE7',
-    borderColor: '#86EFAC',
+    backgroundColor: semantic.surfaceCard,
+    borderColor: semantic.successBorder,
   },
   statusIconPending: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#FDE68A',
+    backgroundColor: semantic.warningSoft,
+    borderColor: semantic.warningBorder,
   },
   completionHeaderText: {
     flex: 1,
-  },
-  completionOverline: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: semantic.textMuted,
-    letterSpacing: 0.7,
-    marginBottom: 2,
   },
   completionStatusTitle: {
     fontSize: 15,
@@ -399,7 +374,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -407,18 +382,16 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.lg,
     padding: 24,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
   },
   certIconWrap: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: semantic.brandSoft,
+    borderWidth: 1,
+    borderColor: semantic.brandBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -436,10 +409,8 @@ const styles = StyleSheet.create({
   },
   certCodeBox: {
     width: '100%',
-    backgroundColor: semantic.surfaceSubtle,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
+    backgroundColor: semantic.surfaceCanvas,
+    borderRadius: radius.btn,
     padding: 12,
     alignItems: 'center',
     marginBottom: 18,
@@ -448,14 +419,15 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: semantic.textMuted,
-    letterSpacing: 0.8,
+    letterSpacing: 0.7,
     marginBottom: 4,
   },
   certCodeValue: {
     fontFamily: monoFontFamily,
     fontSize: 16,
     fontWeight: '700',
-    color: semantic.brandPrimaryStrong,
+    color: semantic.brandPrimary,
+    fontVariant: ['tabular-nums'],
   },
   modalActions: {
     flexDirection: 'row',

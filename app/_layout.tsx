@@ -20,6 +20,7 @@ import { Text } from '../src/components/ui/Text';
 import { parseAppError } from '../src/api/problem';
 import { subscribeSessionExpired, useSessionStore } from '../src/store/session';
 import { notify } from '../src/lib/dialog';
+import { initializeAds } from '../src/lib/ads';
 import { semantic } from '../src/theme/tokens';
 
 function RootNavigator() {
@@ -73,7 +74,7 @@ function RootNavigator() {
       <View style={styles.stackWrap}>
         <Stack
           screenOptions={{
-            headerStyle: { backgroundColor: semantic.surfaceCanvas },
+            headerStyle: { backgroundColor: semantic.surfacePage },
             headerShadowVisible: false,
             headerTintColor: semantic.textPrimary,
             headerTitleStyle: {
@@ -103,6 +104,10 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    void initializeAds();
+  }, []);
+
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const subscription = AppState.addEventListener('change', (status: AppStateStatus) => {
@@ -190,9 +195,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   offlineBannerWrap: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: semantic.warningSoft,
     borderBottomWidth: 1,
-    borderBottomColor: '#FDE68A',
+    borderBottomColor: semantic.warningBorder,
   },
   offlineBanner: {
     flexDirection: 'row',
@@ -210,14 +215,14 @@ const styles = StyleSheet.create({
   offlineText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#92400E',
+    color: semantic.warning,
   },
   retryButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#D97706',
-    minHeight: 32,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: semantic.warning,
+    minHeight: 44,
     justifyContent: 'center',
   },
   retryText: {

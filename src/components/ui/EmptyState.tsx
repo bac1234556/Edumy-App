@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from './Button';
-import { semantic, radius } from '../../theme/tokens';
+import { semantic, radius, microShadow } from '../../theme/tokens';
 
 interface EmptyStateProps {
   title: string;
@@ -22,7 +22,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.box}>
+      <View style={[styles.box, microShadow]}>
         <View style={styles.iconFrame}>
           {icon || <Ionicons name="folder-open-outline" size={26} color={semantic.brandPrimary} />}
         </View>
@@ -46,12 +46,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+    backgroundColor: semantic.surfaceCanvas,
   },
   box: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 420,
     backgroundColor: semantic.surfaceCard,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
     padding: 24,
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   iconFrame: {
     width: 52,
     height: 52,
-    borderRadius: 12,
+    borderRadius: radius.card,
     backgroundColor: semantic.brandSoft,
     borderWidth: 1,
     borderColor: semantic.brandBorder,
@@ -80,10 +81,10 @@ const styles = StyleSheet.create({
     color: semantic.textSecondary,
     marginTop: 6,
     textAlign: 'center',
-    lineHeight: 19,
+    lineHeight: 20,
   },
   actionButton: {
     marginTop: 18,
-    minWidth: 160,
+    minWidth: 168,
   },
 });

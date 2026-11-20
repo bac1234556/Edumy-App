@@ -2,12 +2,16 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useLessonPreview } from '../../../../src/features/catalog/hooks';
 import { LessonContentViewer } from '../../../../src/components/media/LessonContentViewer';
 import { Text } from '../../../../src/components/ui/Text';
+import { Badge } from '../../../../src/components/ui/Badge';
+import { Card } from '../../../../src/components/ui/Card';
 import { Loading } from '../../../../src/components/ui/Loading';
 import { ErrorState } from '../../../../src/components/ui/ErrorState';
-import { Ionicons } from '@expo/vector-icons';
+import { ResponsiveContainer } from '../../../../src/components/ui/ResponsiveContainer';
+import { layout, semantic } from '../../../../src/theme/tokens';
 
 export default function LessonPreviewScreen() {
   const { slug, lessonId } = useLocalSearchParams<{ slug: string; lessonId: string }>();
@@ -25,6 +29,7 @@ export default function LessonPreviewScreen() {
   if (isError || !lesson) {
     return (
       <ErrorState
+        error={error}
         message={error?.message || 'Không thể tải bài học xem trước.'}
         onRetry={() => refetch()}
       />
@@ -40,7 +45,7 @@ export default function LessonPreviewScreen() {
         }}
       />
 
-      {/* Media or Content Viewer */}
+      {/* Light-mode Media or Article Viewer */}
       <LessonContentViewer
         contentType={lesson.contentType === 'video' ? 'video' : 'article'}
         videoUrl={lesson.videoUrl}
@@ -50,21 +55,26 @@ export default function LessonPreviewScreen() {
 
       {/* Lesson Details Info */}
       <ScrollView contentContainerStyle={styles.infoContainer}>
-        <View style={styles.badgeRow}>
-          <View style={styles.previewTag}>
-            <Ionicons name="eye-outline" size={13} color="#0D9488" />
-            <Text style={styles.previewTagText}>Học thử miễn phí</Text>
-          </View>
-          {Boolean(lesson.durationSeconds) && (
-            <Text style={styles.durationText}>
-              {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
-            </Text>
-          )}
-        </View>
+        <ResponsiveContainer maxWidth={layout.maxContentWidth}>
+          <Card>
+            <View style={styles.badgeRow}>
+              <Badge
+                variant="info"
+                label="Học thử miễn phí"
+                icon={<Ionicons name="eye-outline" size={13} color={semantic.brandPrimary} />}
+              />
+              {Boolean(lesson.durationSeconds) && (
+                <Text variant="caption" tabular style={styles.durationText}>
+                  {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
+                </Text>
+              )}
+            </View>
 
-        <Text variant="h2" style={styles.title}>
-          {lesson.title}
-        </Text>
+            <Text variant="h2" style={styles.title}>
+              {lesson.title}
+            </Text>
+          </Card>
+        </ResponsiveContainer>
       </ScrollView>
     </View>
   );
@@ -73,69 +83,23 @@ export default function LessonPreviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: semantic.surfaceCanvas,
   },
   infoContainer: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  previewTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E6FFFA',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginRight: 10,
-  },
-  previewTagText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0D9488',
-    marginLeft: 4,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   durationText: {
-    fontSize: 12,
-    color: '#64748B',
+    color: semantic.textMuted,
+    fontWeight: '600',
   },
   title: {
-    color: '#0F172A',
-    marginBottom: 6,
-  },
-  chapterSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 16,
-  },
-  courseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginTop: 8,
-  },
-  courseMeta: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  courseMetaLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  courseMetaTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
-    marginTop: 2,
+    color: semantic.textPrimary,
   },
 });

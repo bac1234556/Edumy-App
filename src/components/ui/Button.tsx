@@ -20,6 +20,7 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   icon?: React.ReactNode;
+  accessibilityLabel?: string;
 }
 
 export function Button({
@@ -31,15 +32,24 @@ export function Button({
   style,
   textStyle,
   icon,
+  accessibilityLabel,
 }: ButtonProps) {
   const isInteractive = !loading && !disabled;
 
+  const spinnerColor =
+    variant === 'outline'
+      ? semantic.textPrimary
+      : variant === 'secondary'
+        ? semantic.brandPrimaryStrong
+        : '#FFFFFF';
+
   return (
     <TouchableOpacity
-      activeOpacity={0.78}
+      activeOpacity={0.82}
       onPress={isInteractive ? onPress : undefined}
       disabled={!isInteractive}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ disabled: !isInteractive, busy: loading }}
       style={[
         styles.base,
@@ -49,10 +59,7 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'outline' || variant === 'secondary' ? semantic.textPrimary : '#FFFFFF'}
-        />
+        <ActivityIndicator size="small" color={spinnerColor} />
       ) : (
         <>
           {icon}
@@ -75,9 +82,9 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 46,
-    borderRadius: radius.md,
-    paddingHorizontal: 18,
+    minHeight: 44,
+    borderRadius: radius.btn,
+    paddingHorizontal: 16,
     paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
@@ -87,23 +94,22 @@ const styles = StyleSheet.create({
   },
   primary: {
     backgroundColor: semantic.brandPrimary,
-    borderColor: semantic.brandPrimaryStrong,
+    borderColor: semantic.brandPrimary,
   },
   secondary: {
-    backgroundColor: '#F1F5F9',
-    borderColor: semantic.borderSubtle,
+    backgroundColor: semantic.brandSoft,
+    borderColor: semantic.brandBorder,
   },
   outline: {
     backgroundColor: semantic.surfaceCard,
-    borderWidth: 1,
     borderColor: semantic.borderStrong,
   },
   danger: {
     backgroundColor: semantic.danger,
-    borderColor: '#B91C1C',
+    borderColor: semantic.danger,
   },
   disabled: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: semantic.surfaceMuted,
     borderColor: semantic.borderSubtle,
   },
   textBase: {
@@ -117,7 +123,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   secondaryText: {
-    color: semantic.textPrimary,
+    color: semantic.brandPrimaryStrong,
   },
   outlineText: {
     color: semantic.textPrimary,
@@ -126,7 +132,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   disabledText: {
-    color: '#94A3B8',
+    color: semantic.textPlaceholder,
   },
   textWithIcon: {
     marginLeft: 8,

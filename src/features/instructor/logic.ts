@@ -2,8 +2,12 @@
 // Pure business logic, BR-PAY-HOLD formatters, validation & labels for Instructor Channel.
 
 import { z } from 'zod';
-import { formatDateTimeDmY } from '../../lib/date';
+import { formatDate, formatDateTimeDmY } from '../../lib/date';
 import { AppError } from '../../api/problem';
+
+export const DEFAULT_MIN_WITHDRAWAL = 1000000;
+export const DEFAULT_MAX_WITHDRAWALS_PER_MONTH = 1;
+const WITHDRAWAL_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 
 export interface WithdrawalStatusInfo {
   label: string;
@@ -79,7 +83,7 @@ export interface WithdrawalValidationResult {
 export function validateWithdrawalAmount(
   amount: number,
   availableBalance: number,
-  minWithdrawal: number = 100000
+  minWithdrawal: number = DEFAULT_MIN_WITHDRAWAL
 ): WithdrawalValidationResult {
   if (isNaN(amount) || amount <= 0) {
     return { valid: false, message: 'Vui lòng nhập số tiền hợp lệ.' };
@@ -149,7 +153,7 @@ export type WithdrawalErrorResolution =
 
 export function resolveWithdrawalErrorAction(
   appError: Pick<AppError, 'code' | 'message'>,
-  minWithdrawal: number = 100000
+  minWithdrawal: number = DEFAULT_MIN_WITHDRAWAL
 ): WithdrawalErrorResolution {
   switch (appError.code) {
     case 'PAYOUT_ACCOUNT_REQUIRED':
@@ -165,6 +169,13 @@ export function resolveWithdrawalErrorAction(
         message:
           appError.message ||
           'Bạn đang có một yêu cầu rút tiền đang chờ duyệt. Vui lòng kiểm tra danh sách yêu cầu.',
+      };
+    case 'WITHDRAWAL_MONTHLY_LIMIT_REACHED':
+      return {
+        action: 'banner_error',
+        message:
+          appError.message ||
+          'Mỗi tháng chỉ được rút tiền 1 lần. Bạn đã thực hiện rút tiền trong tháng này, vui lòng thử lại vào tháng sau.',
       };
     case 'WITHDRAWAL_EXCEEDS_BALANCE':
       return {
@@ -184,4 +195,60 @@ export function resolveWithdrawalErrorAction(
         message: appError.message || 'Không thể tạo yêu cầu rút tiền.',
       };
   }
+}
+
+export interface MonthlyWithdrawalStatus {
+  limitReached: boolean;
+  maxPerMonth: number;
+  message: string | null;
+}
+
+function toVietnamYearMonth(isoOrDate: Date | string): string | null {
+  const date = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  if (isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    timeZone: WITHDRAWAL_TIME_ZONE,
+  }).formatToParts(date);
+  const year = parts.find((p) => p.type === 'year')?.value;
+  const month = parts.find((p) => p.type === 'month')?.value;
+  return year && month ? `${year}-${month}` : null;
+}
+
+export function resolveMonthlyWithdrawalStatus(
+  summary?: {
+    canWithdrawThisMonth?: boolean;
+    maxWithdrawalsPerMonth?: number;
+    nextWithdrawalAt?: string;
+  },
+  withdrawals?: { status?: string; createdAt?: string }[],
+  now: Date = new Date()
+): MonthlyWithdrawalStatus {
+  const maxPerMonth = summary?.maxWithdrawalsPerMonth ?? DEFAULT_MAX_WITHDRAWALS_PER_MONTH;
+  let limitReached = summary?.canWithdrawThisMonth === false;
+
+  if (summary?.canWithdrawThisMonth === undefined && maxPerMonth > 0 && withdrawals?.length) {
+    const currentMonth = toVietnamYearMonth(now);
+    if (currentMonth) {
+      const usedInMonth = withdrawals.filter((item) => {
+        const status = item.status?.toLowerCase();
+        if (status !== 'requested' && status !== 'paid') return false;
+        if (!item.createdAt) return false;
+        return toVietnamYearMonth(item.createdAt) === currentMonth;
+      }).length;
+      limitReached = usedInMonth >= maxPerMonth;
+    }
+  }
+
+  if (!limitReached) {
+    return { limitReached: false, maxPerMonth, message: null };
+  }
+
+  const nextDate = formatDate(summary?.nextWithdrawalAt);
+  const message = nextDate
+    ? `Bạn đã sử dụng lượt rút tiền tháng này (tối đa ${maxPerMonth} lần/tháng). Lượt tiếp theo từ ${nextDate}.`
+    : `Mỗi tháng chỉ được rút tiền tối đa ${maxPerMonth} lần. Bạn đã thực hiện rút tiền trong tháng này, vui lòng thử lại vào tháng sau.`;
+
+  return { limitReached: true, maxPerMonth, message };
 }
