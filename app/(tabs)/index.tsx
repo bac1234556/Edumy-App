@@ -18,8 +18,10 @@ import { EmptyState } from '../../src/components/ui/EmptyState';
 import { ResponsiveContainer } from '../../src/components/ui/ResponsiveContainer';
 import { AdBanner } from '../../src/components/ui/AdBanner';
 import { CourseCard } from '../../src/features/catalog/components/CourseCard';
+import { SortPicker } from '../../src/features/catalog/components/SortPicker';
 import { useCourses, useCategories } from '../../src/features/catalog/hooks';
 import { CourseFilterParams, CourseCard as CourseCardType } from '../../src/features/catalog/api';
+import { CatalogSortOption } from '../../src/features/catalog/logic';
 import { usePromotedCourses } from '../../src/features/ads/hooks';
 import { PromotedCoursesBanner } from '../../src/features/ads/components/PromotedCoursesBanner';
 import { CoursePromoModal } from '../../src/features/ads/components/CoursePromoModal';
@@ -30,7 +32,7 @@ export default function CatalogScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
   const [selectedPrice, setSelectedPrice] = useState<'free' | 'paid' | undefined>(undefined);
-  const [sortOption, setSortOption] = useState<'newest' | 'rating' | 'price_asc' | 'price_desc'>('newest');
+  const [sortOption, setSortOption] = useState<CatalogSortOption>('newest');
 
   const filterParams: CourseFilterParams = {
     q: searchQuery.trim() || undefined,
@@ -165,28 +167,7 @@ export default function CatalogScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.sortBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Đổi thứ tự sắp xếp khóa học"
-              onPress={() => {
-                const nextSort: Record<string, 'newest' | 'rating' | 'price_asc' | 'price_desc'> = {
-                  newest: 'rating',
-                  rating: 'price_asc',
-                  price_asc: 'price_desc',
-                  price_desc: 'newest',
-                };
-                setSortOption(nextSort[sortOption]);
-              }}
-            >
-              <Ionicons name="swap-vertical-outline" size={15} color={semantic.brandPrimary} />
-              <Text style={styles.sortBtnText}>
-                {sortOption === 'newest' && 'Mới nhất'}
-                {sortOption === 'rating' && 'Đánh giá cao'}
-                {sortOption === 'price_asc' && 'Giá tăng dần'}
-                {sortOption === 'price_desc' && 'Giá giảm dần'}
-              </Text>
-            </TouchableOpacity>
+            <SortPicker value={sortOption} onChange={setSortOption} />
           </View>
         </ResponsiveContainer>
       </View>
@@ -349,23 +330,6 @@ const styles = StyleSheet.create({
   priceBtnTextActive: {
     color: semantic.brandPrimary,
     fontWeight: '700',
-  },
-  sortBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    minHeight: 36,
-    borderRadius: radius.btn,
-    borderWidth: 1,
-    borderColor: semantic.borderSubtle,
-    backgroundColor: semantic.surfaceCard,
-  },
-  sortBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: semantic.textPrimary,
   },
   heroCard: {
     backgroundColor: semantic.surfaceCard,

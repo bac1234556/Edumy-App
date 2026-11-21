@@ -1,8 +1,34 @@
 // src/features/catalog/__tests__/logic.test.ts
-// Unit tests for resolveCourseAction (BR-MOBILE-SCOPE) and video helper.
+// Unit tests for catalog sort helpers, resolveCourseAction (BR-MOBILE-SCOPE) and video helper.
 
-import { resolveCourseAction } from '../logic';
+import {
+  CATALOG_SORT_OPTIONS,
+  getSortLabel,
+  resolveCourseAction,
+} from '../logic';
+import type { CourseFilterParams } from '../api';
 import { isNativeVideoUrl } from '../../../components/media/LessonContentViewer';
+
+describe('CATALOG_SORT_OPTIONS & getSortLabel', () => {
+  it('contains all 4 sort options matching CourseFilterParams["sort"]', () => {
+    const expectedValues: NonNullable<CourseFilterParams['sort']>[] = [
+      'newest',
+      'rating',
+      'price_asc',
+      'price_desc',
+    ];
+
+    expect(CATALOG_SORT_OPTIONS).toHaveLength(4);
+    expect(CATALOG_SORT_OPTIONS.map((item) => item.value)).toEqual(expectedValues);
+  });
+
+  it('returns the exact Vietnamese label for each sort value', () => {
+    expect(getSortLabel('newest')).toBe('Mới nhất');
+    expect(getSortLabel('rating')).toBe('Đánh giá cao');
+    expect(getSortLabel('price_asc')).toBe('Giá tăng dần');
+    expect(getSortLabel('price_desc')).toBe('Giá giảm dần');
+  });
+});
 
 describe('resolveCourseAction (BR-MOBILE-SCOPE)', () => {
   it('returns null action and instructor notice when viewer is instructor', () => {

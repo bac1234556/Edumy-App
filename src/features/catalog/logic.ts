@@ -1,5 +1,25 @@
 // src/features/catalog/logic.ts
-// Pure business logic for course action resolution (BR-MOBILE-SCOPE).
+// Pure business logic for catalog sorting and course action resolution (BR-MOBILE-SCOPE).
+
+import type { CourseFilterParams } from './api';
+
+export type CatalogSortOption = NonNullable<CourseFilterParams['sort']>;
+
+export interface CatalogSortOptionItem {
+  readonly value: CatalogSortOption;
+  readonly label: string;
+}
+
+export const CATALOG_SORT_OPTIONS: readonly CatalogSortOptionItem[] = [
+  { value: 'newest', label: 'Mới nhất' },
+  { value: 'rating', label: 'Đánh giá cao' },
+  { value: 'price_asc', label: 'Giá tăng dần' },
+  { value: 'price_desc', label: 'Giá giảm dần' },
+] as const;
+
+export function getSortLabel(value: CatalogSortOption): string {
+  return CATALOG_SORT_OPTIONS.find((option) => option.value === value)?.label ?? 'Mới nhất';
+}
 
 export interface CourseViewerState {
   owned?: boolean;
