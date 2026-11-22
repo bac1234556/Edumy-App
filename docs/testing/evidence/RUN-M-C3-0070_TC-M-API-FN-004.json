@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C3-0070",
+  "cycle": "C3",
+  "tcId": "TC-M-API-FN-004",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "[Hồi quy C3] 6/6 endpoint Học tập (enrollments, my enrollments, learn room, lesson detail, visit, completion) khớp 100% schema openapi.json.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C3 Regression) / Jest 29.7 (131/131 PASS) / Expo Web / edumy-test",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "Hồi quy C3 đạt PASS",
+  "regressionCycle": "C3",
+  "previousRunId": "RUN-M-C1-0082",
+  "meStatus": 200,
+  "learnStatus": 200
+}

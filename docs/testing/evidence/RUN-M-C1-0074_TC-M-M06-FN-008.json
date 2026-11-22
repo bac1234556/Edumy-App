@@ -1,0 +1,22 @@
+{
+  "runId": "RUN-M-C1-0074",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-008",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "PUT /me/payout-account=200 (bankName=Vietcombank, accountNumberLast4='5544', 0 trường accountNumber đầy đủ).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:19+07:00",
+  "note": "",
+  "payoutUpd": {
+    "bankName": "Vietcombank",
+    "accountNumberLast4": "5544",
+    "accountHolder": "NGUYEN VAN GVA",
+    "updatedAt": "2026-11-22T07:15:19.555580352"
+  }
+}

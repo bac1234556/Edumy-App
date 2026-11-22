@@ -1,0 +1,19 @@
+{
+  "runId": "RUN-M-C1-0062",
+  "cycle": "C1",
+  "tcId": "TC-M-M04-FN-004",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Fail",
+  "actual": "HV2 phản hồi câu hỏi của HV1=403 (403); HV2 xóa câu hỏi của HV1=403 (403); nhưng HV2 gọi POST /questions/496/resolve lại trả 200 (thay vì 403 FORBIDDEN — QaService.resolveQuestion thiếu kiểm tra chủ sở hữu/giảng viên, mặc dù UI Edumy-App ẩn nút qua canManageQuestion).",
+  "defectId": "DEF-M-002",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:15+07:00",
+  "note": "Lỗi phân quyền Backend trên POST /api/v1/questions/{id}/resolve",
+  "hv2AnsOther": 403,
+  "hv2ResOther": 200,
+  "hv2DelOther": 403
+}

@@ -1,0 +1,17 @@
+{
+  "runId": "RUN-M-C1-0031",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-SEC-001",
+  "module": "M-M08",
+  "type": "SEC",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "Tất cả Base URL được nạp tập trung từ src/config/env.ts (EXPO_PUBLIC_API_BASE_URL, EXPO_PUBLIC_WEB_BASE_URL); hardcodedUrlsOutsideEnv=0; 0 secret hardcode trong app/ & src/.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "hardcodedUrlsOutsideEnv": []
+}

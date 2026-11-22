@@ -1,0 +1,19 @@
+{
+  "runId": "RUN-M-C1-0076",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-SEC-002",
+  "module": "M-M06",
+  "type": "SEC",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "HV2 gọi /instructor/overview=403; GV-B xem học viên khóa GV-A=403; GV-B hủy lệnh rút của GV-A=404.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:19+07:00",
+  "note": "",
+  "hv2InstOverview": 403,
+  "gvbStudentsGva": 403,
+  "gvbCancelGvaWd": 404
+}

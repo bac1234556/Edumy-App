@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C1-0089",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-USA-001",
+  "module": "M-M08",
+  "type": "USA",
+  "priority": "Medium",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "100% nhãn giao diện và thông báo lỗi bằng tiếng Việt có dấu; formatVnd(300000)='300.000 đ', formatVnd(0)='Miễn phí' (MoneyText tabular-nums); formatDate='22/11/2026' (dd/MM/yyyy); ResponsiveContainer + Screen thích ứng viewport 360x800 không tràn ngang.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Expo Web Bundle (http://localhost:8082, dist-web-qa) / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:29+07:00",
+  "note": "",
+  "hasViCurrency": true,
+  "sampleVnd": "300.000 đ",
+  "sampleDate": "22/11/2026",
+  "hasResponsiveContainer": true
+}

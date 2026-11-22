@@ -1,0 +1,33 @@
+{
+  "runId": "RUN-M-C1-0045",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-004",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Pairwise Catalog: freeAllZero=true (n=11), priceAscSorted=true, priceDescSorted=true, ratingSearch=200 (n=5).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:54:20+07:00",
+  "note": "",
+  "freeAllZero": true,
+  "ascOk": true,
+  "descOk": true,
+  "sampleAsc": [
+    10000,
+    60000,
+    100000,
+    130000,
+    200000
+  ],
+  "sampleDesc": [
+    1890000,
+    1850000,
+    1790000,
+    1650000,
+    1590000
+  ]
+}

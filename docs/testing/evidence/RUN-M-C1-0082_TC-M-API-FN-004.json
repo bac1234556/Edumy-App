@@ -1,0 +1,66 @@
+{
+  "runId": "RUN-M-C1-0082",
+  "cycle": "C1",
+  "tcId": "TC-M-API-FN-004",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "6/6 endpoint Học tập (enrollments, my enrollments, learn room, lesson detail, visit, completion) khớp 100% schema openapi.json.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:28+07:00",
+  "note": "",
+  "endpoints": [
+    {
+      "apiId": "API-15",
+      "method": "POST",
+      "path": "/api/v1/courses/{courseId}/enrollments",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-16",
+      "method": "GET",
+      "path": "/api/v1/me/enrollments",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-17",
+      "method": "GET",
+      "path": "/api/v1/learn/courses/{courseId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-18",
+      "method": "GET",
+      "path": "/api/v1/learn/lessons/{lessonId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-19",
+      "method": "POST",
+      "path": "/api/v1/learn/lessons/{lessonId}/visit",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    },
+    {
+      "apiId": "API-20",
+      "method": "PUT",
+      "path": "/api/v1/learn/lessons/{lessonId}/completion",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    }
+  ]
+}

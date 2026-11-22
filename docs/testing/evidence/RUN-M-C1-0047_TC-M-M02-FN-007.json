@@ -1,0 +1,22 @@
+{
+  "runId": "RUN-M-C1-0047",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-007",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "GET /catalog/courses/kien-truc-microservices-chuyen-sau-0fe09d: isFree=false, HV2 viewer={\"owned\":false,\"isInstructor\":false}, Guest viewer=null -> resolveCourseAction trả BUY_ON_WEB ('Mua trên website' -> http://localhost:3002/courses/1076).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:14+07:00",
+  "note": "",
+  "hv2Viewer": {
+    "owned": false,
+    "isInstructor": false
+  },
+  "guestViewer": null,
+  "targetUrl": "http://localhost:3002/courses/1076"
+}

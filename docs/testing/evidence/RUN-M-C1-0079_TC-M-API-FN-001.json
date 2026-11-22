@@ -1,0 +1,66 @@
+{
+  "runId": "RUN-M-C1-0079",
+  "cycle": "C1",
+  "tcId": "TC-M-API-FN-001",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "6/6 endpoint Auth Mobile khớp 100% hợp đồng api-contract-v2.md & schema MobileTokensDto / 204 No Content / 429 Retry-After.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:28+07:00",
+  "note": "",
+  "endpoints": [
+    {
+      "apiId": "API-01",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/register",
+      "status": 201,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-02",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/login",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-03",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/refresh",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-04",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/logout",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    },
+    {
+      "apiId": "API-05",
+      "method": "POST",
+      "path": "/api/v1/auth/forgot-password",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-06",
+      "method": "POST",
+      "path": "/api/v1/auth/verification-email/resend",
+      "status": 429,
+      "matched": true,
+      "note": "200 OK / 429 EMAIL_RESEND_TOO_SOON + Retry-After"
+    }
+  ]
+}

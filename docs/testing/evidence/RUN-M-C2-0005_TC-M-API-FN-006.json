@@ -1,0 +1,18 @@
+{
+  "runId": "RUN-M-C2-0005",
+  "cycle": "C2",
+  "tcId": "TC-M-API-FN-006",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "[Fixed DEF-M-004 & DEF-M-001] 7/7 endpoint Kênh Giảng viên khớp 100% hợp đồng (API-26 GET /instructor/courses/49/students rawHasEmail=false); đồng thời PUT /me/payout-account khi sai mật khẩu trả đúng 422 code='CURRENT_PASSWORD_INCORRECT' (đóng DEF-M-001 & DEF-M-004).",
+  "defectId": "DEF-M-004",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "Đã đóng DEF-M-004 & DEF-M-001 ở Chu kỳ C2",
+  "rawHasEmail": false,
+  "payoutErrorCode": "CURRENT_PASSWORD_INCORRECT"
+}

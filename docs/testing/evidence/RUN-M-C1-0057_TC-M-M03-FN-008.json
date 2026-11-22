@@ -1,0 +1,28 @@
+{
+  "runId": "RUN-M-C1-0057",
+  "cycle": "C1",
+  "tcId": "TC-M-M03-FN-008",
+  "module": "M-M03",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Hoàn thành bài cuối 3/3: progressPercent=100%, certificateJustIssued=true, certificateCode='EDUMY-E3BEFBD2DF'.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:15+07:00",
+  "note": "",
+  "finalComp": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "lessonId": 1227,
+      "completed": true,
+      "progressPercent": 100,
+      "certificateCode": "EDUMY-E3BEFBD2DF",
+      "certificateJustIssued": true
+    },
+    "errors": null
+  }
+}

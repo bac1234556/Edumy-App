@@ -1,0 +1,29 @@
+{
+  "runId": "RUN-M-C1-0017",
+  "cycle": "C1",
+  "tcId": "TC-M-M05-FN-005",
+  "module": "M-M05",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "certificates/logic.test.ts PASS (2 tests); GET /me/certificates/EDUMY-BBD78DB934/pdf trả 200 (application/pdf;charset=UTF-8, magic='%PDF', size=34765 bytes).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:09+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 2,
+    "numFailing": 0,
+    "titles": [
+      "downloadAndShareCertificate downloads PDF with Bearer *** and invokes Sharing [passed]",
+      "copyCertificateVerificationLink copies certificate verification URL to clipboard [passed]"
+    ]
+  },
+  "certCode": "EDUMY-BBD78DB934",
+  "pdfStatus": 200,
+  "pdfMagic": "%PDF",
+  "pdfBytes": 34765
+}

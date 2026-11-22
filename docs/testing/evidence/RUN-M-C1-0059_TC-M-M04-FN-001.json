@@ -1,0 +1,18 @@
+{
+  "runId": "RUN-M-C1-0059",
+  "cycle": "C1",
+  "tcId": "TC-M-M04-FN-001",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Fail",
+  "actual": "Tạo câu hỏi mới=403 (id=undefined, askerName=\"undefined\", isResolved=undefined); lọc mineOnly=true trả 0 câu hỏi.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:54:24+07:00",
+  "note": "",
+  "createdQuestion": null,
+  "mineCount": 0
+}

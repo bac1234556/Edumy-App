@@ -1,0 +1,18 @@
+{
+  "runId": "RUN-M-C2-0007",
+  "cycle": "C2",
+  "tcId": "TC-M-M04-FN-003",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Liên đới M-M04: GV-A trả lời câu hỏi=200, HV1 xóa câu hỏi=200.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "",
+  "gvaAnsStatus": 200,
+  "hv1DelStatus": 200
+}

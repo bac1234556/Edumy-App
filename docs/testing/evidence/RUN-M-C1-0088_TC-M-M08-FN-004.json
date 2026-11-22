@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C1-0088",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-FN-004",
+  "module": "M-M08",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Quét bundle production (entry-df0fc524eb8904b07d255d40e2346760.js, 1.81 MB): leakedForbiddenEndpoints=0 (0 tham chiếu tới /cart, /orders, /payments, /webhooks, /auth/login); khóa trả phí dẫn sang 'http://localhost:3002/courses/1076' đúng BR-MOBILE-SCOPE.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Expo Web Bundle (http://localhost:8082, dist-web-qa) / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:29+07:00",
+  "note": "",
+  "bundleFile": "entry-df0fc524eb8904b07d255d40e2346760.js",
+  "bundleSizeBytes": 1902670,
+  "leakedInBundle": [],
+  "buyOnWebUrl": "http://localhost:3002/courses/1076"
+}

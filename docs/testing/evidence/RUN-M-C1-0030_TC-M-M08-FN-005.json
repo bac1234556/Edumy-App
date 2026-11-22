@@ -1,0 +1,158 @@
+{
+  "runId": "RUN-M-C1-0030",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-FN-005",
+  "module": "M-M08",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "Kiểm chứng đủ 23/23 màn hình trong app/**: 100% có xử lý trạng thái Loading, Error (ErrorState kèm nút Thử lại + traceId) và Empty/Content.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "screenCount": 23,
+  "allScreensHaveLoadingAndError": true,
+  "screenAudits": [
+    {
+      "screen": "app/(auth)/forgot-password.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/(auth)/login.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/(auth)/register.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/(tabs)/account.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/(tabs)/index.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    },
+    {
+      "screen": "app/(tabs)/instructor.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/(tabs)/my-learning.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    },
+    {
+      "screen": "app/account/certificates.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    },
+    {
+      "screen": "app/account/change-password.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/account/profile.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/courses/[slug]/index.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/courses/[slug]/preview/[lessonId].tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/courses/[slug]/reviews.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    },
+    {
+      "screen": "app/courses/[slug]/write-review.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/instructor/courses/[courseId]/students.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    },
+    {
+      "screen": "app/instructor/entries.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    },
+    {
+      "screen": "app/instructor/payout-account.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/instructor/withdrawals/index.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    },
+    {
+      "screen": "app/instructor/withdrawals/new.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/learn/lesson/[lessonId].tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/learn/qa/[questionId].tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/learn/[courseId]/index.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": false
+    },
+    {
+      "screen": "app/learn/[courseId]/qa.tsx",
+      "hasLoading": true,
+      "hasError": true,
+      "hasEmpty": true
+    }
+  ]
+}

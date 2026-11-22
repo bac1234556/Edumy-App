@@ -1,0 +1,374 @@
+{
+  "totalChecked": 46,
+  "allMatched": true,
+  "endpoints": [
+    {
+      "apiId": "API-01",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/register",
+      "status": 201,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-02",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/login",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-03",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/refresh",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-04",
+      "method": "POST",
+      "path": "/api/v1/auth/mobile/logout",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    },
+    {
+      "apiId": "API-05",
+      "method": "POST",
+      "path": "/api/v1/auth/forgot-password",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-06",
+      "method": "POST",
+      "path": "/api/v1/auth/verification-email/resend",
+      "status": 429,
+      "matched": true,
+      "note": "200 OK / 429 EMAIL_RESEND_TOO_SOON + Retry-After"
+    },
+    {
+      "apiId": "API-07",
+      "method": "GET",
+      "path": "/api/v1/me",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-08",
+      "method": "PATCH",
+      "path": "/api/v1/me",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-09",
+      "method": "PUT",
+      "path": "/api/v1/me/password",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content & 422 CURRENT_PASSWORD_INCORRECT"
+    },
+    {
+      "apiId": "API-10",
+      "method": "GET",
+      "path": "/api/v1/catalog/categories",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-11",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-12",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses/{slugOrId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-13",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses/{slugOrId}/reviews",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-14",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses/{slugOrId}/lessons/{lessonId}/preview",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-15",
+      "method": "POST",
+      "path": "/api/v1/courses/{courseId}/enrollments",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-16",
+      "method": "GET",
+      "path": "/api/v1/me/enrollments",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-17",
+      "method": "GET",
+      "path": "/api/v1/learn/courses/{courseId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-18",
+      "method": "GET",
+      "path": "/api/v1/learn/lessons/{lessonId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-19",
+      "method": "POST",
+      "path": "/api/v1/learn/lessons/{lessonId}/visit",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    },
+    {
+      "apiId": "API-20",
+      "method": "PUT",
+      "path": "/api/v1/learn/lessons/{lessonId}/completion",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-21",
+      "method": "GET",
+      "path": "/api/v1/me/certificates",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-22",
+      "method": "GET",
+      "path": "/api/v1/me/certificates/{code}/pdf",
+      "status": 200,
+      "matched": true,
+      "note": "200 application/pdf (%PDF binary)"
+    },
+    {
+      "apiId": "API-23a",
+      "method": "GET",
+      "path": "/api/v1/courses/{courseId}/questions",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23b",
+      "method": "POST",
+      "path": "/api/v1/courses/{courseId}/questions",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23c",
+      "method": "GET",
+      "path": "/api/v1/questions/{questionId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23d",
+      "method": "POST",
+      "path": "/api/v1/questions/{questionId}/answers",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23e",
+      "method": "POST",
+      "path": "/api/v1/questions/{questionId}/resolve",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23f",
+      "method": "DELETE",
+      "path": "/api/v1/questions/{questionId}",
+      "status": 200,
+      "matched": true,
+      "note": "200 QaMessageResponse"
+    },
+    {
+      "apiId": "API-24a",
+      "method": "POST",
+      "path": "/api/v1/courses/{courseId}/reviews",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-24b",
+      "method": "DELETE",
+      "path": "/api/v1/reviews/{reviewId}",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    },
+    {
+      "apiId": "API-25a",
+      "method": "GET",
+      "path": "/api/v1/instructor/overview",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-25b",
+      "method": "GET",
+      "path": "/api/v1/instructor/courses",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-26",
+      "method": "GET",
+      "path": "/api/v1/instructor/courses/{courseId}/students",
+      "status": 200,
+      "matched": true,
+      "note": "OK — Khớp envelope v2 & 0 email (Đã đóng DEF-M-004 ở C2)"
+    },
+    {
+      "apiId": "API-27a",
+      "method": "GET",
+      "path": "/api/v1/instructor/questions",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-27b",
+      "method": "GET",
+      "path": "/api/v1/instructor/invitations",
+      "status": 200,
+      "matched": true,
+      "note": "CoInstructorInvitationDto[]"
+    },
+    {
+      "apiId": "API-27c",
+      "method": "POST",
+      "path": "/api/v1/instructor/invitations/{id}/accept",
+      "status": 200,
+      "matched": true,
+      "note": "InvitationActionResponse"
+    },
+    {
+      "apiId": "API-27d",
+      "method": "POST",
+      "path": "/api/v1/instructor/invitations/{id}/decline",
+      "status": 200,
+      "matched": true,
+      "note": "InvitationActionResponse"
+    },
+    {
+      "apiId": "API-28a",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/summary",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-28b",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/monthly",
+      "status": 200,
+      "matched": true,
+      "note": "MonthlyEarningDto[]"
+    },
+    {
+      "apiId": "API-28c",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/courses",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-28d",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/entries",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-29a",
+      "method": "GET",
+      "path": "/api/v1/me/payout-account",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-29b",
+      "method": "PUT",
+      "path": "/api/v1/me/payout-account",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-30a",
+      "method": "GET",
+      "path": "/api/v1/me/withdrawals",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-30b",
+      "method": "POST",
+      "path": "/api/v1/me/withdrawals",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-30c",
+      "method": "POST",
+      "path": "/api/v1/me/withdrawals/{id}/cancel",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    }
+  ]
+}

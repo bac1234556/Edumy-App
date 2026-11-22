@@ -1,0 +1,68 @@
+{
+  "runId": "RUN-M-C1-0054",
+  "cycle": "C1",
+  "tcId": "TC-M-M03-FN-004",
+  "module": "M-M03",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "GET /learn/courses/49=200 (chapters=1, quizzes=1, progress={\"percent\":50,\"completedItems\":2,\"totalItems\":4}).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:14+07:00",
+  "note": "",
+  "learnRoom49": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "courseId": 1075,
+      "title": "Lập Trình Java Nâng Cao Spring Boot",
+      "progress": {
+        "percent": 50,
+        "completedItems": 2,
+        "totalItems": 4
+      },
+      "lastAccessedLessonId": null,
+      "certificateCode": null,
+      "chapters": [
+        {
+          "id": 1117,
+          "title": "Chương 1: Kiến thức nền tảng",
+          "lessons": [
+            {
+              "id": 1238,
+              "title": "Bài 1: Nội dung bài học số 1",
+              "contentType": "video",
+              "durationSeconds": 7200,
+              "completed": true
+            },
+            {
+              "id": 1239,
+              "title": "Bài 2: Nội dung bài học số 2",
+              "contentType": "video",
+              "durationSeconds": 7200,
+              "completed": true
+            },
+            {
+              "id": 1240,
+              "title": "Bài 3: Nội dung bài học số 3",
+              "contentType": "video",
+              "durationSeconds": 7200,
+              "completed": false
+            }
+          ],
+          "quizzes": [
+            {
+              "id": 1081,
+              "title": "Bài ki?m tra Chuong 1",
+              "passed": false
+            }
+          ]
+        }
+      ]
+    },
+    "errors": null
+  }
+}

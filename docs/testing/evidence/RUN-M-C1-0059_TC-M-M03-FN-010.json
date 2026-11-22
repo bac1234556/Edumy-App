@@ -1,0 +1,36 @@
+{
+  "runId": "RUN-M-C1-0059",
+  "cycle": "C1",
+  "tcId": "TC-M-M03-FN-010",
+  "module": "M-M03",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "HV2 mở phòng học chưa mua (/learn/50) trả 403 (NOT_ENROLLED); mở bài học (/learn/lessons/184) trả 403 (NOT_ENROLLED).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:15+07:00",
+  "note": "",
+  "unEnrolledRoom": {
+    "success": false,
+    "message": "Bạn chưa ghi danh khóa học này.",
+    "data": null,
+    "errors": {
+      "code": "NOT_ENROLLED",
+      "fields": null,
+      "traceId": "045c337d-e186-4445-b6be-cdbe1064bc87"
+    }
+  },
+  "unEnrolledLesson": {
+    "success": false,
+    "message": "Bạn chưa ghi danh khóa học này.",
+    "data": null,
+    "errors": {
+      "code": "NOT_ENROLLED",
+      "fields": null,
+      "traceId": "2d765b0d-6fac-459a-93ad-928b6023702c"
+    }
+  }
+}

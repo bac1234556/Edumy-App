@@ -70,7 +70,6 @@ export default function CourseStudentsScreen() {
           </View>
           <View style={styles.meta}>
             <Text style={styles.name}>{item.fullName || `Học viên #${item.userId}`}</Text>
-            {Boolean(item.email) && <Text style={styles.email}>{item.email}</Text>}
             <Text style={styles.enrolledText}>
               Ghi danh: {formatDate(item.enrolledAt ?? '')}
             </Text>

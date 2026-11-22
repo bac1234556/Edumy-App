@@ -1,0 +1,18 @@
+{
+  "runId": "RUN-M-C2-0010",
+  "cycle": "C2",
+  "tcId": "TC-M-M08-MNT-002",
+  "module": "M-M08",
+  "type": "MNT",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "Kiểm tra kiến trúc sau sửa lỗi C2: 0 import axios trực tiếp trong app/ hoặc components/, 0 Alert.alert ngoài dialog.ts, 100% kiểu API dẫn xuất từ schema.d.ts.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "",
+  "directAxios": 0,
+  "alertOutsideDialog": 0
+}

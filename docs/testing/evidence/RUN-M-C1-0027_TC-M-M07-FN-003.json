@@ -1,0 +1,23 @@
+{
+  "runId": "RUN-M-C1-0027",
+  "cycle": "C1",
+  "tcId": "TC-M-M07-FN-003",
+  "module": "M-M07",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "Quét toàn bộ màn hình trong app/learn/** (index, lesson/[lessonId], qa, qa/[questionId]): adsInLearnScreens=0 (0 quảng cáo trong không gian học tập).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "checkedLearnFiles": [
+    "app\\learn\\lesson\\[lessonId].tsx",
+    "app\\learn\\qa\\[questionId].tsx",
+    "app\\learn\\[courseId]\\index.tsx",
+    "app\\learn\\[courseId]\\qa.tsx"
+  ],
+  "adsInLearnScreens": []
+}

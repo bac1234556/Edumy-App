@@ -1,0 +1,66 @@
+{
+  "runId": "RUN-M-C1-0090",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-COMP-001",
+  "module": "M-M08",
+  "type": "COMP",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "8/8 luồng Smoke/High trên Expo Web (http://localhost:8082: /, /auth/login, /courses/lap-trinh-java-nang-cao-spring-boot-c91846, /my-learning, /learn/49, /certificates, /instructor, /instructor/courses/49/students) đều trả HTTP 200 (hasRootDiv=true, latency=20.57/24.71/26.46/28.46/30.22/33.09/35.82/39.28ms) và tương tác thành công với Backend /api/v1.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Expo Web Bundle (http://localhost:8082, dist-web-qa) / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:29+07:00",
+  "note": "",
+  "webRoutes": [
+    {
+      "status": 200,
+      "durationMs": 20.57,
+      "length": 1172,
+      "hasRootDiv": true
+    },
+    {
+      "status": 200,
+      "durationMs": 24.71,
+      "length": 1172,
+      "hasRootDiv": true
+    },
+    {
+      "status": 200,
+      "durationMs": 26.46,
+      "length": 1172,
+      "hasRootDiv": true
+    },
+    {
+      "status": 200,
+      "durationMs": 28.46,
+      "length": 1172,
+      "hasRootDiv": true
+    },
+    {
+      "status": 200,
+      "durationMs": 30.22,
+      "length": 1172,
+      "hasRootDiv": true
+    },
+    {
+      "status": 200,
+      "durationMs": 33.09,
+      "length": 1172,
+      "hasRootDiv": true
+    },
+    {
+      "status": 200,
+      "durationMs": 35.82,
+      "length": 1172,
+      "hasRootDiv": true
+    },
+    {
+      "status": 200,
+      "durationMs": 39.28,
+      "length": 1172,
+      "hasRootDiv": true
+    }
+  ]
+}

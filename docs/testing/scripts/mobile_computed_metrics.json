@@ -1,0 +1,1409 @@
+{
+  "table1_module": [
+    {
+      "key": "M-M01",
+      "total": 13,
+      "executed": 13,
+      "pass": 13,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 24,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-M02",
+      "total": 10,
+      "executed": 10,
+      "pass": 10,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 20,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-M03",
+      "total": 11,
+      "executed": 11,
+      "pass": 11,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 22,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-M04",
+      "total": 6,
+      "executed": 6,
+      "pass": 6,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 16,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 50.0,
+      "S1": 0,
+      "S2": 2,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-M05",
+      "total": 6,
+      "executed": 6,
+      "pass": 6,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 10,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-M06",
+      "total": 15,
+      "executed": 15,
+      "pass": 15,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 30,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 93.33,
+      "S1": 0,
+      "S2": 1,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-M07",
+      "total": 4,
+      "executed": 4,
+      "pass": 4,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 6,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-M08",
+      "total": 18,
+      "executed": 18,
+      "pass": 15,
+      "fail": 0,
+      "blocked": 3,
+      "notRun": 0,
+      "totalRuns": 31,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 83.33,
+      "firstTimePassRate": 83.33,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "M-API",
+      "total": 7,
+      "executed": 7,
+      "pass": 7,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 15,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 85.71,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 1
+    },
+    {
+      "key": "M-REG",
+      "total": 2,
+      "executed": 2,
+      "pass": 2,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 4,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "Tổng",
+      "total": 92,
+      "executed": 92,
+      "pass": 89,
+      "fail": 0,
+      "blocked": 3,
+      "notRun": 0,
+      "totalRuns": 178,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 96.74,
+      "firstTimePassRate": 91.3,
+      "S1": 0,
+      "S2": 3,
+      "S3": 0,
+      "S4": 1
+    }
+  ],
+  "table2_type": [
+    {
+      "key": "FN",
+      "total": 74,
+      "executed": 74,
+      "pass": 74,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 146,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 93.24,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "SEC",
+      "total": 5,
+      "executed": 5,
+      "pass": 5,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 10,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "PERF",
+      "total": 2,
+      "executed": 2,
+      "pass": 2,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 4,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "REL",
+      "total": 1,
+      "executed": 1,
+      "pass": 1,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 2,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "USA",
+      "total": 2,
+      "executed": 2,
+      "pass": 2,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 2,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "COMP",
+      "total": 4,
+      "executed": 4,
+      "pass": 1,
+      "fail": 0,
+      "blocked": 3,
+      "notRun": 0,
+      "totalRuns": 5,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 25.0,
+      "firstTimePassRate": 25.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "MNT",
+      "total": 3,
+      "executed": 3,
+      "pass": 3,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 8,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "DEP",
+      "total": 1,
+      "executed": 1,
+      "pass": 1,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 1,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "Tổng",
+      "total": 92,
+      "executed": 92,
+      "pass": 89,
+      "fail": 0,
+      "blocked": 3,
+      "notRun": 0,
+      "totalRuns": 178,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 96.74,
+      "firstTimePassRate": 91.3,
+      "S1": 0,
+      "S2": 3,
+      "S3": 0,
+      "S4": 1
+    }
+  ],
+  "table3_platform": [
+    {
+      "key": "Jest",
+      "total": 36,
+      "executed": 36,
+      "pass": 36,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 69,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 100.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "Android-30",
+      "total": 1,
+      "executed": 1,
+      "pass": 0,
+      "fail": 0,
+      "blocked": 1,
+      "notRun": 0,
+      "totalRuns": 1,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 0.0,
+      "firstTimePassRate": 0.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "Android-34",
+      "total": 1,
+      "executed": 1,
+      "pass": 0,
+      "fail": 0,
+      "blocked": 1,
+      "notRun": 0,
+      "totalRuns": 1,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 0.0,
+      "firstTimePassRate": 0.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "Web",
+      "total": 53,
+      "executed": 53,
+      "pass": 53,
+      "fail": 0,
+      "blocked": 0,
+      "notRun": 0,
+      "totalRuns": 106,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 100.0,
+      "firstTimePassRate": 90.57,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "iOS",
+      "total": 1,
+      "executed": 1,
+      "pass": 0,
+      "fail": 0,
+      "blocked": 1,
+      "notRun": 0,
+      "totalRuns": 1,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 0.0,
+      "firstTimePassRate": 0.0,
+      "S1": 0,
+      "S2": 0,
+      "S3": 0,
+      "S4": 0
+    },
+    {
+      "key": "Tổng",
+      "total": 92,
+      "executed": 92,
+      "pass": 89,
+      "fail": 0,
+      "blocked": 3,
+      "notRun": 0,
+      "totalRuns": 178,
+      "cycles": 3,
+      "execRate": 100.0,
+      "passRate": 96.74,
+      "firstTimePassRate": 91.3,
+      "S1": 0,
+      "S2": 3,
+      "S3": 0,
+      "S4": 1
+    }
+  ],
+  "table4_cycle": [
+    {
+      "cycle": "C1",
+      "executed": 92,
+      "pass": 84,
+      "fail": 5,
+      "blocked": 3,
+      "defectsNew": 4,
+      "defectsClosed": 0
+    },
+    {
+      "cycle": "C2",
+      "executed": 10,
+      "pass": 10,
+      "fail": 0,
+      "blocked": 0,
+      "defectsNew": 0,
+      "defectsClosed": 4
+    },
+    {
+      "cycle": "C3",
+      "executed": 76,
+      "pass": 76,
+      "fail": 0,
+      "blocked": 0,
+      "defectsNew": 0,
+      "defectsClosed": 0
+    }
+  ],
+  "table7_ac": [
+    {
+      "acId": "BR-MOBILE-SCOPE",
+      "module": "M-M02",
+      "desc": "Ứng dụng = Học tập + Kênh giảng viên; bỏ hoàn toàn giỏ hàng/đơn hàng/thanh toán (/cart, /orders); khóa trả phí hiển thị 'Mua trên website' mở qua expo-web-browser",
+      "tcCount": 4,
+      "passCount": 4,
+      "tcs": "TC-M-M02-FN-005, TC-M-M02-FN-006, TC-M-M02-FN-007, TC-M-M08-FN-004",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M01",
+      "module": "M-M03",
+      "desc": "Khóa học của tôi (My Learning) hiển thị danh sách phân trang vô hạn các khóa đã đăng ký cùng % tiến độ từ server và nút 'Học tiếp'",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M03-FN-003, TC-M-M03-FN-009",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M02",
+      "module": "M-M03",
+      "desc": "Xem nội dung bài học: ghi nhận visit (POST /learn/lessons/{id}/visit), điều hướng Bài trước/Bài sau, hoàn thành thủ công (PUT completion), quiz hiển thị liên kết làm trên website để % tiến độ khớp 100% với web",
+      "tcCount": 5,
+      "passCount": 5,
+      "tcs": "TC-M-M03-FN-004, TC-M-M03-FN-005, TC-M-M03-FN-006, TC-M-M03-FN-007, TC-M-M03-FN-009",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M03",
+      "module": "M-M01",
+      "desc": "Khôi phục phiên làm việc (useRestoreSession): chỉ xóa token khi 401 AUTH_REFRESH_INVALID/AUTH_REFRESH_REUSED hoặc 403 AUTH_ACCOUNT_LOCKED; lỗi mạng giữ token và hiện banner offline + 'Thử lại'",
+      "tcCount": 4,
+      "passCount": 4,
+      "tcs": "TC-M-M01-FN-006, TC-M-M01-FN-007, TC-M-M01-FN-008, TC-M-M08-FN-001",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M04",
+      "module": "M-M01",
+      "desc": "Đăng xuất an toàn trên Native & Web (dialog.ts, sessionEpoch guard, cancelQueries, queryClient.clear, xóa SecureStore/memory token, best-effort /auth/mobile/logout, điều hướng login); đổi mật khẩu thu hồi mọi thiết bị",
+      "tcCount": 3,
+      "passCount": 3,
+      "tcs": "TC-M-M01-FN-010, TC-M-M01-FN-011, TC-M-M05-FN-002",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M08",
+      "module": "M-M03",
+      "desc": "Cấp phát chứng chỉ tự động: certificateJustIssued=true -> modal chúc mừng kèm mã EDUMY-... và link sang Chứng chỉ",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M03-FN-008, TC-M-M03-FN-011",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M09",
+      "module": "M-M04",
+      "desc": "Hỏi đáp bài học (Q&A) dùng đúng schema v2 (isResolved, askerName, authorName, POST /questions/{id}/resolve {resolved}, DELETE có confirm)",
+      "tcCount": 4,
+      "passCount": 4,
+      "tcs": "TC-M-M04-FN-001, TC-M-M04-FN-002, TC-M-M04-FN-003, TC-M-M04-FN-004",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M10",
+      "module": "M-M04",
+      "desc": "Đánh giá khóa học: tạo/sửa đánh giá (POST /courses/{id}/reviews), rút đánh giá (DELETE /reviews/{id}), đánh giá bị Admin ẩn không sửa được (AC-30)",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M04-FN-005, TC-M-M04-FN-006",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M12",
+      "module": "M-M05",
+      "desc": "Danh sách chứng chỉ số (GET /me/certificates phân trang vô hạn) và tải PDF kèm Bearer + chia sẻ trên native (FileSystem.downloadAsync + Sharing)",
+      "tcCount": 3,
+      "passCount": 3,
+      "tcs": "TC-M-M05-FN-004, TC-M-M05-FN-005, TC-M-M05-FN-006",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M13",
+      "module": "M-M05",
+      "desc": "Xác minh chứng chỉ trên Web (mở verifyUrl qua WebBrowser.openBrowserAsync) và sao chép link verifyUrl vào clipboard",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M05-FN-004, TC-M-M05-FN-006",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M14",
+      "module": "M-M06",
+      "desc": "Kênh giảng viên — Tổng quan: hiển thị KPI, biểu đồ 30 ngày, nhãn 'Doanh số bán' (grossSales) và 'Thu nhập thực nhận' (netEarnings, đã trừ 30% phí sàn & đồng GV)",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M06-FN-001, TC-M-M06-FN-002",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M15",
+      "module": "M-M06",
+      "desc": "Kênh giảng viên — Khóa học phụ trách, danh sách học viên (không lộ email) và chấp nhận/từ chối lời mời đồng giảng viên có confirm",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M06-FN-003, TC-M-M06-FN-004",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M16",
+      "module": "M-M06",
+      "desc": "Kênh giảng viên — Hàng đợi hỏi đáp Q&A: lọc câu hỏi chưa trả lời/tất cả theo khóa học và gửi phản hồi giảng viên",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M06-FN-005, TC-M-M06-FN-013",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M17",
+      "module": "M-M06",
+      "desc": "Kênh giảng viên — Thu nhập BR-PAY-HOLD theo holdDays (0 ngày vs >0 ngày) & nextMaturityAt, thống kê theo tháng/khóa học và lịch sử bút toán (/instructor/entries)",
+      "tcCount": 2,
+      "passCount": 2,
+      "tcs": "TC-M-M06-FN-006, TC-M-M06-FN-007",
+      "verdict": "ĐẠT"
+    },
+    {
+      "acId": "AC-M18",
+      "module": "M-M06",
+      "desc": "Kênh giảng viên — Tài khoản nhận tiền (currentPassword, xóa mật khẩu sau submit, chỉ 4 số cuối) và Rút tiền (min 1.000.000, tối đa 1 lần/tháng, 4 mã lỗi, hủy khi requested)",
+      "tcCount": 5,
+      "passCount": 5,
+      "tcs": "TC-M-M06-FN-008, TC-M-M06-FN-009, TC-M-M06-FN-010, TC-M-M06-FN-011, TC-M-M06-FN-012",
+      "verdict": "ĐẠT"
+    }
+  ],
+  "table10_cov": [
+    {
+      "feature": "api",
+      "files": 5,
+      "stmts": "106/138 (76.81%)",
+      "branches": "96/122 (78.69%)",
+      "funcs": "13/34 (38.24%)",
+      "lines": "105/137 (76.64%)",
+      "linePct": 76.64
+    },
+    {
+      "feature": "components",
+      "files": 5,
+      "stmts": "11/23 (47.83%)",
+      "branches": "7/51 (13.73%)",
+      "funcs": "2/7 (28.57%)",
+      "lines": "10/22 (45.45%)",
+      "linePct": 45.45
+    },
+    {
+      "feature": "config",
+      "files": 1,
+      "stmts": "8/11 (72.73%)",
+      "branches": "10/18 (55.56%)",
+      "funcs": "2/2 (100.0%)",
+      "lines": "7/10 (70.0%)",
+      "linePct": 70.0
+    },
+    {
+      "feature": "features/ads",
+      "files": 1,
+      "stmts": "78/85 (91.76%)",
+      "branches": "59/80 (73.75%)",
+      "funcs": "15/15 (100.0%)",
+      "lines": "63/66 (95.45%)",
+      "linePct": 95.45
+    },
+    {
+      "feature": "features/auth",
+      "files": 2,
+      "stmts": "30/85 (35.29%)",
+      "branches": "15/33 (45.45%)",
+      "funcs": "3/19 (15.79%)",
+      "lines": "30/84 (35.71%)",
+      "linePct": 35.71
+    },
+    {
+      "feature": "features/catalog",
+      "files": 2,
+      "stmts": "29/29 (100.0%)",
+      "branches": "19/20 (95.0%)",
+      "funcs": "9/9 (100.0%)",
+      "lines": "28/28 (100.0%)",
+      "linePct": 100.0
+    },
+    {
+      "feature": "features/certificates",
+      "files": 1,
+      "stmts": "13/16 (81.25%)",
+      "branches": "7/10 (70.0%)",
+      "funcs": "2/2 (100.0%)",
+      "lines": "13/16 (81.25%)",
+      "linePct": 81.25
+    },
+    {
+      "feature": "features/instructor",
+      "files": 1,
+      "stmts": "68/73 (93.15%)",
+      "branches": "70/85 (82.35%)",
+      "funcs": "12/12 (100.0%)",
+      "lines": "63/65 (96.92%)",
+      "linePct": 96.92
+    },
+    {
+      "feature": "features/learning",
+      "files": 1,
+      "stmts": "13/14 (92.86%)",
+      "branches": "17/20 (85.0%)",
+      "funcs": "2/2 (100.0%)",
+      "lines": "11/12 (91.67%)",
+      "linePct": 91.67
+    },
+    {
+      "feature": "features/profile",
+      "files": 1,
+      "stmts": "10/10 (100.0%)",
+      "branches": "8/8 (100.0%)",
+      "funcs": "4/4 (100.0%)",
+      "lines": "9/9 (100.0%)",
+      "linePct": 100.0
+    },
+    {
+      "feature": "features/qa",
+      "files": 1,
+      "stmts": "18/18 (100.0%)",
+      "branches": "12/12 (100.0%)",
+      "funcs": "3/3 (100.0%)",
+      "lines": "18/18 (100.0%)",
+      "linePct": 100.0
+    },
+    {
+      "feature": "features/reviews",
+      "files": 1,
+      "stmts": "14/15 (93.33%)",
+      "branches": "25/28 (89.29%)",
+      "funcs": "2/2 (100.0%)",
+      "lines": "14/14 (100.0%)",
+      "linePct": 100.0
+    },
+    {
+      "feature": "lib",
+      "files": 4,
+      "stmts": "59/72 (81.94%)",
+      "branches": "39/51 (76.47%)",
+      "funcs": "11/15 (73.33%)",
+      "lines": "48/58 (82.76%)",
+      "linePct": 82.76
+    },
+    {
+      "feature": "store",
+      "files": 1,
+      "stmts": "15/16 (93.75%)",
+      "branches": "1/2 (50.0%)",
+      "funcs": "11/12 (91.67%)",
+      "lines": "12/13 (92.31%)",
+      "linePct": 92.31
+    },
+    {
+      "feature": "theme",
+      "files": 1,
+      "stmts": "8/8 (100.0%)",
+      "branches": "0/0 (100.0%)",
+      "funcs": "0/0 (100.0%)",
+      "lines": "8/8 (100.0%)",
+      "linePct": 100.0
+    },
+    {
+      "feature": "TỔNG (All files)",
+      "files": 28,
+      "stmts": "480/613 (78.3%)",
+      "branches": "385/540 (71.29%)",
+      "funcs": "91/138 (65.94%)",
+      "lines": "439/560 (78.39%)",
+      "linePct": 78.39
+    }
+  ],
+  "contract": {
+    "totalChecked": 46,
+    "allMatched": true,
+    "endpoints": [
+      {
+        "apiId": "API-01",
+        "method": "POST",
+        "path": "/api/v1/auth/mobile/register",
+        "status": 201,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-02",
+        "method": "POST",
+        "path": "/api/v1/auth/mobile/login",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-03",
+        "method": "POST",
+        "path": "/api/v1/auth/mobile/refresh",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-04",
+        "method": "POST",
+        "path": "/api/v1/auth/mobile/logout",
+        "status": 204,
+        "matched": true,
+        "note": "204 No Content chuẩn hợp đồng"
+      },
+      {
+        "apiId": "API-05",
+        "method": "POST",
+        "path": "/api/v1/auth/forgot-password",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-06",
+        "method": "POST",
+        "path": "/api/v1/auth/verification-email/resend",
+        "status": 429,
+        "matched": true,
+        "note": "200 OK / 429 EMAIL_RESEND_TOO_SOON + Retry-After"
+      },
+      {
+        "apiId": "API-07",
+        "method": "GET",
+        "path": "/api/v1/me",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-08",
+        "method": "PATCH",
+        "path": "/api/v1/me",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-09",
+        "method": "PUT",
+        "path": "/api/v1/me/password",
+        "status": 204,
+        "matched": true,
+        "note": "204 No Content & 422 CURRENT_PASSWORD_INCORRECT"
+      },
+      {
+        "apiId": "API-10",
+        "method": "GET",
+        "path": "/api/v1/catalog/categories",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-11",
+        "method": "GET",
+        "path": "/api/v1/catalog/courses",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-12",
+        "method": "GET",
+        "path": "/api/v1/catalog/courses/{slugOrId}",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-13",
+        "method": "GET",
+        "path": "/api/v1/catalog/courses/{slugOrId}/reviews",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-14",
+        "method": "GET",
+        "path": "/api/v1/catalog/courses/{slugOrId}/lessons/{lessonId}/preview",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-15",
+        "method": "POST",
+        "path": "/api/v1/courses/{courseId}/enrollments",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-16",
+        "method": "GET",
+        "path": "/api/v1/me/enrollments",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-17",
+        "method": "GET",
+        "path": "/api/v1/learn/courses/{courseId}",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-18",
+        "method": "GET",
+        "path": "/api/v1/learn/lessons/{lessonId}",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-19",
+        "method": "POST",
+        "path": "/api/v1/learn/lessons/{lessonId}/visit",
+        "status": 204,
+        "matched": true,
+        "note": "204 No Content chuẩn hợp đồng"
+      },
+      {
+        "apiId": "API-20",
+        "method": "PUT",
+        "path": "/api/v1/learn/lessons/{lessonId}/completion",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-21",
+        "method": "GET",
+        "path": "/api/v1/me/certificates",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-22",
+        "method": "GET",
+        "path": "/api/v1/me/certificates/{code}/pdf",
+        "status": 200,
+        "matched": true,
+        "note": "200 application/pdf (%PDF binary)"
+      },
+      {
+        "apiId": "API-23a",
+        "method": "GET",
+        "path": "/api/v1/courses/{courseId}/questions",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-23b",
+        "method": "POST",
+        "path": "/api/v1/courses/{courseId}/questions",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-23c",
+        "method": "GET",
+        "path": "/api/v1/questions/{questionId}",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-23d",
+        "method": "POST",
+        "path": "/api/v1/questions/{questionId}/answers",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-23e",
+        "method": "POST",
+        "path": "/api/v1/questions/{questionId}/resolve",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-23f",
+        "method": "DELETE",
+        "path": "/api/v1/questions/{questionId}",
+        "status": 200,
+        "matched": true,
+        "note": "200 QaMessageResponse"
+      },
+      {
+        "apiId": "API-24a",
+        "method": "POST",
+        "path": "/api/v1/courses/{courseId}/reviews",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-24b",
+        "method": "DELETE",
+        "path": "/api/v1/reviews/{reviewId}",
+        "status": 204,
+        "matched": true,
+        "note": "204 No Content chuẩn hợp đồng"
+      },
+      {
+        "apiId": "API-25a",
+        "method": "GET",
+        "path": "/api/v1/instructor/overview",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-25b",
+        "method": "GET",
+        "path": "/api/v1/instructor/courses",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-26",
+        "method": "GET",
+        "path": "/api/v1/instructor/courses/{courseId}/students",
+        "status": 200,
+        "matched": true,
+        "note": "OK — Khớp envelope v2 & 0 email (Đã đóng DEF-M-004 ở C2)"
+      },
+      {
+        "apiId": "API-27a",
+        "method": "GET",
+        "path": "/api/v1/instructor/questions",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-27b",
+        "method": "GET",
+        "path": "/api/v1/instructor/invitations",
+        "status": 200,
+        "matched": true,
+        "note": "CoInstructorInvitationDto[]"
+      },
+      {
+        "apiId": "API-27c",
+        "method": "POST",
+        "path": "/api/v1/instructor/invitations/{id}/accept",
+        "status": 200,
+        "matched": true,
+        "note": "InvitationActionResponse"
+      },
+      {
+        "apiId": "API-27d",
+        "method": "POST",
+        "path": "/api/v1/instructor/invitations/{id}/decline",
+        "status": 200,
+        "matched": true,
+        "note": "InvitationActionResponse"
+      },
+      {
+        "apiId": "API-28a",
+        "method": "GET",
+        "path": "/api/v1/me/earnings/summary",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-28b",
+        "method": "GET",
+        "path": "/api/v1/me/earnings/monthly",
+        "status": 200,
+        "matched": true,
+        "note": "MonthlyEarningDto[]"
+      },
+      {
+        "apiId": "API-28c",
+        "method": "GET",
+        "path": "/api/v1/me/earnings/courses",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-28d",
+        "method": "GET",
+        "path": "/api/v1/me/earnings/entries",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-29a",
+        "method": "GET",
+        "path": "/api/v1/me/payout-account",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-29b",
+        "method": "PUT",
+        "path": "/api/v1/me/payout-account",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-30a",
+        "method": "GET",
+        "path": "/api/v1/me/withdrawals",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-30b",
+        "method": "POST",
+        "path": "/api/v1/me/withdrawals",
+        "status": 200,
+        "matched": true,
+        "note": "OK"
+      },
+      {
+        "apiId": "API-30c",
+        "method": "POST",
+        "path": "/api/v1/me/withdrawals/{id}/cancel",
+        "status": 204,
+        "matched": true,
+        "note": "204 No Content chuẩn hợp đồng"
+      }
+    ]
+  },
+  "perf": {
+    "benchmarks": [
+      {
+        "scenario": "GET /catalog/courses?sort=newest",
+        "worstP50": 329.17,
+        "worstP95": 410.74,
+        "worstMax": 414.16,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 329.17,
+            "p95": 410.74,
+            "max": 414.16,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 132.83,
+            "p95": 205.88,
+            "max": 221.54,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 130.64,
+            "p95": 204.87,
+            "max": 207.89,
+            "err5xx": 0
+          }
+        ]
+      },
+      {
+        "scenario": "GET /catalog/courses?sort=rating",
+        "worstP50": 151.99,
+        "worstP95": 238.9,
+        "worstMax": 249.49,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 151.99,
+            "p95": 236.01,
+            "max": 243.28,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 149.44,
+            "p95": 226.92,
+            "max": 229.52,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 135.29,
+            "p95": 238.9,
+            "max": 249.49,
+            "err5xx": 0
+          }
+        ]
+      },
+      {
+        "scenario": "GET /catalog/courses?sort=price_asc",
+        "worstP50": 137.28,
+        "worstP95": 211.75,
+        "worstMax": 223.33,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 137.28,
+            "p95": 211.75,
+            "max": 223.33,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 118.21,
+            "p95": 188.55,
+            "max": 209.82,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 129.29,
+            "p95": 182.84,
+            "max": 186.27,
+            "err5xx": 0
+          }
+        ]
+      },
+      {
+        "scenario": "GET /catalog/courses?sort=price_desc",
+        "worstP50": 125.05,
+        "worstP95": 199.13,
+        "worstMax": 214.05,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 121.42,
+            "p95": 198.98,
+            "max": 203.96,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 115.6,
+            "p95": 198.37,
+            "max": 206.43,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 125.05,
+            "p95": 199.13,
+            "max": 214.05,
+            "err5xx": 0
+          }
+        ]
+      },
+      {
+        "scenario": "GET /catalog/courses/{slug}",
+        "worstP50": 120.35,
+        "worstP95": 188.69,
+        "worstMax": 206.23,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 107.48,
+            "p95": 162.48,
+            "max": 165.5,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 111.11,
+            "p95": 158.18,
+            "max": 160.6,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 120.35,
+            "p95": 188.69,
+            "max": 206.23,
+            "err5xx": 0
+          }
+        ]
+      },
+      {
+        "scenario": "GET /learn/courses/{id}",
+        "worstP50": 415.02,
+        "worstP95": 587.61,
+        "worstMax": 615.57,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 415.02,
+            "p95": 587.61,
+            "max": 615.57,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 376.72,
+            "p95": 557.99,
+            "max": 565.39,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 351.85,
+            "p95": 467.08,
+            "max": 496.76,
+            "err5xx": 0
+          }
+        ]
+      },
+      {
+        "scenario": "PUT /learn/lessons/{id}/completion",
+        "worstP50": 371.73,
+        "worstP95": 507.06,
+        "worstMax": 524.95,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 371.73,
+            "p95": 507.06,
+            "max": 524.95,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 245.32,
+            "p95": 361.68,
+            "max": 371.9,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 288.58,
+            "p95": 457.85,
+            "max": 471.48,
+            "err5xx": 0
+          }
+        ]
+      },
+      {
+        "scenario": "POST /courses/{id}/questions",
+        "worstP50": 234.81,
+        "worstP95": 313.43,
+        "worstMax": 323.56,
+        "total5xx": 0,
+        "rounds": [
+          {
+            "round": 1,
+            "p50": 234.81,
+            "p95": 305.31,
+            "max": 311.54,
+            "err5xx": 0
+          },
+          {
+            "round": 2,
+            "p50": 207.77,
+            "p95": 283.29,
+            "max": 285.03,
+            "err5xx": 0
+          },
+          {
+            "round": 3,
+            "p50": 201.67,
+            "p95": 313.43,
+            "max": 323.56,
+            "err5xx": 0
+          }
+        ]
+      }
+    ]
+  },
+  "total_defects": 4,
+  "closed_defects": 4,
+  "open_defects": 0
+}

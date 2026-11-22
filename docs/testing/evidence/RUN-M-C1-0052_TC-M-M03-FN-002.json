@@ -1,0 +1,36 @@
+{
+  "runId": "RUN-M-C1-0052",
+  "cycle": "C1",
+  "tcId": "TC-M-M03-FN-002",
+  "module": "M-M03",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Ghi danh miễn phí vào khóa trả phí trả 422 (COURSE_NOT_FREE); giảng viên tự ghi danh khóa mình dạy trả 422 (OWN_COURSE).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:14+07:00",
+  "note": "",
+  "paidEnrollErr": {
+    "success": false,
+    "message": "Khóa học này là khóa trả phí.",
+    "data": null,
+    "errors": {
+      "code": "COURSE_NOT_FREE",
+      "fields": null,
+      "traceId": "5ca6e048-39b4-4d2b-afbb-f296a7fd2ac9"
+    }
+  },
+  "ownEnrollErr": {
+    "success": false,
+    "message": "Giảng viên không thể ghi danh khóa học của chính mình.",
+    "data": null,
+    "errors": {
+      "code": "OWN_COURSE",
+      "fields": null,
+      "traceId": "f1231fe0-8a8e-4d33-9609-242d0120f33f"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "runId": "RUN-M-C2-0006",
+  "cycle": "C2",
+  "tcId": "TC-M-M02-FN-009",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "Medium",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Liên đới M-M02/M-M04: GET /catalog/courses/lap-trinh-java-co-ban-mien-phi-1af0e1/reviews trả 200, phản ánh tức thì đánh giá đã tạo/cập nhật/xóa.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "",
+  "count": 1
+}

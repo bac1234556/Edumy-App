@@ -1,0 +1,37 @@
+{
+  "runId": "RUN-M-C1-0064",
+  "cycle": "C1",
+  "tcId": "TC-M-M04-FN-005",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Fail",
+  "actual": "Tạo đánh giá POST /courses/1073/reviews=200 (id=77, rating=5); nhưng khi cập nhật đánh giá qua submitReviewApi (POST /courses/1073/reviews — Edumy-App chưa có PUT /reviews/{id}) trả 400 (\"Bạn đã gửi đánh giá cho khóa học này rồi.\"); rút đánh giá DELETE /reviews/77=204 (204).",
+  "defectId": "DEF-M-003",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:15+07:00",
+  "note": "Edumy-App submitReviewApi chỉ gọi POST /courses/{id}/reviews (tạo mới), thiếu PUT /reviews/{reviewId} để cập nhật đánh giá",
+  "revCreate": {
+    "reviewId": 77,
+    "userId": 24,
+    "courseId": 1073,
+    "rating": 5,
+    "comment": "Đánh giá từ Mobile C1 rất tốt!",
+    "sentimentLabel": "POSITIVE",
+    "sentimentScore": 0.9,
+    "createdAt": "2026-11-22T07:15:15.740372971",
+    "visibilityStatus": "VISIBLE",
+    "moderationReason": null,
+    "moderatedAt": null,
+    "user": null
+  },
+  "revUpdate": {
+    "success": false,
+    "message": "Bạn đã gửi đánh giá cho khóa học này rồi.",
+    "data": null,
+    "errors": null
+  },
+  "revDeleteStatus": 204
+}

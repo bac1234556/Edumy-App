@@ -1,0 +1,98 @@
+{
+  "runId": "RUN-M-C1-0083",
+  "cycle": "C1",
+  "tcId": "TC-M-API-FN-005",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "10/10 endpoint Chứng chỉ, Q&A và Đánh giá khớp 100% hợp đồng v2 (JSON envelope & binary PDF).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:28+07:00",
+  "note": "",
+  "endpoints": [
+    {
+      "apiId": "API-21",
+      "method": "GET",
+      "path": "/api/v1/me/certificates",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-22",
+      "method": "GET",
+      "path": "/api/v1/me/certificates/{code}/pdf",
+      "status": 200,
+      "matched": true,
+      "note": "200 application/pdf (%PDF binary)"
+    },
+    {
+      "apiId": "API-23a",
+      "method": "GET",
+      "path": "/api/v1/courses/{courseId}/questions",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23b",
+      "method": "POST",
+      "path": "/api/v1/courses/{courseId}/questions",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23c",
+      "method": "GET",
+      "path": "/api/v1/questions/{questionId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23d",
+      "method": "POST",
+      "path": "/api/v1/questions/{questionId}/answers",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23e",
+      "method": "POST",
+      "path": "/api/v1/questions/{questionId}/resolve",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-23f",
+      "method": "DELETE",
+      "path": "/api/v1/questions/{questionId}",
+      "status": 200,
+      "matched": true,
+      "note": "200 QaMessageResponse"
+    },
+    {
+      "apiId": "API-24a",
+      "method": "POST",
+      "path": "/api/v1/courses/{courseId}/reviews",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-24b",
+      "method": "DELETE",
+      "path": "/api/v1/reviews/{reviewId}",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    }
+  ]
+}

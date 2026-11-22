@@ -1,0 +1,42 @@
+{
+  "runId": "RUN-M-C1-0080",
+  "cycle": "C1",
+  "tcId": "TC-M-API-FN-002",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "3/3 endpoint Hồ sơ (/me: GET, PATCH, PUT /me/password) khớp 100% schema MeDto, 204 No Content và ErrorEnvelope 422.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:28+07:00",
+  "note": "",
+  "endpoints": [
+    {
+      "apiId": "API-07",
+      "method": "GET",
+      "path": "/api/v1/me",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-08",
+      "method": "PATCH",
+      "path": "/api/v1/me",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-09",
+      "method": "PUT",
+      "path": "/api/v1/me/password",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content & 422 CURRENT_PASSWORD_INCORRECT"
+    }
+  ]
+}

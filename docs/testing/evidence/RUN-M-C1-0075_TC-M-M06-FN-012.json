@@ -1,0 +1,49 @@
+{
+  "runId": "RUN-M-C1-0075",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-012",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Tạo lệnh rút 1.000.000đ=200 (status=requested); gửi trùng khi đang mở=409 (WITHDRAWAL_ALREADY_OPEN); hủy khi requested=204 (204); hủy lại lệnh đã hủy=409 (CANNOT_CANCEL).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:19+07:00",
+  "note": "",
+  "wdCreate": {
+    "id": 12,
+    "amount": 1000000,
+    "bankName": "Vietcombank",
+    "accountNumberLast4": "5544",
+    "accountHolder": "NGUYEN VAN GVA",
+    "status": "requested",
+    "transferReference": null,
+    "rejectReason": null,
+    "createdAt": "2026-11-22T14:15:19.632028245",
+    "processedAt": null
+  },
+  "wdDup": {
+    "success": false,
+    "message": "Bạn đang có một yêu cầu rút tiền đang chờ xử lý.",
+    "data": null,
+    "errors": {
+      "code": "WITHDRAWAL_ALREADY_OPEN",
+      "fields": null,
+      "traceId": "8bdd74aa-e11c-4f6c-a9a6-02f4f4e3811a"
+    }
+  },
+  "wdCancelStatus": 204,
+  "wdCancelAgain": {
+    "success": false,
+    "message": "Chỉ có thể hủy yêu cầu đang ở trạng thái chờ xử lý.",
+    "data": null,
+    "errors": {
+      "code": "CANNOT_CANCEL",
+      "fields": null,
+      "traceId": "3880765d-fb2f-4a4f-8df9-8c91e787cf69"
+    }
+  }
+}

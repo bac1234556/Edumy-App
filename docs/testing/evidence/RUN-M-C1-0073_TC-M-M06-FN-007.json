@@ -1,0 +1,32 @@
+{
+  "runId": "RUN-M-C1-0073",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-007",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "Medium",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "summary=200 (available=3710000, holdDays=7), monthly=200, courses=200, entries=200 (n=1).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:19+07:00",
+  "note": "",
+  "summary": {
+    "hasEarnings": true,
+    "totalEarned": 3710000,
+    "pendingBalance": 0,
+    "inWithdrawal": 0,
+    "withdrawn": 0,
+    "availableBalance": 3710000,
+    "minWithdrawal": 1000000,
+    "holdDays": 7,
+    "nextMaturityAt": null,
+    "maxWithdrawalsPerMonth": 1,
+    "withdrawalsUsedThisMonth": 0,
+    "canWithdrawThisMonth": true,
+    "nextWithdrawalAt": null
+  },
+  "entriesCount": 1
+}

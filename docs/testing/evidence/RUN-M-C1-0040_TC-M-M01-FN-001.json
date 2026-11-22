@@ -1,0 +1,33 @@
+{
+  "runId": "RUN-M-C1-0040",
+  "cycle": "C1",
+  "tcId": "TC-M-M01-FN-001",
+  "module": "M-M01",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "POST /auth/mobile/login=200 (MobileTokens), GET /me=200 (email=qa.hv1@edumy.test, roles=[\"STUDENT\"]).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:12+07:00",
+  "note": "",
+  "loginStatus": 200,
+  "me": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "id": 24,
+      "email": "qa.hv1@edumy.test",
+      "fullName": "QA HV1 Tiếng Việt",
+      "emailVerified": true,
+      "roles": [
+        "STUDENT"
+      ],
+      "status": "ACTIVE",
+      "createdAt": "2026-11-21T09:25:45.043942Z"
+    },
+    "errors": null
+  }
+}

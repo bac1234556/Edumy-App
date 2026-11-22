@@ -1,0 +1,30 @@
+{
+  "runId": "RUN-M-C1-0006",
+  "cycle": "C1",
+  "tcId": "TC-M-M01-FN-009",
+  "module": "M-M01",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "client.test.ts PASS (7 assertions): 3 request 401 đồng thời chỉ gọi 1 lần POST /auth/mobile/refresh (single-flight) và retry thành công cả 3.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:09+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 7,
+    "numFailing": 0,
+    "titles": [
+      "Axios Client & Single-flight 401 Token Refresh attaches Bearer *** from session store on requests [passed]",
+      "Axios Client & Single-flight 401 Token Refresh handles 5 parallel 401 requests with exactly 1 refresh call and retries all 5 [passed]",
+      "Axios Client & Single-flight 401 Token Refresh refresh returning 401 clears secure token and session [passed]",
+      "Axios Client & Single-flight 401 Token Refresh network error during refresh preserves token in secure storage [passed]",
+      "Axios Client & Single-flight 401 Token Refresh does not save rotated tokens when logout (clearSession) runs mid-refresh [passed]",
+      "Axios Client & Single-flight 401 Token Refresh does not trigger token refresh on normal 403 Forbidden [passed]",
+      "Axios Client & Single-flight 401 Token Refresh emits onSessionExpired when refresh fails with 401 [passed]"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C3-0075",
+  "cycle": "C3",
+  "tcId": "TC-M-M08-COMP-001",
+  "module": "M-M08",
+  "type": "COMP",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "[Hồi quy C3] 8/8 luồng Smoke/High trên Expo Web (http://localhost:8082: /, /auth/login, /courses/lap-trinh-java-nang-cao-spring-boot-c91846, /my-learning, /learn/49, /certificates, /instructor, /instructor/courses/49/students) đều trả HTTP 200 (hasRootDiv=true, latency=20.57/24.71/26.46/28.46/30.22/33.09/35.82/39.28ms) và tương tác thành công với Backend /api/v1.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C3 Regression) / Jest 29.7 (131/131 PASS) / Expo Web / edumy-test",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "Hồi quy C3 đạt PASS",
+  "regressionCycle": "C3",
+  "previousRunId": "RUN-M-C1-0090",
+  "meStatus": 200,
+  "learnStatus": 200
+}

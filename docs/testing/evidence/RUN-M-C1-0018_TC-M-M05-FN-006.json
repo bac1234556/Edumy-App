@@ -1,0 +1,35 @@
+{
+  "runId": "RUN-M-C1-0018",
+  "cycle": "C1",
+  "tcId": "TC-M-M05-FN-006",
+  "module": "M-M05",
+  "type": "FN",
+  "priority": "Medium",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "certificates/logic.test.ts PASS: resolveVerificationUrl fallback đúng http://localhost:5001/certificates/verify/{code}; tải PDF mã không tồn tại trả 404 (NOT_FOUND).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:09+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 2,
+    "numFailing": 0,
+    "titles": [
+      "downloadAndShareCertificate downloads PDF with Bearer *** and invokes Sharing [passed]",
+      "copyCertificateVerificationLink copies certificate verification URL to clipboard [passed]"
+    ]
+  },
+  "fakePdfRes": {
+    "success": false,
+    "message": "Không tìm thấy chứng chỉ.",
+    "data": null,
+    "errors": {
+      "code": "NOT_FOUND",
+      "fields": null,
+      "traceId": "bcd96bed-72cb-420e-a315-c5c7a8971615"
+    }
+  }
+}

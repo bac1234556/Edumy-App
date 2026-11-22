@@ -1,0 +1,21 @@
+{
+  "runId": "RUN-M-C1-0032",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-REL-001",
+  "module": "M-M08",
+  "type": "REL",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "Các nút mutation đều gắn disabled/loading={isPending}; bắn 2 request POST /me/withdrawals đồng thời trả statuses=[409, 200] (tối đa 1 lệnh thành công=1, lệnh kia bị chặn 409).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "statuses": [
+    409,
+    200
+  ],
+  "successCount": 1
+}

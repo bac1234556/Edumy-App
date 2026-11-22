@@ -1,0 +1,39 @@
+{
+  "runId": "RUN-M-C1-0061",
+  "cycle": "C1",
+  "tcId": "TC-M-M04-FN-002",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Chưa ghi danh đặt câu hỏi trả 403 (FORBIDDEN); câu hỏi rỗng trả 400 (VALIDATION_ERROR).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:15+07:00",
+  "note": "",
+  "qUnenrolled": {
+    "success": false,
+    "message": "Bạn phải ghi danh khóa học này mới có thể đặt câu hỏi.",
+    "data": null,
+    "errors": {
+      "code": "FORBIDDEN",
+      "fields": null,
+      "traceId": "f18ef3a8-bcd5-420f-bee3-fe5c4c558422"
+    }
+  },
+  "qEmpty": {
+    "success": false,
+    "message": "Dữ liệu đầu vào không hợp lệ.",
+    "data": null,
+    "errors": {
+      "code": "VALIDATION_ERROR",
+      "fields": {
+        "content": "Nội dung câu hỏi không được để trống",
+        "title": "Tiêu đề câu hỏi không được để trống"
+      },
+      "traceId": "5b8687e0-ad4e-45ac-82e6-a5e988957387"
+    }
+  }
+}

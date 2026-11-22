@@ -1,0 +1,18 @@
+{
+  "runId": "RUN-M-C1-0028",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-FN-002",
+  "module": "M-M08",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "useForegroundSync.ts tự động invalidate đủ 5 nhóm queryKeys khi AppState chuyển sang 'active': learning.all, certificates.all, earnings.all, instructor.all, auth.me.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "fgHasAll5": true,
+  "fgSyncCode": "// src/hooks/useForegroundSync.ts\n// Invalidate learning, certificates, earnings, instructor & profile queries when returning to foreground.\n\nimport { useEffect } from 'react';\nimport { AppState, AppStateStatus } from 'react-native';\nimport { useQueryClient } from '@tanstack/react-query';\nimport { queryKeys } from '../api/query-keys';\n\nexport function useForegroundSync() {\n  const queryClient = useQueryClient();\n\n  useEffect(() => {\n    const handleAppStateChange = (nextAppState: AppStateStatus) => {\n      if (nextAppState === 'active') {\n        queryClient.invalidateQueries({ queryKey: queryKeys.learning.all });\n        queryClient.invalidateQueries({ queryKey: queryKeys.certificates.all });\n        queryClient.invalidateQueries({ queryKey: queryKeys.earnings.all });\n        queryClient.invalidateQueries({ queryKey: queryKeys.instructor.all });\n        queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });\n      }\n    };\n\n    const subscription = AppState.addEventListener('change', handleAppStateChange);\n\n    return () => {\n      subscription.remove();\n    };\n  }, [queryClient]);\n}\n"
+}

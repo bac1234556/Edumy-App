@@ -1,0 +1,30 @@
+{
+  "runId": "RUN-M-C1-0008",
+  "cycle": "C1",
+  "tcId": "TC-M-M01-SEC-001",
+  "module": "M-M01",
+  "type": "SEC",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "tokens.test.ts PASS (5 tests): Native dùng SecureStore('edumy.refreshToken'), Web chỉ lưu memory; asyncStorageHits=0, localStorageHits=0.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:09+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 5,
+    "numFailing": 0,
+    "titles": [
+      "tokens.ts reads refresh token from SecureStore on native [passed]",
+      "tokens.ts saves refresh token to SecureStore on native [passed]",
+      "tokens.ts removes refresh token from SecureStore on native [passed]",
+      "tokens.ts returns null safely when SecureStore throws an error on native [passed]",
+      "tokens.ts stores refresh token in memory only on web without touching SecureStore [passed]"
+    ]
+  },
+  "asyncStorageHits": [],
+  "localStorageHits": []
+}

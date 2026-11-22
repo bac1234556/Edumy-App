@@ -1,0 +1,39 @@
+{
+  "runId": "RUN-M-C2-0001",
+  "cycle": "C2",
+  "tcId": "TC-M-M04-FN-005",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "[Fixed DEF-M-003] Tạo đánh giá POST /courses/47/reviews=200 (id=80, rating=5); cập nhật qua updateReviewApi PUT /reviews/80=204 (rating mới=4); rút đánh giá DELETE /reviews/80=204 (204).",
+  "defectId": "DEF-M-003",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:16+07:00",
+  "note": "Đã đóng DEF-M-003 [App] ở Chu kỳ C2",
+  "revCreate": {
+    "reviewId": 80,
+    "userId": 24,
+    "courseId": 47,
+    "rating": 5,
+    "comment": "Đánh giá mới ở Chu kỳ C2!",
+    "sentimentLabel": "POSITIVE",
+    "sentimentScore": 0.9,
+    "createdAt": "2026-11-22T07:50:15.409048106",
+    "visibilityStatus": "VISIBLE",
+    "moderationReason": null,
+    "moderatedAt": null,
+    "user": null
+  },
+  "revUpdateStatus": 204,
+  "updatedItem": {
+    "id": 80,
+    "rating": 4,
+    "comment": "Đã cập nhật đánh giá qua PUT /reviews/{id} ở Chu kỳ C2",
+    "reviewerName": "QA HV1 Tiếng Việt",
+    "createdAt": "2026-11-22T00:50:15.409048Z"
+  },
+  "revDeleteStatus": 204
+}

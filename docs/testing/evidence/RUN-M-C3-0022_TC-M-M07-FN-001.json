@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C3-0022",
+  "cycle": "C3",
+  "tcId": "TC-M-M07-FN-001",
+  "module": "M-M07",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "[Hồi quy C3] ads/logic.test.ts PASS (10 tests): AdMob luôn mặc định dùng Google TestIds và shouldShowInterstitial tuân thủ cooldown 60.000ms.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C3 Regression) / Jest 29.7 (131/131 PASS) / Expo Web / edumy-test",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "Hồi quy C3 đạt PASS",
+  "regressionCycle": "C3",
+  "previousRunId": "RUN-M-C1-0025",
+  "meStatus": 200,
+  "learnStatus": 200
+}

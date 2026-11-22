@@ -1,0 +1,42 @@
+{
+  "runId": "RUN-M-C1-0047",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-008",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Khách không token xem bài học thử 181=200 (title=\"Bài 1: Nội dung bài học số 1\"); bài không học thử 182=403 (LESSON_NOT_PREVIEWABLE).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:54:21+07:00",
+  "note": "",
+  "prevOk": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "id": 1238,
+      "courseId": 1075,
+      "title": "Bài 1: Nội dung bài học số 1",
+      "contentType": "video",
+      "videoUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      "articleContent": null,
+      "durationSeconds": 7200,
+      "prevLessonId": null,
+      "nextLessonId": null
+    },
+    "errors": null
+  },
+  "prevDenied": {
+    "success": false,
+    "message": "Bài học này không cho phép xem thử miễn phí.",
+    "data": null,
+    "errors": {
+      "code": "LESSON_NOT_PREVIEWABLE",
+      "fields": null,
+      "traceId": "7781da10-8112-4844-9b06-87e68757d286"
+    }
+  }
+}

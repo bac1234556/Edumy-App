@@ -1,0 +1,19 @@
+{
+  "runId": "RUN-M-C1-0034",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-COMP-002",
+  "module": "M-M08",
+  "type": "COMP",
+  "priority": "High",
+  "platform": "Android-30",
+  "status": "Blocked",
+  "actual": "BLOCKED: Máy kiểm thử Windows hiện chưa cài đặt Android SDK / adb / emulator (%LOCALAPPDATA%\\Android\\Sdk không tồn tại, 0 AVD API 30).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Windows x64 (Android-30)",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "Thiếu Android SDK & AVD API 30 trên máy host Windows.",
+  "hostPlatform": "win32",
+  "androidSdkInstalled": false,
+  "avdList": []
+}

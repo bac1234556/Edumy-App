@@ -1,0 +1,36 @@
+{
+  "runId": "RUN-M-C1-0049",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-010",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Khóa Hidden (qa-khoa-da-an-hidden-fccd7f) trả 404 (COURSE_NOT_FOUND: \"Không tìm thấy khóa học.\"); slug không tồn tại trả 404.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:54:21+07:00",
+  "note": "",
+  "hiddenDet": {
+    "success": false,
+    "message": "Không tìm thấy khóa học.",
+    "data": null,
+    "errors": {
+      "code": "COURSE_NOT_FOUND",
+      "fields": null,
+      "traceId": "37e46a43-1b10-4074-aaa4-6eaa41aa86db"
+    }
+  },
+  "missingDet": {
+    "success": false,
+    "message": "Không tìm thấy khóa học.",
+    "data": null,
+    "errors": {
+      "code": "COURSE_NOT_FOUND",
+      "fields": null,
+      "traceId": "b3b369a9-d34f-4abb-8f58-48e43450131a"
+    }
+  }
+}

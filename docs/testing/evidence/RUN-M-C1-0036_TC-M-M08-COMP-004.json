@@ -1,0 +1,18 @@
+{
+  "runId": "RUN-M-C1-0036",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-COMP-004",
+  "module": "M-M08",
+  "type": "COMP",
+  "priority": "Low",
+  "platform": "iOS",
+  "status": "Blocked",
+  "actual": "BLOCKED: Máy kiểm thử chạy hệ điều hành Windows (win32); iOS Simulator yêu cầu macOS và Xcode.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Windows x64 (iOS)",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "Máy host Windows không hỗ trợ iOS Simulator.",
+  "hostPlatform": "win32",
+  "xcodeAvailable": false
+}

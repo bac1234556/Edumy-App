@@ -1,0 +1,23 @@
+{
+  "runId": "RUN-M-C1-0065",
+  "cycle": "C1",
+  "tcId": "TC-M-M04-FN-006",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Fail",
+  "actual": "Khi đánh giá bị Admin ẩn (hideStatus=200), học viên gửi lại qua submitReviewApi (POST /courses/{id}/reviews) nhận 400 (undefined: \"Bạn đã gửi đánh giá cho khóa học này rồi.\") thay vì 403/409 REVIEW_HIDDEN_BY_ADMIN mà write-review.tsx dòng 78 kỳ vọng.",
+  "defectId": "DEF-M-003",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:15+07:00",
+  "note": "write-review.tsx gọi POST /courses/{id}/reviews trả 400 BAD_REQUEST thay vì PUT /reviews/{id} (403) và kiểm tra mã REVIEW_HIDDEN_BY_ADMIN không khớp Backend",
+  "hideStatus": 200,
+  "editWhileHidden": {
+    "success": false,
+    "message": "Bạn đã gửi đánh giá cho khóa học này rồi.",
+    "data": null,
+    "errors": null
+  }
+}

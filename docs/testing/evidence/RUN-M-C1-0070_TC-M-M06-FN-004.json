@@ -1,0 +1,28 @@
+{
+  "runId": "RUN-M-C1-0070",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-004",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "GET /instructor/invitations=200; accept=200, decline=200, lời mời đã thu hồi/không tồn tại (999999)=404.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:18+07:00",
+  "note": "",
+  "accStatus": 200,
+  "decStatus": 200,
+  "ghostInv": {
+    "success": false,
+    "message": "Không tìm thấy lời mời cộng tác.",
+    "data": null,
+    "errors": {
+      "code": "NOT_FOUND",
+      "fields": null,
+      "traceId": "d6439773-388f-4b92-aeea-746feb336170"
+    }
+  }
+}

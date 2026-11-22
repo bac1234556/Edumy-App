@@ -1,0 +1,19 @@
+{
+  "runId": "RUN-M-C2-0004",
+  "cycle": "C2",
+  "tcId": "TC-M-M04-FN-004",
+  "module": "M-M04",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "[Fixed DEF-M-002] HV2 phản hồi=403 (403); HV2 resolve POST /questions/660/resolve=403 (403 FORBIDDEN: \"Bạn không có quyền đánh dấu đã giải quyết câu hỏi này.\"); HV2 xóa câu hỏi=403 (403) — đóng DEF-M-002.",
+  "defectId": "DEF-M-002",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:16+07:00",
+  "note": "Đã đóng DEF-M-002 [Backend] ở Chu kỳ C2",
+  "hv2AnsStatus": 403,
+  "hv2ResolveStatus": 403,
+  "hv2DelStatus": 403
+}

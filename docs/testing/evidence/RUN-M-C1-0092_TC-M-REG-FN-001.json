@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C1-0092",
+  "cycle": "C1",
+  "tcId": "TC-M-REG-FN-001",
+  "module": "M-REG",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Hồi quy SortPicker (D-09): SortPicker.test.tsx PASS (3/3 tests cho 4 tùy chọn Mới nhất, Đánh giá cao, Giá tăng dần, Giá giảm dần + bấm backdrop đóng sheet); cả 4 truy vấn GET /api/v1/catalog/courses?sort=newest|rating|price_asc|price_desc đều trả HTTP 200 với thứ tự chính xác.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Expo Web Bundle (http://localhost:8082, dist-web-qa) / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:29+07:00",
+  "note": "",
+  "newestFirstId": 1076,
+  "ratingFirstId": 48,
+  "priceAscFirstPrice": 0,
+  "priceDescFirstPrice": 1890000
+}

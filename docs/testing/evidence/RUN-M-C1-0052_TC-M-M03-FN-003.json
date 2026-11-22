@@ -1,0 +1,99 @@
+{
+  "runId": "RUN-M-C1-0052",
+  "cycle": "C1",
+  "tcId": "TC-M-M03-FN-003",
+  "module": "M-M03",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "GET /me/enrollments=200 (count=4, sample progressPercent=0%, lastAccessedLessonId=null).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:54:22+07:00",
+  "note": "",
+  "myEnrolls": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "content": [
+        {
+          "id": 26,
+          "enrolledAt": "2026-11-21T09:38:50.649663Z",
+          "progressPercent": 0,
+          "completedItems": 0,
+          "totalItems": 2,
+          "lastAccessedLessonId": null,
+          "lastAccessedAt": null,
+          "certificateCode": null,
+          "course": {
+            "id": 50,
+            "slug": "kien-truc-microservices-chuyen-sau-a8fd4e",
+            "title": "Kiến Trúc Microservices Chuyên Sâu",
+            "thumbnailUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80",
+            "instructorName": "QA GVA Tiếng Việt"
+          }
+        },
+        {
+          "id": 24,
+          "enrolledAt": "2026-11-21T09:38:48.246615Z",
+          "progressPercent": 25,
+          "completedItems": 1,
+          "totalItems": 4,
+          "lastAccessedLessonId": null,
+          "lastAccessedAt": null,
+          "certificateCode": null,
+          "course": {
+            "id": 49,
+            "slug": "lap-trinh-java-nang-cao-spring-boot-ba915c",
+            "title": "Lập Trình Java Nâng Cao Spring Boot",
+            "thumbnailUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80",
+            "instructorName": "QA GVA Tiếng Việt"
+          }
+        },
+        {
+          "id": 15,
+          "enrolledAt": "2026-11-21T09:27:55.100552Z",
+          "progressPercent": 100,
+          "completedItems": 10,
+          "totalItems": 10,
+          "lastAccessedLessonId": null,
+          "lastAccessedAt": null,
+          "certificateCode": "EDUMY-BBD78DB934",
+          "course": {
+            "id": 48,
+            "slug": "khoa-hoc-chung-chi-10-bai-tieng-viet-69d020",
+            "title": "Khóa Học Chứng Chỉ 10 Bài Tiếng Việt",
+            "thumbnailUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80",
+            "instructorName": "QA GVA Tiếng Việt"
+          }
+        },
+        {
+          "id": 11,
+          "enrolledAt": "2026-11-21T09:26:47.756997Z",
+          "progressPercent": 100,
+          "completedItems": 3,
+          "totalItems": 3,
+          "lastAccessedLessonId": 168,
+          "lastAccessedAt": "2026-11-21T10:49:23.885825Z",
+          "certificateCode": "EDUMY-A6FDA6C06E",
+          "course": {
+            "id": 47,
+            "slug": "lap-trinh-java-co-ban-mien-phi-1af0e1",
+            "title": "Lập Trình Java Cơ Bản Miễn Phí",
+            "thumbnailUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80",
+            "instructorName": "QA GVA Tiếng Việt"
+          }
+        }
+      ],
+      "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 4,
+        "totalPages": 1
+      }
+    },
+    "errors": null
+  }
+}

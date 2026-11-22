@@ -43,7 +43,15 @@ export async function getInstructorCourseStudentsApi(
   const response = await client.get(`/instructor/courses/${courseId}/students`, {
     params: { page, size: 20 },
   });
-  return unwrap<StudentRosterResponse>(response.data);
+  const raw = unwrap<StudentRosterResponse>(response.data);
+  return {
+    ...raw,
+    content: (raw.content ?? []).map((item) => {
+      const sanitized = { ...item };
+      delete sanitized.email;
+      return sanitized;
+    }),
+  };
 }
 
 export async function getInstructorQuestionsApi(

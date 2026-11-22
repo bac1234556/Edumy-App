@@ -1,0 +1,168 @@
+{
+  "runId": "RUN-M-C1-0077",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-PERF-001",
+  "module": "M-M08",
+  "type": "PERF",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "50 CCU x 3 lượt Catalog: newest p95=410.74ms, rating p95=238.9ms, price_asc p95=211.75ms, price_desc p95=199.13ms, detail p95=188.69ms (tất cả <= 3000ms, 5xx=0).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:23+07:00",
+  "note": "",
+  "benchmarks": [
+    {
+      "scenario": "GET /catalog/courses?sort=newest",
+      "worstP50": 329.17,
+      "worstP95": 410.74,
+      "worstMax": 414.16,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 329.17,
+          "p95": 410.74,
+          "max": 414.16,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 132.83,
+          "p95": 205.88,
+          "max": 221.54,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 130.64,
+          "p95": 204.87,
+          "max": 207.89,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses?sort=rating",
+      "worstP50": 151.99,
+      "worstP95": 238.9,
+      "worstMax": 249.49,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 151.99,
+          "p95": 236.01,
+          "max": 243.28,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 149.44,
+          "p95": 226.92,
+          "max": 229.52,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 135.29,
+          "p95": 238.9,
+          "max": 249.49,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses?sort=price_asc",
+      "worstP50": 137.28,
+      "worstP95": 211.75,
+      "worstMax": 223.33,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 137.28,
+          "p95": 211.75,
+          "max": 223.33,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 118.21,
+          "p95": 188.55,
+          "max": 209.82,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 129.29,
+          "p95": 182.84,
+          "max": 186.27,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses?sort=price_desc",
+      "worstP50": 125.05,
+      "worstP95": 199.13,
+      "worstMax": 214.05,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 121.42,
+          "p95": 198.98,
+          "max": 203.96,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 115.6,
+          "p95": 198.37,
+          "max": 206.43,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 125.05,
+          "p95": 199.13,
+          "max": 214.05,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses/{slug}",
+      "worstP50": 120.35,
+      "worstP95": 188.69,
+      "worstMax": 206.23,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 107.48,
+          "p95": 162.48,
+          "max": 165.5,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 111.11,
+          "p95": 158.18,
+          "max": 160.6,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 120.35,
+          "p95": 188.69,
+          "max": 206.23,
+          "err5xx": 0
+        }
+      ]
+    }
+  ]
+}

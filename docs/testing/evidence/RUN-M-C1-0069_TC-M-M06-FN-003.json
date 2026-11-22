@@ -1,0 +1,28 @@
+{
+  "runId": "RUN-M-C1-0069",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-003",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Fail",
+  "actual": "GET /instructor/courses=200 (n=39); GET /instructor/courses/49/students=200 (n=1), NHƯNG hasAnyEmailField=true (Backend trả trường \"email\": \"qa.hv1@edumy.test\" và App app/instructor/courses/[courseId]/students.tsx dòng 73 hiển thị trực tiếp item.email lên màn hình — vi phạm UC-I19 & AC-M15 không lộ email học viên).",
+  "defectId": "DEF-M-004",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:17+07:00",
+  "note": "Lộ email học viên trên API GET /instructor/courses/{id}/students và màn hình students.tsx (vi phạm UC-I19)",
+  "coursesCount": 39,
+  "studentsCount": 1,
+  "sampleStudent": {
+    "enrollmentId": 1025,
+    "userId": 24,
+    "fullName": "QA HV1 Tiếng Việt",
+    "email": "qa.hv1@edumy.test",
+    "enrolledAt": "2026-11-22T00:02:32.073155Z",
+    "progressPercentage": 50,
+    "status": "ACTIVE"
+  },
+  "hasAnyEmailField": true
+}

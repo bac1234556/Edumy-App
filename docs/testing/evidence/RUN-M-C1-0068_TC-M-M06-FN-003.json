@@ -1,0 +1,19 @@
+{
+  "runId": "RUN-M-C1-0068",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-003",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Fail",
+  "actual": "GET /instructor/courses=200 (n=39); GET /instructor/courses/49/students=200 (n=0, hasAnyEmailField=false — tuân thủ UC-I19 không lộ email học viên).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:54:29+07:00",
+  "note": "",
+  "coursesCount": 39,
+  "studentsCount": 0,
+  "hasAnyEmailField": false
+}

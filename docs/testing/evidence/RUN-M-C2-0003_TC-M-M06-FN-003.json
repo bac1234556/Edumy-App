@@ -1,0 +1,27 @@
+{
+  "runId": "RUN-M-C2-0003",
+  "cycle": "C2",
+  "tcId": "TC-M-M06-FN-003",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "[Fixed DEF-M-004 trên cả App & Backend] GET /instructor/courses/49/students=200 (n=7, rawHasEmail=false); getInstructorCourseStudentsApi lọc email (appStripsEmail=true) và students.tsx gỡ dòng render item.email (screenRendersEmail=false) — tuân thủ 100% UC-I19 & AC-M15.",
+  "defectId": "DEF-M-004",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:16+07:00",
+  "note": "Đã đóng DEF-M-004 trên cả [App] và [Backend] ở Chu kỳ C2",
+  "appStripsEmail": true,
+  "screenRendersEmail": false,
+  "rawHasEmail": false,
+  "sampleStudent": {
+    "enrollmentId": 25,
+    "userId": 40,
+    "fullName": "Sig Test",
+    "enrolledAt": "2026-11-21T09:38:49.772508Z",
+    "progressPercentage": 0,
+    "status": "ACTIVE"
+  }
+}

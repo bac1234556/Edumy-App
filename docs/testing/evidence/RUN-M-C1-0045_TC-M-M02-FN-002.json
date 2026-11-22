@@ -1,0 +1,37 @@
+{
+  "runId": "RUN-M-C1-0045",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-002",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Tìm có dấu ('Lập trình Java' -> 5 khóa), không dấu ('lap trinh java' -> 5 khóa), hoa ('LAP TRINH JAVA' -> 5 khóa) khớp 100% danh sách ID.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:13+07:00",
+  "note": "",
+  "idsAcc": [
+    1075,
+    1073,
+    49,
+    47,
+    2
+  ],
+  "idsUnacc": [
+    1075,
+    1073,
+    49,
+    47,
+    2
+  ],
+  "idsUpper": [
+    1075,
+    1073,
+    49,
+    47,
+    2
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "runId": "RUN-M-C1-0058",
+  "cycle": "C1",
+  "tcId": "TC-M-M03-FN-009",
+  "module": "M-M03",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Đồng bộ chéo Web <-> App trên khóa 49: Web progressPercentage=50% === Mobile progress.percent=50% (completedLessons=undefined).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:15+07:00",
+  "note": "",
+  "webPct": 50,
+  "mobPct": 50,
+  "mobileProgress": {
+    "percent": 50,
+    "completedItems": 2,
+    "totalItems": 4
+  }
+}

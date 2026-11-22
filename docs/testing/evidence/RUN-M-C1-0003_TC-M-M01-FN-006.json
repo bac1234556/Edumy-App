@@ -1,0 +1,27 @@
+{
+  "runId": "RUN-M-C1-0003",
+  "cycle": "C1",
+  "tcId": "TC-M-M01-FN-006",
+  "module": "M-M01",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "hooks.test.ts PASS (4 assertions): useRestoreSession xoay vòng refreshToken mới, gọi GET /me và chuyển sang authenticated.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:08+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 4,
+    "numFailing": 0,
+    "titles": [
+      "restoreSessionSequence preserves refresh token and sets offline status on network error [passed]",
+      "restoreSessionSequence removes refresh token on 401 AUTH_REFRESH_REUSED [passed]",
+      "restoreSessionSequence restores session in order: refresh -> save token -> getMe -> setSession [passed]",
+      "performLogout clears session, cancels & clears query cache, removes token, calls logoutApi and replaces route [passed]"
+    ]
+  }
+}

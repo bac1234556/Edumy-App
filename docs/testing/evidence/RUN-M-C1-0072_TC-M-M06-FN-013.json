@@ -1,0 +1,38 @@
+{
+  "runId": "RUN-M-C1-0072",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-013",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "Medium",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "GV-A gửi câu trả lời rỗng trả 400 (VALIDATION_ERROR); GV-B trả lời câu hỏi khóa của GV-A bị chặn 403 (FORBIDDEN).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:18+07:00",
+  "note": "",
+  "instReplyEmpty": {
+    "success": false,
+    "message": "Dữ liệu đầu vào không hợp lệ.",
+    "data": null,
+    "errors": {
+      "code": "VALIDATION_ERROR",
+      "fields": {
+        "content": "Nội dung câu trả lời không được để trống"
+      },
+      "traceId": "6b46a509-a681-47af-9260-ca80f803f73f"
+    }
+  },
+  "gvbReplyOther": {
+    "success": false,
+    "message": "Bạn không có quyền phản hồi câu hỏi này.",
+    "data": null,
+    "errors": {
+      "code": "FORBIDDEN",
+      "fields": null,
+      "traceId": "d1a41411-ffe7-40ef-9fb4-8b7377d38836"
+    }
+  }
+}

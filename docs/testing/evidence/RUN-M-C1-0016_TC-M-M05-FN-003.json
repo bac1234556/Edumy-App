@@ -1,0 +1,43 @@
+{
+  "runId": "RUN-M-C1-0016",
+  "cycle": "C1",
+  "tcId": "TC-M-M05-FN-003",
+  "module": "M-M05",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "changePasswordSchema chặn mật khẩu <8 ký tự, thiếu chữ/số hoặc trùng mật khẩu cũ; sai currentPassword trả 422 (CURRENT_PASSWORD_INCORRECT).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:09+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 10,
+    "numFailing": 0,
+    "titles": [
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) returns false when user is not logged in [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) returns false for normal student without earnings [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) returns true when user has instructor role [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) returns true when user has recorded earnings even if role is only student (BR-53) [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) updateProfileSchema validates valid fullName [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) updateProfileSchema rejects empty fullName [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) updateProfileSchema rejects fullName exceeding 100 characters [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) changePasswordSchema validates correct password change [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) changePasswordSchema rejects new password that is identical to current password [passed]",
+      "Profile Logic & Instructor Tab Visibility (D-M01, rules 40) changePasswordSchema rejects mismatched confirmation password [passed]"
+    ]
+  },
+  "badPassChange": {
+    "success": false,
+    "message": "Mật khẩu hiện tại không chính xác.",
+    "data": null,
+    "errors": {
+      "code": "CURRENT_PASSWORD_INCORRECT",
+      "fields": null,
+      "traceId": "8814adc7-f4e7-440d-917d-f8ea9c72efcb"
+    }
+  }
+}

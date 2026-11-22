@@ -1,0 +1,30 @@
+{
+  "runId": "RUN-M-C1-0049",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-009",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "Medium",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "GET /catalog/courses/lap-trinh-java-nang-cao-spring-boot-c91846/reviews=200 (count=0, page={\"number\":0,\"size\":10,\"totalElements\":0,\"totalPages\":0}).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:14+07:00",
+  "note": "",
+  "revList": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "content": [],
+      "page": {
+        "number": 0,
+        "size": 10,
+        "totalElements": 0,
+        "totalPages": 0
+      }
+    },
+    "errors": null
+  }
+}

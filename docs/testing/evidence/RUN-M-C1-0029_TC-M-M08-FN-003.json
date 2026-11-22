@@ -1,0 +1,32 @@
+{
+  "runId": "RUN-M-C1-0029",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-FN-003",
+  "module": "M-M08",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "problem.test.ts PASS (9 tests): parseAppError trích đúng message tiếng Việt, fieldErrors không lẫn code/traceId, đọc Retry-After khi 429 và giữ traceId khi 500.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 9,
+    "numFailing": 0,
+    "titles": [
+      "parseAppError (v2 envelope) parses AUTH_INVALID_CREDENTIALS (401) without polluting fieldErrors with code/traceId [passed]",
+      "parseAppError (v2 envelope) parses VALIDATION_ERROR (400) with errors.fields [passed]",
+      "parseAppError (v2 envelope) parses WITHDRAWAL_EXCEEDS_BALANCE (422) from v2 envelope [passed]",
+      "parseAppError (v2 envelope) parses 500 INTERNAL_ERROR from v2 envelope and falls back on empty body [passed]",
+      "parseAppError (v2 envelope) reads Retry-After header for 429 status [passed]",
+      "parseAppError (v2 envelope) handles timeout error correctly [passed]",
+      "parseAppError (v2 envelope) handles network error (offline) correctly [passed]",
+      "applyFieldErrors calls setError for each field in fieldErrors [passed]",
+      "applyFieldErrors does nothing when fieldErrors is undefined [passed]"
+    ]
+  }
+}

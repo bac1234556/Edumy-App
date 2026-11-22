@@ -26,3 +26,21 @@ export function validateReviewInput(rating: number, comment?: string): ReviewVal
 
   return { valid: true };
 }
+
+export function isReviewHiddenError(
+  err: { status?: number; code?: string; message?: string } | null | undefined,
+  hadVisibleReview: boolean = false
+): boolean {
+  if (!err) return false;
+  if (err.code === 'REVIEW_HIDDEN_BY_ADMIN' || err.status === 409) {
+    return true;
+  }
+  const msg = (err.message || '').toLowerCase();
+  if (err.status === 403 && (msg.includes('ẩn') || msg.includes('quản trị viên'))) {
+    return true;
+  }
+  if (!hadVisibleReview && err.status === 400 && msg.includes('đã gửi đánh giá')) {
+    return true;
+  }
+  return false;
+}

@@ -1,0 +1,24 @@
+{
+  "runId": "RUN-M-C1-0024",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-SEC-001",
+  "module": "M-M06",
+  "type": "SEC",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "GET /me/payout-account chỉ trả accountNumberLast4='5544' (leakedFullAcc=false); maskAccountNumber='•••• •••• •••• 5544'; consoleLogInSensitive=0.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "payoutData": {
+    "bankName": "Vietcombank",
+    "accountNumberLast4": "5544",
+    "accountHolder": "NGUYEN VAN GVA",
+    "updatedAt": "2026-11-22T07:07:40.976616"
+  },
+  "leakedFullAcc": false,
+  "consoleLogInSensitive": []
+}

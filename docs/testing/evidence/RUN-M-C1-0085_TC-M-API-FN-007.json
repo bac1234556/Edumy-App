@@ -1,0 +1,90 @@
+{
+  "runId": "RUN-M-C1-0085",
+  "cycle": "C1",
+  "tcId": "TC-M-API-FN-007",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "9/9 endpoint Thu nhập, Tài khoản nhận tiền & Rút tiền khớp schema openapi.json (ghi chú DEF-M-001 mức S4: khi sai currentPassword, PUT /me/payout-account trả PASSWORD_INCORRECT thay vì CURRENT_PASSWORD_INCORRECT, App đã tương thích cả hai mã).",
+  "defectId": "DEF-M-001",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:28+07:00",
+  "note": "Ghi chú S4 DEF-M-001 trên mã lỗi 422 của PUT /me/payout-account",
+  "endpoints": [
+    {
+      "apiId": "API-28a",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/summary",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-28b",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/monthly",
+      "status": 200,
+      "matched": true,
+      "note": "MonthlyEarningDto[]"
+    },
+    {
+      "apiId": "API-28c",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/courses",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-28d",
+      "method": "GET",
+      "path": "/api/v1/me/earnings/entries",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-29a",
+      "method": "GET",
+      "path": "/api/v1/me/payout-account",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-29b",
+      "method": "PUT",
+      "path": "/api/v1/me/payout-account",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-30a",
+      "method": "GET",
+      "path": "/api/v1/me/withdrawals",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-30b",
+      "method": "POST",
+      "path": "/api/v1/me/withdrawals",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-30c",
+      "method": "POST",
+      "path": "/api/v1/me/withdrawals/{id}/cancel",
+      "status": 204,
+      "matched": true,
+      "note": "204 No Content chuẩn hợp đồng"
+    }
+  ]
+}

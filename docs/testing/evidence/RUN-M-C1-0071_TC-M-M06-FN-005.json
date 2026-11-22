@@ -1,0 +1,28 @@
+{
+  "runId": "RUN-M-C1-0071",
+  "cycle": "C1",
+  "tcId": "TC-M-M06-FN-005",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "GET /instructor/questions?status=unanswered=200 (n=20); GV-A trả lời POST /questions/497/answers=200.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:18+07:00",
+  "note": "",
+  "queueCount": 20,
+  "reply": {
+    "id": 9,
+    "authorId": 20,
+    "authorName": "QA GVA Tiếng Việt",
+    "authorAvatar": null,
+    "authorType": "INSTRUCTOR",
+    "content": "Thầy đã trả lời câu hỏi của em nhé!",
+    "visibilityStatus": "VISIBLE",
+    "createdAt": "2026-11-22T07:15:18.404616094",
+    "answerId": 9
+  }
+}

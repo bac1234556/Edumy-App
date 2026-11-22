@@ -1,0 +1,26 @@
+{
+  "runId": "RUN-M-C1-0010",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-003",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "SortPicker.test.tsx PASS (3 tests): hiển thị đủ 4 kiểu sắp xếp tiếng Việt (accessibilityRole='radio'), chọn trực tiếp gọi onChange & đóng bằng nền không đổi giá trị.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:09+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 3,
+    "numFailing": 0,
+    "titles": [
+      "SortPicker renders trigger with current sort label and accessibility metadata [passed]",
+      "SortPicker opens sheet with 4 options, marks selected radio, selects \"Giá giảm dần\" and closes [passed]",
+      "SortPicker closes without changing value when pressing backdrop or onRequestClose [passed]"
+    ]
+  }
+}

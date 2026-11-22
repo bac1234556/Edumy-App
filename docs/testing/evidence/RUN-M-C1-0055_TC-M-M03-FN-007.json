@@ -1,0 +1,40 @@
+{
+  "runId": "RUN-M-C1-0055",
+  "cycle": "C1",
+  "tcId": "TC-M-M03-FN-007",
+  "module": "M-M03",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Đánh dấu hoàn thành bài 1/3 -> progressPercent=33% (Math.floor(100/3)=33%); bỏ đánh dấu -> progressPercent=0%.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:54:23+07:00",
+  "note": "",
+  "mark1": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "lessonId": 1225,
+      "completed": true,
+      "progressPercent": 33,
+      "certificateCode": null,
+      "certificateJustIssued": false
+    },
+    "errors": null
+  },
+  "unmark1": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "lessonId": 1225,
+      "completed": false,
+      "progressPercent": 0,
+      "certificateCode": null,
+      "certificateJustIssued": false
+    },
+    "errors": null
+  }
+}

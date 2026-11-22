@@ -1,0 +1,33 @@
+{
+  "runId": "RUN-M-C1-0025",
+  "cycle": "C1",
+  "tcId": "TC-M-M07-FN-001",
+  "module": "M-M07",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "ads/logic.test.ts PASS (10 tests): AdMob luôn mặc định dùng Google TestIds và shouldShowInterstitial tuân thủ cooldown 60.000ms.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 10,
+    "numFailing": 0,
+    "titles": [
+      "Hybrid Ads Logic (Q-M01) shouldShowInterstitial allows showing when never shown before [passed]",
+      "Hybrid Ads Logic (Q-M01) shouldShowInterstitial blocks showing during cooldown window and allows once elapsed [passed]",
+      "Hybrid Ads Logic (Q-M01) shouldShowInterstitial always allows when cooldown is 0 [passed]",
+      "Hybrid Ads Logic (Q-M01) selectPromotedCourses interleaves HOT, VALUE, and NEW paid courses while excluding free and owned courses [passed]",
+      "Hybrid Ads Logic (Q-M01) selectPromotedCourses deduplicates overlapping courses and respects limit [passed]",
+      "Hybrid Ads Logic (Q-M01) selectPromotedCourses falls back to general catalog courses when fewer than 3 paid courses are eligible [passed]",
+      "Hybrid Ads Logic (Q-M01) selectPromotedCourses returns empty array when limit <= 0 or no eligible courses [passed]",
+      "Hybrid Ads Logic (Q-M01) pickModalPromoCourses & pickInlineFeedAdCourse returns up to 3 courses for modal carousel and picks 2nd course for inline feed ad [passed]",
+      "Hybrid Ads Logic (Q-M01) pickModalPromoCourses & pickInlineFeedAdCourse handles empty or single-item lists gracefully [passed]",
+      "Hybrid Ads Logic (Q-M01) getFlashSaleCountdown computes remaining HH:MM:SS until 23:59:59 in Asia/Ho_Chi_Minh [passed]"
+    ]
+  }
+}

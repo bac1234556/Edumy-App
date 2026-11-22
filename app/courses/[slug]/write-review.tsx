@@ -1,5 +1,5 @@
-// app/courses/[slug]/write-review.tsx — Gửi đánh giá khóa học
-import React, { useState } from 'react';
+// app/courses/[slug]/write-review.tsx — Gửi / Cập nhật / Rút đánh giá khóa học
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,10 +11,15 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { notify } from '../../../src/lib/dialog';
-import { useCourseDetail } from '../../../src/features/catalog/hooks';
-import { useSubmitReview } from '../../../src/features/reviews/hooks';
-import { validateReviewInput } from '../../../src/features/reviews/logic';
+import { confirm, notify } from '../../../src/lib/dialog';
+import { useCourseDetail, useCourseReviews } from '../../../src/features/catalog/hooks';
+import {
+  useDeleteReview,
+  useSubmitReview,
+  useUpdateReview,
+} from '../../../src/features/reviews/hooks';
+import { isReviewHiddenError, validateReviewInput } from '../../../src/features/reviews/logic';
+import { useSessionStore } from '../../../src/store/session';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
 import { Card } from '../../../src/components/ui/Card';
@@ -25,15 +30,43 @@ import { AppError } from '../../../src/api/problem';
 import { layout, radius, semantic } from '../../../src/theme/tokens';
 
 export default function WriteReviewScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { slug, reviewId: paramReviewId } = useLocalSearchParams<{
+    slug: string;
+    reviewId?: string;
+  }>();
   const router = useRouter();
+  const { me } = useSessionStore();
 
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasPrefilled, setHasPrefilled] = useState(false);
 
   const { data: course, isLoading, isError, error, refetch } = useCourseDetail(slug || '');
+  const { data: reviewsPage } = useCourseReviews(slug || '', 0);
   const { mutate: submitReview, isPending: isSubmitting } = useSubmitReview(slug);
+  const { mutate: updateReview, isPending: isUpdating } = useUpdateReview(slug);
+  const { mutate: deleteReview, isPending: isDeleting } = useDeleteReview(slug);
+
+  const existingReview = useMemo(() => {
+    const list = reviewsPage?.content ?? [];
+    if (paramReviewId) {
+      const byId = list.find((r) => String(r.id) === String(paramReviewId));
+      if (byId) return byId;
+    }
+    if (!me?.fullName) return undefined;
+    return list.find((r) => r.reviewerName === me.fullName);
+  }, [reviewsPage?.content, paramReviewId, me?.fullName]);
+
+  const resolvedReviewId = existingReview?.id ?? (paramReviewId ? Number(paramReviewId) : undefined);
+
+  useEffect(() => {
+    if (existingReview && !hasPrefilled) {
+      setRating(existingReview.rating ?? 5);
+      setComment(existingReview.comment ?? '');
+      setHasPrefilled(true);
+    }
+  }, [existingReview, hasPrefilled]);
 
   if (isLoading) {
     return <Loading message="Đang tải thông tin khóa học..." />;
@@ -52,6 +85,17 @@ export default function WriteReviewScreen() {
     );
   }
 
+  const handleMutationError = (err: unknown) => {
+    const appErr = err as unknown as AppError;
+    if (isReviewHiddenError(appErr, Boolean(existingReview))) {
+      setErrorMessage(
+        'Đánh giá của bạn đối với khóa học này đã bị quản trị viên ẩn và không thể chỉnh sửa.'
+      );
+    } else {
+      setErrorMessage(appErr.message || 'Không thể gửi đánh giá. Vui lòng thử lại sau.');
+    }
+  };
+
   const handleSubmit = () => {
     const val = validateReviewInput(rating, comment);
     if (!val.valid) {
@@ -60,29 +104,61 @@ export default function WriteReviewScreen() {
     }
 
     if (!course.id) return;
+    const payload = {
+      rating,
+      comment: comment.trim() || undefined,
+    };
+
+    if (resolvedReviewId) {
+      updateReview(
+        {
+          reviewId: resolvedReviewId,
+          input: payload,
+        },
+        {
+          onSuccess: async () => {
+            await notify('Thành công', 'Đã cập nhật đánh giá của bạn cho khóa học này!');
+            router.back();
+          },
+          onError: handleMutationError,
+        }
+      );
+      return;
+    }
+
     submitReview(
       {
         courseId: course.id,
-        input: {
-          rating,
-          comment: comment.trim() || undefined,
-        },
+        input: payload,
       },
       {
         onSuccess: async () => {
           await notify('Thành công', 'Cảm ơn bạn đã gửi đánh giá cho khóa học này!');
           router.back();
         },
-        onError: (err) => {
-          const appErr = err as unknown as AppError;
-          if (appErr.code === 'REVIEW_HIDDEN_BY_ADMIN' || appErr.status === 409) {
-            setErrorMessage('Đánh giá của bạn đối với khóa học này đã bị quản trị viên ẩn.');
-          } else {
-            setErrorMessage(appErr.message || 'Không thể gửi đánh giá. Vui lòng thử lại sau.');
-          }
-        },
+        onError: handleMutationError,
       }
     );
+  };
+
+  const handleWithdraw = async () => {
+    if (!resolvedReviewId) return;
+    const confirmed = await confirm({
+      title: 'Rút đánh giá',
+      message: 'Bạn có chắc chắn muốn xóa đánh giá của mình khỏi khóa học này?',
+      confirmText: 'Xóa đánh giá',
+      cancelText: 'Hủy',
+      destructive: true,
+    });
+    if (!confirmed) return;
+
+    deleteReview(resolvedReviewId, {
+      onSuccess: async () => {
+        await notify('Đã xóa', 'Đánh giá của bạn đã được rút khỏi khóa học.');
+        router.back();
+      },
+      onError: handleMutationError,
+    });
   };
 
   return (
@@ -175,11 +251,21 @@ export default function WriteReviewScreen() {
           </Card>
 
           <Button
-            title="Gửi đánh giá"
+            title={resolvedReviewId ? 'Cập nhật đánh giá' : 'Gửi đánh giá'}
             onPress={handleSubmit}
-            loading={isSubmitting}
-            disabled={isSubmitting}
+            loading={isSubmitting || isUpdating}
+            disabled={isSubmitting || isUpdating || isDeleting}
           />
+          {Boolean(resolvedReviewId) && (
+            <Button
+              title="Rút đánh giá"
+              variant="outline"
+              onPress={handleWithdraw}
+              loading={isDeleting}
+              disabled={isSubmitting || isUpdating || isDeleting}
+              style={{ marginTop: 10 }}
+            />
+          )}
         </ResponsiveContainer>
       </ScrollView>
     </KeyboardAvoidingView>

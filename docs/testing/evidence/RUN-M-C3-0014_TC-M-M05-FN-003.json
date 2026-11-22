@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C3-0014",
+  "cycle": "C3",
+  "tcId": "TC-M-M05-FN-003",
+  "module": "M-M05",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "[Hồi quy C3] changePasswordSchema chặn mật khẩu <8 ký tự, thiếu chữ/số hoặc trùng mật khẩu cũ; sai currentPassword trả 422 (CURRENT_PASSWORD_INCORRECT).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C3 Regression) / Jest 29.7 (131/131 PASS) / Expo Web / edumy-test",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "Hồi quy C3 đạt PASS",
+  "regressionCycle": "C3",
+  "previousRunId": "RUN-M-C1-0016",
+  "meStatus": 200,
+  "learnStatus": 200
+}

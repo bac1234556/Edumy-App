@@ -1,0 +1,27 @@
+{
+  "runId": "RUN-M-C1-0066",
+  "cycle": "C1",
+  "tcId": "TC-M-M05-FN-002",
+  "module": "M-M05",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "PUT /me/password=204 (204 No Content); phiên trên Thiết bị B bị thu hồi refreshToken ngay lập tức (401 AUTH_REFRESH_REUSED).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:17+07:00",
+  "note": "",
+  "changePwStatus": 204,
+  "refreshDevB": {
+    "success": false,
+    "message": "Phát hiện sử dụng lại refresh token. Phiên đăng nhập đã bị thu hồi.",
+    "data": null,
+    "errors": {
+      "code": "AUTH_REFRESH_REUSED",
+      "fields": null,
+      "traceId": "11577c3c-b143-428b-8298-021c223fb249"
+    }
+  }
+}

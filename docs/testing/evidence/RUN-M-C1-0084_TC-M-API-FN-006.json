@@ -1,0 +1,74 @@
+{
+  "runId": "RUN-M-C1-0084",
+  "cycle": "C1",
+  "tcId": "TC-M-API-FN-006",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Fail",
+  "actual": "6/7 endpoint Kênh Giảng viên khớp hợp đồng; riêng API-26 GET /api/v1/instructor/courses/{courseId}/students trả thừa trường \"email\" trong StudentRosterItemDto (hasAnyEmailField=true — DEF-M-004, vi phạm UC-I19).",
+  "defectId": "DEF-M-004",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:28+07:00",
+  "note": "API-26 trả thừa trường email học viên trái với quy tắc ẩn email UC-I19",
+  "endpoints": [
+    {
+      "apiId": "API-25a",
+      "method": "GET",
+      "path": "/api/v1/instructor/overview",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-25b",
+      "method": "GET",
+      "path": "/api/v1/instructor/courses",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-26",
+      "method": "GET",
+      "path": "/api/v1/instructor/courses/{courseId}/students",
+      "status": 200,
+      "matched": false,
+      "note": "DEF-M-004: StudentRosterItemDto trả thừa trường email học viên (vi phạm UC-I19)"
+    },
+    {
+      "apiId": "API-27a",
+      "method": "GET",
+      "path": "/api/v1/instructor/questions",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-27b",
+      "method": "GET",
+      "path": "/api/v1/instructor/invitations",
+      "status": 200,
+      "matched": true,
+      "note": "CoInstructorInvitationDto[]"
+    },
+    {
+      "apiId": "API-27c",
+      "method": "POST",
+      "path": "/api/v1/instructor/invitations/{id}/accept",
+      "status": 200,
+      "matched": true,
+      "note": "InvitationActionResponse"
+    },
+    {
+      "apiId": "API-27d",
+      "method": "POST",
+      "path": "/api/v1/instructor/invitations/{id}/decline",
+      "status": 200,
+      "matched": true,
+      "note": "InvitationActionResponse"
+    }
+  ]
+}

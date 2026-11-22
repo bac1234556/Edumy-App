@@ -1,0 +1,33 @@
+{
+  "runId": "RUN-M-C1-0011",
+  "cycle": "C1",
+  "tcId": "TC-M-M02-FN-005",
+  "module": "M-M02",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "catalog/logic.test.ts PASS (10 tests): nhánh isInstructor -> notice 'Bạn là giảng viên khóa này'; nhánh owned -> 'Vào học' (hoặc 'Học tiếp' khi có lastAccessedLessonId).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:09+07:00",
+  "note": "",
+  "jestSuite": {
+    "status": "passed",
+    "numPassing": 10,
+    "numFailing": 0,
+    "titles": [
+      "CATALOG_SORT_OPTIONS & getSortLabel contains all 4 sort options matching CourseFilterParams[\"sort\"] [passed]",
+      "CATALOG_SORT_OPTIONS & getSortLabel returns the exact Vietnamese label for each sort value [passed]",
+      "resolveCourseAction (BR-MOBILE-SCOPE) returns null action and instructor notice when viewer is instructor [passed]",
+      "resolveCourseAction (BR-MOBILE-SCOPE) returns OPEN_LEARNING (\"Vào học\") when owned without lastAccessedLessonId [passed]",
+      "resolveCourseAction (BR-MOBILE-SCOPE) returns OPEN_LEARNING (\"Học tiếp\") when owned with lastAccessedLessonId [passed]",
+      "resolveCourseAction (BR-MOBILE-SCOPE) returns FREE_ENROLL for logged-in user on free course [passed]",
+      "resolveCourseAction (BR-MOBILE-SCOPE) returns LOGIN_TO_ENROLL for anonymous user on free course [passed]",
+      "resolveCourseAction (BR-MOBILE-SCOPE) returns BUY_ON_WEB for paid course when anonymous or not owned [passed]",
+      "isNativeVideoUrl returns true for .mp4 and .m3u8 URLs [passed]",
+      "isNativeVideoUrl returns false for web or non-native URLs [passed]"
+    ]
+  }
+}

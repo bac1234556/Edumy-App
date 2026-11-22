@@ -1,0 +1,23 @@
+{
+  "runId": "RUN-M-C2-0008",
+  "cycle": "C2",
+  "tcId": "TC-M-M06-FN-002",
+  "module": "M-M06",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Liên đới M-M06: GET /instructor/overview=200, đồng bộ số liệu khóa học và học viên sau khi sửa students.tsx.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C2 Fix) / Jest 29.7 / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "",
+  "totals": {
+    "courses": 39,
+    "publishedCourses": 13,
+    "students": 15,
+    "averageRating": 2.5,
+    "ratingCount": 2
+  }
+}

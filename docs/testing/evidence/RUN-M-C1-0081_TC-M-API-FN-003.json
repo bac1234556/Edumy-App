@@ -1,0 +1,58 @@
+{
+  "runId": "RUN-M-C1-0081",
+  "cycle": "C1",
+  "tcId": "TC-M-API-FN-003",
+  "module": "M-API",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "5/5 endpoint Catalog (categories, courses, detail, reviews, preview) khớp 100% schema openapi.json.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:28+07:00",
+  "note": "",
+  "endpoints": [
+    {
+      "apiId": "API-10",
+      "method": "GET",
+      "path": "/api/v1/catalog/categories",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-11",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-12",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses/{slugOrId}",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-13",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses/{slugOrId}/reviews",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    },
+    {
+      "apiId": "API-14",
+      "method": "GET",
+      "path": "/api/v1/catalog/courses/{slugOrId}/lessons/{lessonId}/preview",
+      "status": 200,
+      "matched": true,
+      "note": "OK"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C3-0007",
+  "cycle": "C3",
+  "tcId": "TC-M-M01-SEC-001",
+  "module": "M-M01",
+  "type": "SEC",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "[Hồi quy C3] tokens.test.ts PASS (5 tests): Native dùng SecureStore('edumy.refreshToken'), Web chỉ lưu memory; asyncStorageHits=0, localStorageHits=0.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C3 Regression) / Jest 29.7 (131/131 PASS) / Expo Web / edumy-test",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "Hồi quy C3 đạt PASS",
+  "regressionCycle": "C3",
+  "previousRunId": "RUN-M-C1-0008",
+  "meStatus": 200,
+  "learnStatus": 200
+}

@@ -1,0 +1,52 @@
+{
+  "runId": "RUN-M-C1-0039",
+  "cycle": "C1",
+  "tcId": "TC-M-REG-MNT-001",
+  "module": "M-REG",
+  "type": "MNT",
+  "priority": "High",
+  "platform": "Jest",
+  "status": "Pass",
+  "actual": "Jest Suite: 19/19 suites PASS, 128/128 tests PASS (0 failed); Coverage: Stmts=78.1%, Branch=70.82%, Funcs=65.69%, Lines=78.03%.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Jest 29.7 (jest-expo 51.0.4) / Node.js v24.16.0",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "",
+  "numTotalTestSuites": 19,
+  "numPassedTestSuites": 19,
+  "numTotalTests": 128,
+  "numPassedTests": 128,
+  "totalCoverage": {
+    "lines": {
+      "total": 551,
+      "covered": 430,
+      "skipped": 0,
+      "pct": 78.03
+    },
+    "statements": {
+      "total": 603,
+      "covered": 471,
+      "skipped": 0,
+      "pct": 78.1
+    },
+    "functions": {
+      "total": 137,
+      "covered": 90,
+      "skipped": 0,
+      "pct": 65.69
+    },
+    "branches": {
+      "total": 521,
+      "covered": 369,
+      "skipped": 0,
+      "pct": 70.82
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  }
+}

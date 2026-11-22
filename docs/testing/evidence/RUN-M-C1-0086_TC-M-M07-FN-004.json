@@ -1,0 +1,19 @@
+{
+  "runId": "RUN-M-C1-0086",
+  "cycle": "C1",
+  "tcId": "TC-M-M07-FN-004",
+  "module": "M-M07",
+  "type": "FN",
+  "priority": "Medium",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "Trên Expo Web (dist-web-qa), bundle hoàn toàn không nạp RNGoogleMobileAdsModule (hasNativeAdMobInWebBundle=false); src/components/ui/AdBanner.web.tsx trả null không gây crash; hệ thống House Ads (PromotedCoursesBanner, InlineCourseAdCard, CoursePromoModal) hiển thị bình thường.",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Expo Web Bundle (http://localhost:8082, dist-web-qa) / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:29+07:00",
+  "note": "",
+  "hasNativeAdMobInWebBundle": false,
+  "adBannerWebReturnsNull": true,
+  "hasPromotedCoursesBanner": true
+}

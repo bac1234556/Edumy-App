@@ -1,0 +1,19 @@
+{
+  "runId": "RUN-M-C1-0035",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-COMP-003",
+  "module": "M-M08",
+  "type": "COMP",
+  "priority": "Medium",
+  "platform": "Android-34",
+  "status": "Blocked",
+  "actual": "BLOCKED: Máy kiểm thử Windows hiện chưa cài đặt Android SDK / adb / emulator (0 AVD API 34 Tablet).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Windows x64 (Android-34)",
+  "timestamp": "2026-11-22T14:15:10+07:00",
+  "note": "Thiếu Android SDK & AVD API 34 trên máy host Windows.",
+  "hostPlatform": "win32",
+  "androidSdkInstalled": false,
+  "avdList": []
+}

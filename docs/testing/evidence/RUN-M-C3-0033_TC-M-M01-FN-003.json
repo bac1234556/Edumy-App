@@ -1,0 +1,20 @@
+{
+  "runId": "RUN-M-C3-0033",
+  "cycle": "C3",
+  "tcId": "TC-M-M01-FN-003",
+  "module": "M-M01",
+  "type": "FN",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "[Hồi quy C3] register invalid=400 (VALIDATION_ERROR), dup=409 (AUTH_EMAIL_TAKEN), new=201 (me.emailVerified=false).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Edumy-App (C3 Regression) / Jest 29.7 (131/131 PASS) / Expo Web / edumy-test",
+  "timestamp": "2026-11-22T14:50:17+07:00",
+  "note": "Hồi quy C3 đạt PASS",
+  "regressionCycle": "C3",
+  "previousRunId": "RUN-M-C1-0041",
+  "meStatus": 200,
+  "learnStatus": 200
+}

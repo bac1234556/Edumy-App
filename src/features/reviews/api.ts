@@ -16,6 +16,13 @@ export async function submitReviewApi(
   return unwrap<CourseReviewResult>(response.data);
 }
 
+export async function updateReviewApi(
+  reviewId: number,
+  input: SubmitReviewInput
+): Promise<void> {
+  await client.put(`/reviews/${reviewId}`, input);
+}
+
 export async function deleteReviewApi(reviewId: number): Promise<void> {
   await client.delete(`/reviews/${reviewId}`);
 }

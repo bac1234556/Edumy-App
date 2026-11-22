@@ -1,0 +1,108 @@
+{
+  "runId": "RUN-M-C1-0077",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-PERF-002",
+  "module": "M-M08",
+  "type": "PERF",
+  "priority": "High",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "50 CCU x 3 lượt Learning & Q&A: learnRoom p95=1112.77ms, completion p95=1144.87ms, createQuestion p95=735.86ms (tất cả <= 3000ms, 5xx=0).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Node.js v24.16.0 / Expo Web Chrome 157 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T13:55:00+07:00",
+  "note": "",
+  "benchmarks": [
+    {
+      "scenario": "GET /learn/courses/{id}",
+      "worstP50": 903.52,
+      "worstP95": 1112.77,
+      "worstMax": 1119.46,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 678.29,
+          "p95": 919.87,
+          "max": 926.53,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 696.54,
+          "p95": 909.78,
+          "max": 934.71,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 903.52,
+          "p95": 1112.77,
+          "max": 1119.46,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "PUT /learn/lessons/{id}/completion",
+      "worstP50": 868.71,
+      "worstP95": 1144.87,
+      "worstMax": 1148.09,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 724.3,
+          "p95": 917.49,
+          "max": 925.95,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 868.71,
+          "p95": 1144.87,
+          "max": 1148.09,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 766.02,
+          "p95": 966.09,
+          "max": 981.94,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "POST /courses/{id}/questions",
+      "worstP50": 563.14,
+      "worstP95": 735.86,
+      "worstMax": 764.38,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 502.53,
+          "p95": 665.18,
+          "max": 681.63,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 500.09,
+          "p95": 682.7,
+          "max": 687.84,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 563.14,
+          "p95": 735.86,
+          "max": 764.38,
+          "err5xx": 0
+        }
+      ]
+    }
+  ]
+}

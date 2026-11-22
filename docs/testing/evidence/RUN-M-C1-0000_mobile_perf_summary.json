@@ -1,0 +1,244 @@
+{
+  "benchmarks": [
+    {
+      "scenario": "GET /catalog/courses?sort=newest",
+      "worstP50": 329.17,
+      "worstP95": 410.74,
+      "worstMax": 414.16,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 329.17,
+          "p95": 410.74,
+          "max": 414.16,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 132.83,
+          "p95": 205.88,
+          "max": 221.54,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 130.64,
+          "p95": 204.87,
+          "max": 207.89,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses?sort=rating",
+      "worstP50": 151.99,
+      "worstP95": 238.9,
+      "worstMax": 249.49,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 151.99,
+          "p95": 236.01,
+          "max": 243.28,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 149.44,
+          "p95": 226.92,
+          "max": 229.52,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 135.29,
+          "p95": 238.9,
+          "max": 249.49,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses?sort=price_asc",
+      "worstP50": 137.28,
+      "worstP95": 211.75,
+      "worstMax": 223.33,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 137.28,
+          "p95": 211.75,
+          "max": 223.33,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 118.21,
+          "p95": 188.55,
+          "max": 209.82,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 129.29,
+          "p95": 182.84,
+          "max": 186.27,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses?sort=price_desc",
+      "worstP50": 125.05,
+      "worstP95": 199.13,
+      "worstMax": 214.05,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 121.42,
+          "p95": 198.98,
+          "max": 203.96,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 115.6,
+          "p95": 198.37,
+          "max": 206.43,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 125.05,
+          "p95": 199.13,
+          "max": 214.05,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /catalog/courses/{slug}",
+      "worstP50": 120.35,
+      "worstP95": 188.69,
+      "worstMax": 206.23,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 107.48,
+          "p95": 162.48,
+          "max": 165.5,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 111.11,
+          "p95": 158.18,
+          "max": 160.6,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 120.35,
+          "p95": 188.69,
+          "max": 206.23,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "GET /learn/courses/{id}",
+      "worstP50": 415.02,
+      "worstP95": 587.61,
+      "worstMax": 615.57,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 415.02,
+          "p95": 587.61,
+          "max": 615.57,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 376.72,
+          "p95": 557.99,
+          "max": 565.39,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 351.85,
+          "p95": 467.08,
+          "max": 496.76,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "PUT /learn/lessons/{id}/completion",
+      "worstP50": 371.73,
+      "worstP95": 507.06,
+      "worstMax": 524.95,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 371.73,
+          "p95": 507.06,
+          "max": 524.95,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 245.32,
+          "p95": 361.68,
+          "max": 371.9,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 288.58,
+          "p95": 457.85,
+          "max": 471.48,
+          "err5xx": 0
+        }
+      ]
+    },
+    {
+      "scenario": "POST /courses/{id}/questions",
+      "worstP50": 234.81,
+      "worstP95": 313.43,
+      "worstMax": 323.56,
+      "total5xx": 0,
+      "rounds": [
+        {
+          "round": 1,
+          "p50": 234.81,
+          "p95": 305.31,
+          "max": 311.54,
+          "err5xx": 0
+        },
+        {
+          "round": 2,
+          "p50": 207.77,
+          "p95": 283.29,
+          "max": 285.03,
+          "err5xx": 0
+        },
+        {
+          "round": 3,
+          "p50": 201.67,
+          "p95": 313.43,
+          "max": 323.56,
+          "err5xx": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "runId": "RUN-M-C1-0091",
+  "cycle": "C1",
+  "tcId": "TC-M-M08-DEP-001",
+  "module": "M-M08",
+  "type": "DEP",
+  "priority": "Medium",
+  "platform": "Web",
+  "status": "Pass",
+  "actual": "npx expo export --platform web --output-dir dist-web-qa xuất thành công 27 assets + entry bundle 1.81 MB trong 167,2s; cold load http://localhost:8082 trả HTTP 200 trong 3.81ms và nạp danh mục khóa học trong 15.93ms (tổng thời gian lên màn hình Khám phá < 1s).",
+  "defectId": "",
+  "commit": "Edumy-App@6cf1e9e / Edumy-main@260de6b",
+  "environment": "Expo Web Bundle (http://localhost:8082, dist-web-qa) / Node.js v24.16.0 / edumy-test (localhost:5001)",
+  "timestamp": "2026-11-22T14:15:29+07:00",
+  "note": "",
+  "exportTimeMs": 167229,
+  "bundleFile": "entry-df0fc524eb8904b07d255d40e2346760.js",
+  "bundleSizeBytes": 1902670,
+  "coldLoadHtmlMs": 3.81,
+  "initialCatalogApiMs": 15.93
+}
