@@ -71,6 +71,10 @@ export default function QuestionDetailScreen() {
   );
   const canResolve = isAsker || isInstructorRole;
   const isReadOnly = isQuestionReadOnly(thread.visibilityStatus);
+  const hasInstructorAnswer = Boolean(
+    thread.answers?.some((a) => a.authorType?.toLowerCase() === 'instructor')
+  );
+  const isConfirmedOrResolved = Boolean(thread.isResolved || hasInstructorAnswer);
 
   const handleToggleResolve = () => {
     resolveQuestion(!thread.isResolved, {
@@ -164,10 +168,10 @@ export default function QuestionDetailScreen() {
                 </View>
               </View>
 
-              {thread.isResolved ? (
+              {isConfirmedOrResolved ? (
                 <Badge
                   variant="success"
-                  label="Đã giải quyết"
+                  label="Đã xác nhận"
                   icon={<Ionicons name="checkmark-circle-outline" size={13} color={semantic.success} />}
                 />
               ) : (
@@ -189,8 +193,8 @@ export default function QuestionDetailScreen() {
             {canResolve && !isReadOnly && (
               <View style={styles.askerActions}>
                 <Button
-                  title={thread.isResolved ? 'Mở lại câu hỏi' : 'Đánh dấu đã giải quyết'}
-                  variant={thread.isResolved ? 'outline' : 'primary'}
+                  title={isConfirmedOrResolved ? 'Đã xác nhận trả lời ✓' : 'Đánh dấu đã xác nhận'}
+                  variant={isConfirmedOrResolved ? 'outline' : 'primary'}
                   onPress={handleToggleResolve}
                   loading={isResolving}
                   disabled={isResolving}

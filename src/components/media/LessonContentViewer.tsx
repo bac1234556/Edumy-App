@@ -1,9 +1,9 @@
 // src/components/media/LessonContentViewer.tsx
-// Light-mode Pure White & Ocean Blue viewer for lesson content (video with expo-video / WebView fallback, article text)
+// Light-mode Pure White & Ocean Blue viewer for lesson content (video with Web HTML5 / expo-video / WebView fallback, article text)
 // Shared between M04 preview and M06 learning room.
 
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,12 +19,19 @@ interface LessonContentViewerProps {
   articleContent?: string | null;
   title?: string;
   onOpenWebsite?: () => void;
+  enforceWatchFull?: boolean;
+  onVideoEnded?: () => void;
 }
 
 export function isNativeVideoUrl(url?: string | null): boolean {
   if (!url) return false;
   const cleanUrl = url.split('?')[0].toLowerCase();
-  return cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.m3u8');
+  return (
+    cleanUrl.endsWith('.mp4') ||
+    cleanUrl.endsWith('.m3u8') ||
+    cleanUrl.endsWith('.webm') ||
+    cleanUrl.endsWith('.mov')
+  );
 }
 
 export function LessonContentViewer({
@@ -33,14 +40,50 @@ export function LessonContentViewer({
   articleContent,
   title,
   onOpenWebsite,
+  enforceWatchFull = false,
+  onVideoEnded,
 }: LessonContentViewerProps) {
   const isNative = isNativeVideoUrl(videoUrl);
+  const maxWatchedTimeRef = useRef<number>(0);
+  const endedTriggeredRef = useRef<boolean>(false);
+  const [watchPercent, setWatchPercent] = useState<number>(0);
 
-  const player = useVideoPlayer(isNative && videoUrl ? videoUrl : '', (p) => {
-    p.loop = false;
-  });
+  useEffect(() => {
+    maxWatchedTimeRef.current = 0;
+    endedTriggeredRef.current = false;
+    setWatchPercent(0);
+  }, [videoUrl]);
+
+  const player = useVideoPlayer(
+    Platform.OS !== 'web' && isNative && videoUrl ? videoUrl : '',
+    (p) => {
+      p.loop = false;
+    }
+  );
+
+  // Listen for video completion on native iOS/Android player
+  useEffect(() => {
+    if (Platform.OS === 'web' || !player) return;
+    const sub = player.addListener('playToEnd', () => {
+      if (!endedTriggeredRef.current) {
+        endedTriggeredRef.current = true;
+        setWatchPercent(100);
+        onVideoEnded?.();
+      }
+    });
+    return () => {
+      sub.remove();
+    };
+  }, [player, onVideoEnded]);
 
   if (contentType === 'video') {
+    const embedUrl =
+      videoUrl && (videoUrl.includes('youtube.com/watch?v=') || videoUrl.includes('youtu.be/'))
+        ? videoUrl
+            .replace('watch?v=', 'embed/')
+            .replace('youtu.be/', 'www.youtube.com/embed/')
+        : videoUrl;
+
     return (
       <View style={styles.videoSection}>
         <ResponsiveContainer>
@@ -49,10 +92,14 @@ export function LessonContentViewer({
               <Badge
                 variant="info"
                 label={isNative ? 'Video bài giảng' : 'Trình phát nhúng'}
-                icon={<Ionicons name="play-circle-outline" size={14} color={semantic.brandPrimary} />}
+                icon={
+                  <Ionicons name="play-circle-outline" size={14} color={semantic.brandPrimary} />
+                }
               />
               <Text variant="caption" tabular style={styles.aspectLabel}>
-                16:9 HD
+                {enforceWatchFull
+                  ? `Đã xem ${Math.min(100, Math.round(watchPercent))}% · Không tua nhanh`
+                  : '16:9 HD'}
               </Text>
             </View>
 
@@ -70,16 +117,77 @@ export function LessonContentViewer({
               </View>
             ) : (
               <View style={styles.mediaFrame}>
-                {isNative ? (
+                {Platform.OS === 'web' ? (
+                  isNative ? (
+                    React.createElement('video', {
+                      key: videoUrl,
+                      src: videoUrl,
+                      controls: true,
+                      playsInline: true,
+                      preload: 'metadata',
+                      controlsList: 'nodownload',
+                      style: {
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: '#0f172a',
+                        objectFit: 'contain',
+                        display: 'block',
+                      },
+                      onTimeUpdate: (e: any) => {
+                        const v = e.currentTarget;
+                        if (!v) return;
+                        if (v.currentTime > maxWatchedTimeRef.current && v.currentTime - maxWatchedTimeRef.current < 3) {
+                          maxWatchedTimeRef.current = v.currentTime;
+                        }
+                        if (v.duration > 0) {
+                          const pct = (maxWatchedTimeRef.current / v.duration) * 100;
+                          setWatchPercent(pct);
+                          if (pct >= 95 && !endedTriggeredRef.current) {
+                            endedTriggeredRef.current = true;
+                            onVideoEnded?.();
+                          }
+                        }
+                      },
+                      onSeeking: (e: any) => {
+                        if (!enforceWatchFull) return;
+                        const v = e.currentTarget;
+                        if (v && v.currentTime > maxWatchedTimeRef.current + 2) {
+                          v.currentTime = maxWatchedTimeRef.current;
+                        }
+                      },
+                      onEnded: () => {
+                        setWatchPercent(100);
+                        if (!endedTriggeredRef.current) {
+                          endedTriggeredRef.current = true;
+                          onVideoEnded?.();
+                        }
+                      },
+                    })
+                  ) : (
+                    React.createElement('iframe', {
+                      key: embedUrl,
+                      src: embedUrl,
+                      title: title || 'Video bài giảng',
+                      allowFullScreen: true,
+                      style: {
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        backgroundColor: '#0f172a',
+                      },
+                    })
+                  )
+                ) : isNative ? (
                   <VideoView
                     player={player}
                     style={styles.nativeVideo}
+                    nativeControls
                     allowsFullscreen
                     allowsPictureInPicture
                   />
                 ) : (
                   <WebView
-                    source={{ uri: videoUrl }}
+                    source={{ uri: embedUrl || videoUrl }}
                     style={styles.webView}
                     allowsFullscreenVideo
                     javaScriptEnabled
@@ -176,7 +284,7 @@ const styles = StyleSheet.create({
     aspectRatio: 16 / 9,
     borderRadius: radius.card,
     overflow: 'hidden',
-    backgroundColor: semantic.surfaceMuted,
+    backgroundColor: '#0f172a',
     borderWidth: 1,
     borderColor: semantic.borderSubtle,
   },

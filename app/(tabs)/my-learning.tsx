@@ -127,63 +127,64 @@ export default function MyLearningScreen() {
     const isCompleted = progressPercent >= 100;
 
     return (
-      <TouchableOpacity
-        style={[styles.card, microShadow]}
-        onPress={() => item.course?.id && router.push(`/learn/${item.course.id}` as const)}
-        activeOpacity={0.84}
-        accessibilityRole="button"
-        accessibilityLabel={`Vào học ${item.course?.title ?? 'khóa học'}`}
-      >
-        <View style={styles.cardHeaderRow}>
-          {item.course?.thumbnailUrl ? (
-            <Image source={{ uri: item.course.thumbnailUrl }} style={styles.thumbnail} />
-          ) : (
-            <View style={styles.placeholderThumbnail}>
-              <Ionicons name="book-outline" size={22} color={semantic.brandPrimary} />
-            </View>
-          )}
-
-          <View style={styles.cardMeta}>
-            <Text numberOfLines={2} style={styles.courseTitle}>
-              {item.course?.title}
-            </Text>
-
-            {item.certificateCode ? (
-              <Badge
-                variant="info"
-                label={`Chứng chỉ: ${item.certificateCode}`}
-                icon={<Ionicons name="ribbon-outline" size={13} color={semantic.brandPrimary} />}
-                style={styles.certBadge}
-              />
+      <View style={[styles.card, microShadow]}>
+        <TouchableOpacity
+          onPress={() => item.course?.id && router.push(`/learn/${item.course.id}` as const)}
+          activeOpacity={0.84}
+          accessibilityRole="button"
+          accessibilityLabel={`Vào học ${item.course?.title ?? 'khóa học'}`}
+        >
+          <View style={styles.cardHeaderRow}>
+            {item.course?.thumbnailUrl ? (
+              <Image source={{ uri: item.course.thumbnailUrl }} style={styles.thumbnail} />
             ) : (
-              <Text style={styles.statusSubText}>
-                {isCompleted ? 'Đã hoàn thành toàn bộ bài học' : 'Đang trong tiến trình học'}
-              </Text>
+              <View style={styles.placeholderThumbnail}>
+                <Ionicons name="book-outline" size={22} color={semantic.brandPrimary} />
+              </View>
             )}
-          </View>
-        </View>
 
-        {/* Server-Driven Progress Bar & Tabular Metrics */}
-        <View style={styles.progressSection}>
-          <View style={styles.statsRow}>
-            <Text style={[styles.progressPercentText, isCompleted && styles.progressDoneText]}>
-              {progressPercent}% hoàn thành
-            </Text>
-            <Text style={styles.lessonsCountText}>
-              {item.completedItems ?? 0}/{item.totalItems ?? 0} bài học
-            </Text>
+            <View style={styles.cardMeta}>
+              <Text numberOfLines={2} style={styles.courseTitle}>
+                {item.course?.title}
+              </Text>
+
+              {item.certificateCode ? (
+                <Badge
+                  variant="info"
+                  label={`Chứng chỉ: ${item.certificateCode}`}
+                  icon={<Ionicons name="ribbon-outline" size={13} color={semantic.brandPrimary} />}
+                  style={styles.certBadge}
+                />
+              ) : (
+                <Text style={styles.statusSubText}>
+                  {isCompleted ? 'Đã hoàn thành toàn bộ bài học' : 'Đang trong tiến trình học'}
+                </Text>
+              )}
+            </View>
           </View>
 
-          <View style={styles.progressBarBackground}>
-            <View
-              style={[
-                styles.progressBarFill,
-                isCompleted && styles.progressBarCompleted,
-                { width: `${Math.min(100, progressPercent)}%` },
-              ]}
-            />
+          {/* Server-Driven Progress Bar & Tabular Metrics */}
+          <View style={styles.progressSection}>
+            <View style={styles.statsRow}>
+              <Text style={[styles.progressPercentText, isCompleted && styles.progressDoneText]}>
+                {progressPercent}% hoàn thành
+              </Text>
+              <Text style={styles.lessonsCountText}>
+                {item.completedItems ?? 0}/{item.totalItems ?? 0} bài học
+              </Text>
+            </View>
+
+            <View style={styles.progressBarBackground}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  isCompleted && styles.progressBarCompleted,
+                  { width: `${Math.min(100, progressPercent)}%` },
+                ]}
+              />
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Action Button */}
         <View style={styles.actionRow}>
@@ -193,8 +194,20 @@ export default function MyLearningScreen() {
             variant={isCompleted ? 'outline' : 'primary'}
             style={styles.resumeButton}
           />
+          {isCompleted && item.course?.id && (
+            <Button
+              title="⭐ Đánh giá khóa học"
+              onPress={() =>
+                router.push(
+                  `/courses/${item.course?.slug || item.course?.id}/write-review` as const
+                )
+              }
+              variant="primary"
+              style={styles.resumeButton}
+            />
+          )}
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -358,8 +371,12 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     marginTop: 14,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
   resumeButton: {
     minHeight: 44,
+    flex: 1,
   },
 });

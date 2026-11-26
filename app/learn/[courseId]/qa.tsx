@@ -48,8 +48,9 @@ export default function CourseQaScreen() {
 
   const allQuestions = data?.content || [];
   const questions = allQuestions.filter((q) => {
-    if (filter === 'resolved') return Boolean(q.isResolved);
-    if (filter === 'unresolved') return !q.isResolved;
+    const confirmed = Boolean(q.isResolved || q.hasInstructorAnswer);
+    if (filter === 'resolved') return confirmed;
+    if (filter === 'unresolved') return !confirmed;
     return true;
   });
 
@@ -130,10 +131,10 @@ export default function CourseQaScreen() {
           <Text style={styles.dateText}>{formatDate(item.createdAt ?? '')}</Text>
         </View>
 
-        {item.isResolved ? (
+        {item.isResolved || item.hasInstructorAnswer ? (
           <Badge
             variant="success"
-            label="Đã giải quyết"
+            label="Đã xác nhận"
             icon={<Ionicons name="checkmark-circle-outline" size={13} color={semantic.success} />}
           />
         ) : (

@@ -12,7 +12,12 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCourseLearnRoom } from '../../../src/features/learning/hooks';
 import { useRefetchOnScreenFocus } from '../../../src/hooks/useRefetchOnScreenFocus';
-import { resolveFirstOrUncompletedLesson } from '../../../src/features/learning/logic';
+import {
+  resolveFirstOrUncompletedLesson,
+  isLessonUnlocked,
+  isChapterQuizUnlocked,
+} from '../../../src/features/learning/logic';
+import { notify } from '../../../src/lib/dialog';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
 import { Badge } from '../../../src/components/ui/Badge';
@@ -135,8 +140,23 @@ export default function CourseLearnRoomScreen() {
             <View style={styles.headerActions}>
               {nextLessonId && (
                 <Button
-                  title="Học tiếp"
+                  title={progressPercent >= 100 ? 'Xem lại bài giảng' : 'Học tiếp'}
+                  variant={progressPercent >= 100 ? 'outline' : 'primary'}
                   onPress={() => router.push(`/learn/lesson/${nextLessonId}` as const)}
+                />
+              )}
+
+              {!isInstructorMode && (
+                <Button
+                  title={
+                    progressPercent >= 100
+                      ? '⭐ Đánh giá khóa học (Đã hoàn thành 100%)'
+                      : '⭐ Đánh giá khóa học'
+                  }
+                  variant={progressPercent >= 100 ? 'primary' : 'outline'}
+                  onPress={() =>
+                    router.push(`/courses/${room.courseId}/write-review` as const)
+                  }
                 />
               )}
 
@@ -167,97 +187,175 @@ export default function CourseLearnRoomScreen() {
                 </View>
 
                 <View style={styles.lessonsList}>
-                  {chapter.lessons?.map((lesson, lessonIndex) => (
-                    <TouchableOpacity
-                      key={lesson.id}
-                      style={styles.lessonItem}
-                      onPress={() => router.push(`/learn/lesson/${lesson.id}` as const)}
-                      activeOpacity={0.75}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Mở bài học ${lesson.title}`}
-                    >
-                      <View style={styles.lessonStatusIcon}>
-                        {lesson.completed ? (
-                          <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
-                        ) : (
-                          <Ionicons name="ellipse-outline" size={20} color={semantic.borderStrong} />
-                        )}
-                      </View>
+                  {chapter.lessons?.map((lesson, lessonIndex) => {
+                    const unlocked =
+                      lesson.id !== undefined ? isLessonUnlocked(room, lesson.id) : true;
 
-                      <View style={styles.lessonInfo}>
-                        <Text style={styles.lessonTitle}>
-                          <Text style={styles.lessonNumber}>
-                            {String(chapterIndex + 1).padStart(2, '0')}.
-                            {String(lessonIndex + 1).padStart(2, '0')}{' '}
+                    return (
+                      <TouchableOpacity
+                        key={lesson.id}
+                        style={[styles.lessonItem, !unlocked && styles.lessonItemLocked]}
+                        onPress={() => {
+                          if (!unlocked) {
+                            void notify(
+                              'Bài học đang khóa',
+                              'Bạn phải xem hết tất cả nội dung và hoàn thành bài học trước đó theo thứ tự thì mới xem được bài tiếp theo.'
+                            );
+                            return;
+                          }
+                          router.push(`/learn/lesson/${lesson.id}` as const);
+                        }}
+                        activeOpacity={0.75}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Mở bài học ${lesson.title}`}
+                      >
+                        <View style={styles.lessonStatusIcon}>
+                          {lesson.completed ? (
+                            <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
+                          ) : unlocked ? (
+                            <Ionicons
+                              name="play-circle-outline"
+                              size={20}
+                              color={semantic.brandPrimary}
+                            />
+                          ) : (
+                            <Ionicons
+                              name="lock-closed-outline"
+                              size={18}
+                              color={semantic.textMuted}
+                            />
+                          )}
+                        </View>
+
+                        <View style={styles.lessonInfo}>
+                          <Text style={[styles.lessonTitle, !unlocked && styles.lessonTitleLocked]}>
+                            <Text style={styles.lessonNumber}>
+                              {String(chapterIndex + 1).padStart(2, '0')}.
+                              {String(lessonIndex + 1).padStart(2, '0')}{' '}
+                            </Text>
+                            {lesson.title}
                           </Text>
-                          {lesson.title}
-                        </Text>
 
-                        <View style={styles.lessonMetaRow}>
-                          <Ionicons
-                            name={
-                              lesson.contentType === 'video'
-                                ? 'videocam-outline'
-                                : 'document-text-outline'
-                            }
-                            size={13}
-                            color={semantic.textMuted}
-                          />
-                          <Text style={styles.lessonMetaText}>
-                            {lesson.contentType === 'video' ? 'Video' : 'Bài đọc'}
-                          </Text>
-
-                          {Boolean(lesson.durationSeconds) && (
+                          <View style={styles.lessonMetaRow}>
+                            <Ionicons
+                              name={
+                                lesson.contentType === 'video'
+                                  ? 'videocam-outline'
+                                  : 'document-text-outline'
+                              }
+                              size={13}
+                              color={semantic.textMuted}
+                            />
                             <Text style={styles.lessonMetaText}>
-                              · {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
+                              {lesson.contentType === 'video' ? 'Video' : 'Bài đọc'}
                             </Text>
+
+                            {Boolean(lesson.durationSeconds) && (
+                              <Text style={styles.lessonMetaText}>
+                                · {Math.ceil((lesson.durationSeconds || 0) / 60)} phút
+                              </Text>
+                            )}
+
+                            {!unlocked && (
+                              <Text style={styles.lockedHintText}>
+                                · Khóa (Hoàn thành bài trước)
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+
+                        <Ionicons
+                          name={unlocked ? 'chevron-forward' : 'lock-closed-outline'}
+                          size={16}
+                          color={semantic.textPlaceholder}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  {chapter.quizzes?.map((quiz) => {
+                    const quizUnlocked = isChapterQuizUnlocked(room, chapterIndex);
+
+                    return (
+                      <TouchableOpacity
+                        key={`quiz-${quiz.id}`}
+                        style={[styles.lessonItem, !quizUnlocked && styles.lessonItemLocked]}
+                        onPress={() => {
+                          if (!quizUnlocked) {
+                            void notify(
+                              'Bài kiểm tra đang khóa',
+                              'Bạn phải xem hết và hoàn thành tất cả các bài học trước đó mới được mở bài kiểm tra này.'
+                            );
+                            return;
+                          }
+                          void WebBrowser.openBrowserAsync(webLinks.course(numericCourseId));
+                        }}
+                        activeOpacity={0.75}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Làm bài kiểm tra ${quiz.title} trên website`}
+                      >
+                        <View style={styles.lessonStatusIcon}>
+                          {quiz.passed ? (
+                            <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
+                          ) : quizUnlocked ? (
+                            <Ionicons
+                              name="help-circle-outline"
+                              size={20}
+                              color={semantic.brandPrimary}
+                            />
+                          ) : (
+                            <Ionicons
+                              name="lock-closed-outline"
+                              size={18}
+                              color={semantic.textMuted}
+                            />
                           )}
                         </View>
-                      </View>
 
-                      <Ionicons name="chevron-forward" size={16} color={semantic.textPlaceholder} />
-                    </TouchableOpacity>
-                  ))}
-
-                  {chapter.quizzes?.map((quiz) => (
-                    <TouchableOpacity
-                      key={`quiz-${quiz.id}`}
-                      style={styles.lessonItem}
-                      onPress={() => WebBrowser.openBrowserAsync(webLinks.course(numericCourseId))}
-                      activeOpacity={0.75}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Làm bài kiểm tra ${quiz.title} trên website`}
-                    >
-                      <View style={styles.lessonStatusIcon}>
-                        {quiz.passed ? (
-                          <Ionicons name="checkmark-circle" size={20} color={semantic.success} />
-                        ) : (
-                          <Ionicons
-                            name="help-circle-outline"
-                            size={20}
-                            color={semantic.brandPrimary}
-                          />
-                        )}
-                      </View>
-
-                      <View style={styles.lessonInfo}>
-                        <Text style={styles.lessonTitle}>{quiz.title}</Text>
-                        <View style={styles.lessonMetaRow}>
-                          <Ionicons name="globe-outline" size={13} color={semantic.brandPrimary} />
-                          <Text style={[styles.lessonMetaText, { color: semantic.brandPrimary }]}>
-                            Bài kiểm tra — làm trên website
+                        <View style={styles.lessonInfo}>
+                          <Text
+                            style={[styles.lessonTitle, !quizUnlocked && styles.lessonTitleLocked]}
+                          >
+                            {quiz.title}
                           </Text>
-                          {quiz.passed && (
-                            <Text style={[styles.lessonMetaText, { color: semantic.success }]}>
-                              · Đã đạt
+                          <View style={styles.lessonMetaRow}>
+                            <Ionicons
+                              name="globe-outline"
+                              size={13}
+                              color={quizUnlocked ? semantic.brandPrimary : semantic.textMuted}
+                            />
+                            <Text
+                              style={[
+                                styles.lessonMetaText,
+                                {
+                                  color: quizUnlocked
+                                    ? semantic.brandPrimary
+                                    : semantic.textMuted,
+                                },
+                              ]}
+                            >
+                              Bài kiểm tra — làm trên website
                             </Text>
-                          )}
+                            {quiz.passed ? (
+                              <Text style={[styles.lessonMetaText, { color: semantic.success }]}>
+                                · Đã đạt
+                              </Text>
+                            ) : !quizUnlocked ? (
+                              <Text style={styles.lockedHintText}>
+                                · Khóa (Hoàn thành bài trước)
+                              </Text>
+                            ) : null}
+                          </View>
                         </View>
-                      </View>
 
-                      <Ionicons name="open-outline" size={16} color={semantic.brandPrimary} />
-                    </TouchableOpacity>
-                  ))}
+                        <Ionicons
+                          name={quizUnlocked ? 'open-outline' : 'lock-closed-outline'}
+                          size={16}
+                          color={quizUnlocked ? semantic.brandPrimary : semantic.textPlaceholder}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </Card>
             ))}
@@ -424,5 +522,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: semantic.textMuted,
     fontVariant: ['tabular-nums'],
+  },
+  lessonItemLocked: {
+    opacity: 0.58,
+  },
+  lessonTitleLocked: {
+    color: semantic.textMuted,
+  },
+  lockedHintText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: semantic.warning,
   },
 });

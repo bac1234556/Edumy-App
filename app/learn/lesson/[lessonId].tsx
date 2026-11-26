@@ -1,14 +1,20 @@
-// app/learn/lesson/[lessonId].tsx — Trình học bài giảng (Prev/Next, Visit, Completion & Certificate)
+// app/learn/lesson/[lessonId].tsx — Trình học bài giảng (Sequential Lock, Must-Watch Video, Completion & Certificate)
 import React, { useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
+  useCourseLearnRoom,
   useLessonDetail,
   useRecordLessonVisit,
   useSetLessonCompletion,
 } from '../../../src/features/learning/hooks';
+import {
+  getOrderedLessons,
+  isLessonUnlocked,
+  resolveFirstOrUncompletedLesson,
+} from '../../../src/features/learning/logic';
 import { LessonContentViewer } from '../../../src/components/media/LessonContentViewer';
 import { Text } from '../../../src/components/ui/Text';
 import { Button } from '../../../src/components/ui/Button';
@@ -28,6 +34,7 @@ export default function LessonLearnScreen() {
   const router = useRouter();
 
   const { data: lesson, isLoading, isError, error, refetch } = useLessonDetail(numericLessonId);
+  const { data: room } = useCourseLearnRoom(lesson?.courseId ?? 0);
   const { mutate: recordVisit } = useRecordLessonVisit();
   const { mutate: setCompletion, isPending: isUpdatingCompletion } = useSetLessonCompletion(
     lesson?.courseId
@@ -36,6 +43,11 @@ export default function LessonLearnScreen() {
   const lastVisitedLessonId = useRef<number | null>(null);
   const handledNotEnrolledRef = useRef<number | null>(null);
   const [issuedCertCode, setIssuedCertCode] = useState<string | null>(null);
+  const [hasWatchedToEnd, setHasWatchedToEnd] = useState<boolean>(false);
+
+  useEffect(() => {
+    setHasWatchedToEnd(Boolean(lesson?.completed) || lesson?.contentType !== 'video');
+  }, [numericLessonId, lesson?.completed, lesson?.contentType]);
 
   // D-34: Record visit once per opened lessonId
   useEffect(() => {
@@ -92,13 +104,48 @@ export default function LessonLearnScreen() {
     );
   }
 
+  // Enforce sequential lesson order: check if this lesson is unlocked
+  const unlocked = isLessonUnlocked(room, numericLessonId);
+  if (room && !unlocked) {
+    const firstUncompletedId = resolveFirstOrUncompletedLesson(room);
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ title: 'Bài học đang khóa', headerBackTitle: 'Đề cương' }} />
+        <ErrorState
+          icon={<Ionicons name="lock-closed-outline" size={28} color={semantic.warning} />}
+          message="Bạn phải xem hết tất cả nội dung và hoàn thành bài học trước đó theo thứ tự thì mới xem được bài tiếp theo."
+          retryLabel="Đi tới bài học hiện tại"
+          onRetry={() => {
+            if (firstUncompletedId) {
+              router.replace(`/learn/lesson/${firstUncompletedId}` as const);
+            } else {
+              router.back();
+            }
+          }}
+        />
+      </View>
+    );
+  }
+
   const isCompleted = Boolean(lesson.completed);
+  const isVideoLesson = lesson.contentType === 'video';
+  const canMarkComplete = isCompleted || !isVideoLesson || hasWatchedToEnd;
 
-  const handleToggleCompletion = () => {
-    const nextCompleted = !isCompleted;
+  // Compute true sequential prev/next lesson IDs from ordered chapters
+  const orderedLessons = getOrderedLessons(room);
+  const currentOrderedIdx = orderedLessons.findIndex((l) => l.id === numericLessonId);
+  const prevLessonId =
+    currentOrderedIdx > 0
+      ? orderedLessons[currentOrderedIdx - 1].id
+      : (lesson.prevLessonId ?? null);
+  const nextLessonId =
+    currentOrderedIdx >= 0 && currentOrderedIdx < orderedLessons.length - 1
+      ? orderedLessons[currentOrderedIdx + 1].id
+      : (lesson.nextLessonId ?? null);
 
+  const markCompletedNow = (completedValue: boolean) => {
     setCompletion(
-      { lessonId: numericLessonId, completed: nextCompleted },
+      { lessonId: numericLessonId, completed: completedValue },
       {
         onSuccess: (data) => {
           if (data.certificateJustIssued) {
@@ -120,6 +167,24 @@ export default function LessonLearnScreen() {
     );
   };
 
+  const handleToggleCompletion = () => {
+    if (!isCompleted && isVideoLesson && !hasWatchedToEnd) {
+      void notify(
+        'Chưa xem hết bài giảng',
+        'Bạn phải xem hết nội dung video của bài học này thì mới có thể hoàn thành và mở khóa bài tiếp theo.'
+      );
+      return;
+    }
+    markCompletedNow(!isCompleted);
+  };
+
+  const handleVideoEnded = () => {
+    setHasWatchedToEnd(true);
+    if (!isCompleted && !isUpdatingCompletion) {
+      markCompletedNow(true);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -131,10 +196,12 @@ export default function LessonLearnScreen() {
 
       {/* Light-Mode Media/Article Viewer */}
       <LessonContentViewer
-        contentType={lesson.contentType === 'video' ? 'video' : 'article'}
+        contentType={isVideoLesson ? 'video' : 'article'}
         videoUrl={lesson.videoUrl}
         articleContent={lesson.articleContent}
         title={lesson.title ?? ''}
+        enforceWatchFull={!isCompleted}
+        onVideoEnded={handleVideoEnded}
         onOpenWebsite={
           lesson.courseId
             ? () => {
@@ -151,14 +218,10 @@ export default function LessonLearnScreen() {
             <View style={styles.metaRow}>
               <Badge
                 variant="info"
-                label={lesson.contentType === 'video' ? 'Video bài giảng' : 'Tài liệu bài đọc'}
+                label={isVideoLesson ? 'Video bài giảng' : 'Tài liệu bài đọc'}
                 icon={
                   <Ionicons
-                    name={
-                      lesson.contentType === 'video'
-                        ? 'videocam-outline'
-                        : 'document-text-outline'
-                    }
+                    name={isVideoLesson ? 'videocam-outline' : 'document-text-outline'}
                     size={13}
                     color={semantic.brandPrimary}
                   />
@@ -177,31 +240,45 @@ export default function LessonLearnScreen() {
             </Text>
           </Card>
 
-          {/* Prev / Next Navigation */}
-          {(lesson.prevLessonId || lesson.nextLessonId) && (
-            <View style={styles.navRow}>
-              <Button
-                title="← Bài trước"
-                variant="outline"
-                disabled={!lesson.prevLessonId}
-                onPress={() => {
-                  if (lesson.prevLessonId) {
-                    router.replace(`/learn/lesson/${lesson.prevLessonId}` as const);
-                  }
-                }}
-                style={styles.navButton}
-              />
-              <Button
-                title="Bài tiếp theo →"
-                variant="outline"
-                disabled={!lesson.nextLessonId}
-                onPress={() => {
-                  if (lesson.nextLessonId) {
-                    router.replace(`/learn/lesson/${lesson.nextLessonId}` as const);
-                  }
-                }}
-                style={styles.navButton}
-              />
+          {/* Prev / Next Navigation (Sequential Rule: Next is locked until current lesson is completed) */}
+          {(prevLessonId || nextLessonId) && (
+            <View style={styles.navSection}>
+              <View style={styles.navRow}>
+                <Button
+                  title="← Bài trước"
+                  variant="outline"
+                  disabled={!prevLessonId}
+                  onPress={() => {
+                    if (prevLessonId) {
+                      router.replace(`/learn/lesson/${prevLessonId}` as const);
+                    }
+                  }}
+                  style={styles.navButton}
+                />
+                <Button
+                  title={isCompleted ? 'Bài tiếp theo →' : '🔒 Bài tiếp theo'}
+                  variant="outline"
+                  disabled={!nextLessonId || !isCompleted}
+                  onPress={() => {
+                    if (!isCompleted) {
+                      void notify(
+                        'Chưa hoàn thành bài hiện tại',
+                        'Bạn phải xem hết nội dung bài học này thì mới xem được bài tiếp theo.'
+                      );
+                      return;
+                    }
+                    if (nextLessonId) {
+                      router.replace(`/learn/lesson/${nextLessonId}` as const);
+                    }
+                  }}
+                  style={styles.navButton}
+                />
+              </View>
+              {Boolean(nextLessonId) && !isCompleted && (
+                <Text style={styles.lockedNextNotice}>
+                  🔒 Quy tắc học tập tuần tự: Xem hết nội dung bài hiện tại để mở khóa bài tiếp theo.
+                </Text>
+              )}
             </View>
           )}
 
@@ -222,24 +299,47 @@ export default function LessonLearnScreen() {
               </View>
               <View style={styles.completionHeaderText}>
                 <Text style={styles.completionStatusTitle}>
-                  {isCompleted ? 'Đã hoàn thành bài học này' : 'Chưa đánh dấu hoàn thành'}
+                  {isCompleted
+                    ? 'Đã hoàn thành bài học này'
+                    : isVideoLesson && !hasWatchedToEnd
+                      ? 'Đang học — Cần xem hết video bài giảng'
+                      : 'Chưa đánh dấu hoàn thành'}
                 </Text>
                 <Text style={styles.completionStatusDesc}>
                   {isCompleted
-                    ? 'Tiến độ bài giảng đã được đồng bộ lên máy chủ và tính vào điều kiện cấp chứng chỉ.'
-                    : 'Đánh dấu hoàn thành sau khi bạn đã nắm vững nội dung bài giảng.'}
+                    ? 'Tiến độ bài giảng đã được đồng bộ lên máy chủ và mở khóa bài học kế tiếp.'
+                    : isVideoLesson && !hasWatchedToEnd
+                      ? 'Hệ thống yêu cầu bạn xem hết video bài giảng (không tua nhanh). Khi video kết thúc, bài học sẽ tự động hoàn thành và mở khóa bài tiếp theo.'
+                      : 'Đánh dấu hoàn thành sau khi bạn đã nắm vững nội dung bài giảng.'}
                 </Text>
               </View>
             </View>
 
             <Button
-              title={isCompleted ? 'Bỏ đánh dấu hoàn thành' : 'Đánh dấu hoàn thành'}
+              title={
+                isCompleted
+                  ? 'Đã hoàn thành ✓'
+                  : !canMarkComplete
+                    ? '🔒 Xem hết video để hoàn thành'
+                    : 'Đánh dấu hoàn thành'
+              }
               variant={isCompleted ? 'outline' : 'primary'}
               onPress={handleToggleCompletion}
               loading={isUpdatingCompletion}
-              disabled={isUpdatingCompletion}
+              disabled={isUpdatingCompletion || isCompleted || !canMarkComplete}
               style={styles.toggleButton}
             />
+
+            {isCompleted && !nextLessonId && Boolean(lesson.courseId) && (
+              <Button
+                title="⭐ Viết đánh giá khóa học"
+                variant="primary"
+                onPress={() =>
+                  router.push(`/courses/${lesson.courseId}/write-review` as const)
+                }
+                style={{ marginTop: 10, width: '100%' }}
+              />
+            )}
           </Card>
         </ResponsiveContainer>
       </ScrollView>
@@ -260,7 +360,7 @@ export default function LessonLearnScreen() {
               Hoàn thành khóa học!
             </Text>
             <Text style={styles.modalDesc}>
-              Chúc mừng bạn đã hoàn tất 100% chương trình học và nhận được chứng chỉ tốt nghiệp từ Edumy.
+              Chúc mừng bạn đã hoàn tất 100% chương trình học và nhận được chứng chỉ tốt nghiệp từ Edumy. Hãy để lại đánh giá cho khóa học nhé!
             </Text>
             {Boolean(issuedCertCode) && (
               <View style={styles.certCodeBox}>
@@ -269,8 +369,19 @@ export default function LessonLearnScreen() {
               </View>
             )}
             <View style={styles.modalActions}>
+              {Boolean(lesson.courseId) && (
+                <Button
+                  title="⭐ Đánh giá khóa học"
+                  onPress={() => {
+                    setIssuedCertCode(null);
+                    router.push(`/courses/${lesson.courseId}/write-review` as const);
+                  }}
+                  style={styles.modalActionBtn}
+                />
+              )}
               <Button
                 title="Xem chứng chỉ"
+                variant="secondary"
                 onPress={() => {
                   setIssuedCertCode(null);
                   router.push('/account/certificates' as const);
@@ -318,13 +429,22 @@ const styles = StyleSheet.create({
     lineHeight: 25,
     color: semantic.textPrimary,
   },
+  navSection: {
+    marginBottom: 14,
+  },
   navRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 14,
   },
   navButton: {
     flex: 1,
+  },
+  lockedNextNotice: {
+    marginTop: 8,
+    fontSize: 12,
+    color: semantic.warning,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   completionBox: {
     borderColor: semantic.borderSubtle,

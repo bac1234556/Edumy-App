@@ -93,8 +93,8 @@ export function QuestionsSection() {
                   <Text style={styles.courseLabel} numberOfLines={1}>
                     {q.courseTitle}
                   </Text>
-                  {q.isResolved ? (
-                    <Badge variant="success" label="Đã giải quyết" />
+                  {q.isResolved || q.hasInstructorAnswer ? (
+                    <Badge variant="success" label="Đã xác nhận" />
                   ) : (
                     <Badge variant="warning" label="Đang chờ" />
                   )}

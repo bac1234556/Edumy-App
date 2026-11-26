@@ -17,10 +17,14 @@ const rawApiBaseUrl = getRequiredEnv(
   process.env.EXPO_PUBLIC_API_BASE_URL
 );
 
-const webBaseUrl = getRequiredEnv(
+const rawWebBaseUrl = getRequiredEnv(
   'EXPO_PUBLIC_WEB_BASE_URL',
   process.env.EXPO_PUBLIC_WEB_BASE_URL
 );
+const webBaseUrl =
+  rawWebBaseUrl.includes('localhost:3000') || rawWebBaseUrl.includes('127.0.0.1:3000')
+    ? 'https://edumy.id.vn'
+    : rawWebBaseUrl;
 
 if (
   typeof __DEV__ !== 'undefined' &&
@@ -42,8 +46,10 @@ function getOptionalEnv(value: string | undefined): string | undefined {
 export const ENV = {
   API_BASE_URL:
     Platform.OS === 'web'
-      ? rawApiBaseUrl.replace('://10.0.2.2:', '://localhost:')
-      : rawApiBaseUrl,
+      ? rawApiBaseUrl
+          .replace('://10.0.2.2:', '://192.168.60.165:')
+          .replace('://localhost:', '://192.168.60.165:')
+      : rawApiBaseUrl.replace('://10.0.2.2:', '://192.168.60.165:'),
   WEB_BASE_URL: webBaseUrl,
   ADMOB_BANNER_ID: getOptionalEnv(process.env.EXPO_PUBLIC_ADMOB_BANNER_ID),
   ADMOB_INTERSTITIAL_ID: getOptionalEnv(process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID),
