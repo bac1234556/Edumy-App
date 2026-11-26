@@ -113,6 +113,7 @@ export function OverviewSection({
           <View style={styles.financeSubCell}>
             <Text style={styles.financeSubLabel}>Doanh số bán</Text>
             <MoneyText amount={money?.grossSales ?? 0} style={styles.grossValue} />
+            <Text style={styles.financeSubHint}>Chưa trừ 30% phí</Text>
           </View>
         </View>
       </Card>
@@ -346,6 +347,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: semantic.textMuted,
     fontWeight: '600',
+  },
+  financeSubHint: {
+    fontSize: 10,
+    color: semantic.textMuted,
   },
   availValue: {
     fontSize: 14,

@@ -3,7 +3,6 @@ import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Platform,
   RefreshControl,
   StyleSheet,
   View,
@@ -41,7 +40,7 @@ export default function CertificatesScreen() {
     isFetchingNextPage,
   } = useInfiniteCertificates();
   useRefetchOnScreenFocus(refetch);
-  const { downloadAndShare, isDownloading, copyVerificationLink } = useCertificateActions();
+  const { copyVerificationLink } = useCertificateActions();
 
   const certificates = data?.pages.flatMap((p) => p.content ?? []) ?? [];
 
@@ -76,15 +75,8 @@ export default function CertificatesScreen() {
     );
   };
 
-  const handleDownload = (code: string, verifyUrl?: string | null) => {
-    downloadAndShare(
-      { code, verifyUrl },
-      {
-        onError: (err) => {
-          void notify('Tải chứng chỉ', err.message || 'Không thể tải tệp PDF chứng chỉ.');
-        },
-      }
-    );
+  const handleViewCertificate = (code: string) => {
+    router.push(`/certificates/verify/${encodeURIComponent(code)}` as never);
   };
 
   const renderCertCard = ({ item }: { item: CertificateItem }) => (
@@ -112,17 +104,9 @@ export default function CertificatesScreen() {
 
       <View style={styles.actionButtons}>
         <Button
-          title={Platform.OS === 'web' ? 'Mở xác thực' : 'Tải PDF'}
-          onPress={() => item.code && handleDownload(item.code, item.verifyUrl)}
-          loading={isDownloading}
-          disabled={isDownloading}
-          icon={
-            <Ionicons
-              name={Platform.OS === 'web' ? 'open-outline' : 'download-outline'}
-              size={16}
-              color="#FFFFFF"
-            />
-          }
+          title="Xem chứng chỉ"
+          onPress={() => item.code && handleViewCertificate(item.code)}
+          icon={<Ionicons name="ribbon-outline" size={16} color="#FFFFFF" />}
           style={styles.actionBtn}
         />
 

@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
-import { getCertificatesApi } from './api';
+import { getCertificatesApi, verifyCertificateApi } from './api';
 import {
   downloadAndShareCertificate,
   copyCertificateVerificationLink,
@@ -36,6 +36,16 @@ export function useInfiniteCertificates() {
       return current + 1 < total ? current + 1 : undefined;
     },
     enabled: isLoggedIn,
+  });
+}
+
+export function useCertificateVerification(code?: string) {
+  const cleanCode = (code ?? '').trim();
+  return useQuery({
+    queryKey: ['certificates', 'verify', cleanCode] as const,
+    queryFn: () => verifyCertificateApi(cleanCode),
+    enabled: cleanCode.length > 0,
+    retry: 1,
   });
 }
 

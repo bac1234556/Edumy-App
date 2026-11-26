@@ -146,6 +146,14 @@ export default function CourseLearnRoomScreen() {
                 />
               )}
 
+              {!isInstructorMode && progressPercent >= 100 && (
+                <Button
+                  title="🏆 Xem chứng chỉ hoàn thành"
+                  variant="primary"
+                  onPress={() => router.push('/account/certificates' as const)}
+                />
+              )}
+
               {!isInstructorMode && (
                 <Button
                   title={
@@ -153,7 +161,7 @@ export default function CourseLearnRoomScreen() {
                       ? '⭐ Đánh giá khóa học (Đã hoàn thành 100%)'
                       : '⭐ Đánh giá khóa học'
                   }
-                  variant={progressPercent >= 100 ? 'primary' : 'outline'}
+                  variant={progressPercent >= 100 ? 'outline' : 'outline'}
                   onPress={() =>
                     router.push(`/courses/${room.courseId}/write-review` as const)
                   }

@@ -383,8 +383,13 @@ export default function LessonLearnScreen() {
                 title="Xem chứng chỉ"
                 variant="secondary"
                 onPress={() => {
+                  const codeToView = issuedCertCode;
                   setIssuedCertCode(null);
-                  router.push('/account/certificates' as const);
+                  if (codeToView) {
+                    router.push(`/certificates/verify/${encodeURIComponent(codeToView)}` as never);
+                  } else {
+                    router.push('/account/certificates' as const);
+                  }
                 }}
                 style={styles.modalActionBtn}
               />

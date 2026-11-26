@@ -1,7 +1,12 @@
 // src/features/qa/__tests__/logic.test.ts
 // Unit tests for Q&A validation and read-only status checks.
 
-import { validateQuestionInput, validateAnswerInput, isQuestionReadOnly } from '../logic';
+import {
+  validateQuestionInput,
+  validateAnswerInput,
+  isQuestionReadOnly,
+  canMarkQuestionResolved,
+} from '../logic';
 
 describe('validateQuestionInput', () => {
   it('rejects empty or whitespace-only title', () => {
@@ -70,5 +75,20 @@ describe('isQuestionReadOnly', () => {
     expect(isQuestionReadOnly('active')).toBe(false);
     expect(isQuestionReadOnly('published')).toBe(false);
     expect(isQuestionReadOnly(undefined)).toBe(false);
+  });
+});
+
+describe('canMarkQuestionResolved', () => {
+  it('blocks marking resolved when there are 0 answers', () => {
+    expect(canMarkQuestionResolved(false, 0)).toBe(false);
+  });
+
+  it('allows marking resolved when there is at least 1 answer', () => {
+    expect(canMarkQuestionResolved(false, 1)).toBe(true);
+    expect(canMarkQuestionResolved(false, 3)).toBe(true);
+  });
+
+  it('allows toggling when already resolved', () => {
+    expect(canMarkQuestionResolved(true, 0)).toBe(true);
   });
 });

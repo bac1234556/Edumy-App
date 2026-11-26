@@ -54,3 +54,8 @@ export function validateAnswerInput(content: string): QuestionValidationResult {
 export function isQuestionReadOnly(status?: string): boolean {
   return status?.toLowerCase() === 'hidden';
 }
+
+export function canMarkQuestionResolved(isResolved: boolean, answerCount: number): boolean {
+  if (isResolved) return true;
+  return answerCount >= 1;
+}

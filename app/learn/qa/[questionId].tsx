@@ -21,6 +21,7 @@ import {
 import {
   validateAnswerInput,
   isQuestionReadOnly,
+  canMarkQuestionResolved,
 } from '../../../src/features/qa/logic';
 import { useSessionStore } from '../../../src/store/session';
 import { Text } from '../../../src/components/ui/Text';
@@ -75,8 +76,17 @@ export default function QuestionDetailScreen() {
     thread.answers?.some((a) => a.authorType?.toLowerCase() === 'instructor')
   );
   const isConfirmedOrResolved = Boolean(thread.isResolved || hasInstructorAnswer);
+  const answerCount = thread.answers?.length ?? 0;
+  const canConfirmNow = canMarkQuestionResolved(isConfirmedOrResolved, answerCount);
 
   const handleToggleResolve = () => {
+    if (!canConfirmNow) {
+      void notify(
+        'Chưa thể xác nhận',
+        'Câu hỏi phải có ít nhất 1 câu trả lời mới được phép đánh dấu đã xác nhận.'
+      );
+      return;
+    }
     resolveQuestion(!thread.isResolved, {
       onError: (err) => {
         const appErr = err as unknown as AppError;
@@ -191,25 +201,32 @@ export default function QuestionDetailScreen() {
 
             {/* Asker / Instructor Controls */}
             {canResolve && !isReadOnly && (
-              <View style={styles.askerActions}>
-                <Button
-                  title={isConfirmedOrResolved ? 'Đã xác nhận trả lời ✓' : 'Đánh dấu đã xác nhận'}
-                  variant={isConfirmedOrResolved ? 'outline' : 'primary'}
-                  onPress={handleToggleResolve}
-                  loading={isResolving}
-                  disabled={isResolving}
-                  style={styles.resolveBtn}
-                />
-                {isAsker && (
+              <View>
+                <View style={styles.askerActions}>
                   <Button
-                    title="Xóa"
-                    variant="outline"
-                    onPress={handleDelete}
-                    loading={isDeleting}
-                    disabled={isDeleting}
-                    style={styles.deleteBtn}
-                    textStyle={{ color: semantic.danger }}
+                    title={isConfirmedOrResolved ? 'Đã xác nhận trả lời ✓' : 'Đánh dấu đã xác nhận'}
+                    variant={isConfirmedOrResolved ? 'outline' : 'primary'}
+                    onPress={handleToggleResolve}
+                    loading={isResolving}
+                    disabled={isResolving || !canConfirmNow}
+                    style={styles.resolveBtn}
                   />
+                  {isAsker && (
+                    <Button
+                      title="Xóa"
+                      variant="outline"
+                      onPress={handleDelete}
+                      loading={isDeleting}
+                      disabled={isDeleting}
+                      style={styles.deleteBtn}
+                      textStyle={{ color: semantic.danger }}
+                    />
+                  )}
+                </View>
+                {!canConfirmNow && (
+                  <Text style={styles.resolveHintText}>
+                    Cần có ít nhất 1 câu trả lời để đánh dấu đã xác nhận câu hỏi.
+                  </Text>
                 )}
               </View>
             )}
@@ -432,6 +449,12 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     borderColor: semantic.dangerBorder,
+  },
+  resolveHintText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: semantic.textMuted,
+    fontStyle: 'italic',
   },
   answersSection: {
     gap: 10,
